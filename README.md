@@ -13,8 +13,6 @@ No build step, no install. Open `index.html` in a browser and go.
 
 ![Demo of the SVG dither filter applied to a video](assets/demo.gif)
 
-▶️ [Watch the full-quality clip (MP4)](assets/demo.mp4)
-
 ## Features
 
 - **Image & video input** — drag in a still or a video; video is filtered live, frame by frame.
