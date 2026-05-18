@@ -10,3 +10,7 @@ Thumbs.db
 *.mov
 *.webm
 dither-hero.html
+
+# ...except the committed demo media used by the README
+!assets/demo.mp4
+!assets/demo.gif

@@ -9,6 +9,12 @@ No build step, no install. Open `index.html` in a browser and go.
 ![status](https://img.shields.io/badge/build-none%20required-success)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
+## Demo
+
+![Demo of the SVG dither filter applied to a video](assets/demo.gif)
+
+▶️ [Watch the full-quality clip (MP4)](assets/demo.mp4)
+
 ## Features
 
 - **Image & video input** — drag in a still or a video; video is filtered live, frame by frame.
@@ -83,6 +89,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 ```
 .
 ├── index.html   # the entire tool — UI, dither engine, and exporters
+├── assets/      # demo media (mp4 + gif preview)
 ├── README.md
 └── LICENSE
 ```
