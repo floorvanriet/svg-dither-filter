@@ -92,6 +92,10 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 └── LICENSE
 ```
 
+## Credits
+
+Original idea by [antoncreations](https://www.instagram.com/antoncreations/).
+
 ## License
 
 [MIT](LICENSE) © MG Productions
