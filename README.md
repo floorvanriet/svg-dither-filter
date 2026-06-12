@@ -61,6 +61,11 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Built-in shape library** — 12 shapes (circle, square, rounded, diamond,
   triangle, cross, X, star, ring, H/V line, heart) selectable per slot;
   uploading your own SVG still works per slot.
+- **Shape & colour sets (new in 2.2)** — a second preset layer that swaps
+  *only* the 7 slots while every other setting stays put. 10 built-in sets
+  (V1 Grijs, Mono inkt, Arcering, Game Boy, Neon, Candy, Zonsondergang,
+  Oceaan, Bos, Pop CMYK), apply shapes-only or colours-only, and save your
+  own sets to `localStorage`.
 
 ### Core (v1)
 

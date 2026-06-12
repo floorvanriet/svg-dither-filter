@@ -209,8 +209,16 @@
 
   <div class="grp">
     <h2>Shapes — shadow → highlight</h2>
+    <select id="slotPresetSel" style="width:100%;margin-bottom:6px"><option value="">— shape &amp; kleur preset —</option></select>
+    <div class="btnrow" style="margin-top:0;margin-bottom:10px">
+      <button id="slotShapesBtn" title="Neem alleen de shapes over">Alleen shapes</button>
+      <button id="slotColorsBtn" title="Neem alleen de kleuren over">Alleen kleuren</button>
+      <button id="slotSaveBtn" title="Bewaar huidige shapes + kleuren als set">Opslaan…</button>
+      <button id="slotDelBtn" title="Verwijder eigen set">✕</button>
+    </div>
     <div id="svgList"></div>
-    <div class="hint">Kies per slot een ingebouwde shape, of upload een eigen SVG met ⬆ (blauw = eigen SVG actief). Slot 1 = donkerste, slot 7 = lichtste.</div>
+    <div class="hint">Kies per slot een ingebouwde shape, of upload een eigen SVG met ⬆ (blauw = eigen SVG actief). Slot 1 = donkerste, slot 7 = lichtste.
+      De preset hierboven wisselt alleen shapes/kleuren — alle andere settings blijven staan.</div>
   </div>
 
   <div class="grp">
@@ -1039,6 +1047,89 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
   });
   presetSel.value='';
 });
+
+/* ---------- slot presets: shapes & colours only ---------- */
+const SLOT_PRESETS = {
+  'V1 Grijs':       mkSlots('circle', ramp('#000000','#d2d2d2')),
+  'Mono inkt':      mkSlots('circle', Array(7).fill('#1d1a16')),
+  'Arcering':       mkSlots(['circle','vline','hline','hline','xmark','cross','square'],
+                            ramp('#8a8378','#14110c')),
+  'Game Boy':       mkSlots('square', ramp('#0f380f','#9bbc0f')),
+  'Neon':           mkSlots('diamond',
+                      ['#2a0a4a','#5b1e8f','#8c2bd9','#c13ad9','#ff3df0','#5bd9ff','#9ffcff']),
+  'Candy':          mkSlots(['heart','heart','star','star','heart','star','heart'],
+                      ['#b83b6e','#e0529c','#f47ab8','#f9a8d4','#a78bfa','#7dd3fc','#fde68a']),
+  'Zonsondergang':  mkSlots('circle',
+                      ['#1a0a2e','#4a1942','#83274f','#c43e4b','#ee6c45','#f9a03f','#ffd45e']),
+  'Oceaan':         mkSlots('circle',
+                      ['#03045e','#0b3d91','#0077b6','#0096c7','#00b4d8','#48cae4','#ade8f4']),
+  'Bos':            mkSlots(['triangle','triangle','circle','triangle','circle','circle','star'],
+                      ['#0b2818','#14452a','#1e6b3a','#2e8b4a','#5cab6d','#94c98f','#d8e8b0']),
+  'Pop CMYK':       mkSlots('circle',
+                      ['#1a1a1a','#00aeef','#0057a8','#ec008c','#ff5e3a','#fff200','#ffffff']),
+};
+const LS_SLOTS = 'ditherSlotPresets2';
+function customSlotSets(){ try { return JSON.parse(localStorage.getItem(LS_SLOTS)) || {}; } catch(e){ return {}; } }
+function saveCustomSlotSets(p){ localStorage.setItem(LS_SLOTS, JSON.stringify(p)); }
+
+const slotPresetSel = document.getElementById('slotPresetSel');
+function refreshSlotPresetList(keep){
+  const custom = customSlotSets();
+  slotPresetSel.innerHTML = '<option value="">— shape &amp; kleur preset —</option>'
+    + '<optgroup label="Ingebouwd">'
+    + Object.keys(SLOT_PRESETS).map(n=>`<option value="b:${n}">${n}</option>`).join('')
+    + '</optgroup>'
+    + (Object.keys(custom).length
+      ? '<optgroup label="Eigen sets">'
+        + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('')
+        + '</optgroup>'
+      : '');
+  slotPresetSel.value = keep || '';
+}
+function selectedSlotSet(){
+  const v = slotPresetSel.value; if(!v) return null;
+  const name = v.slice(2);
+  return v[0]==='b' ? SLOT_PRESETS[name] : customSlotSets()[name];
+}
+async function applySlotSet(set, what){ // what: 'both' | 'shapes' | 'colors'
+  if (!set) return;
+  set.slice(0,7).forEach((sl,i)=>{
+    if (what!=='colors'){
+      S.slots[i].shape = sl.shape || (sl.svg ? 'custom' : 'circle');
+      S.slots[i].svg = sl.svg || null;
+    }
+    if (what!=='shapes' && sl.color) S.slots[i].color = sl.color;
+    syncSlotRow(i);
+  });
+  await rebuildAll();
+}
+slotPresetSel.addEventListener('change', ()=>applySlotSet(selectedSlotSet(),'both'));
+document.getElementById('slotShapesBtn').addEventListener('click', ()=>{
+  const s=selectedSlotSet();
+  if(!s){ alert('Kies eerst een shape & kleur preset.'); return; }
+  applySlotSet(s,'shapes');
+});
+document.getElementById('slotColorsBtn').addEventListener('click', ()=>{
+  const s=selectedSlotSet();
+  if(!s){ alert('Kies eerst een shape & kleur preset.'); return; }
+  applySlotSet(s,'colors');
+});
+document.getElementById('slotSaveBtn').addEventListener('click', ()=>{
+  const name = prompt('Naam voor deze shape & kleur set:'); if(!name) return;
+  const p = customSlotSets();
+  p[name.trim()] = S.slots.map(s=>({ shape:s.shape, svg:s.shape==='custom'?s.svg:null, color:s.color }));
+  saveCustomSlotSets(p);
+  refreshSlotPresetList('c:'+name.trim());
+});
+document.getElementById('slotDelBtn').addEventListener('click', ()=>{
+  const v = slotPresetSel.value;
+  if (!v || v[0]!=='c'){ alert('Selecteer eerst een eigen set (ingebouwde kun je niet verwijderen).'); return; }
+  const name = v.slice(2);
+  if (!confirm(`Set "${name}" verwijderen?`)) return;
+  const p = customSlotSets(); delete p[name]; saveCustomSlotSets(p);
+  refreshSlotPresetList();
+});
+refreshSlotPresetList();
 
 /* ---------- artwork export: PNG ---------- */
 document.getElementById('exportPngBtn').addEventListener('click', ()=>{
