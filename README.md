@@ -32,8 +32,13 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ### Artwork engine (new in 2.1)
 
-- **Artwork export** — high-res PNG (960–3840 px) and **true vector SVG**
-  (symbols + uses): infinitely scalable, ideal for print and pen plotters.
+- **Artwork export** — high-res PNG and **true vector SVG** (symbols + uses):
+  infinitely scalable, ideal for print and pen plotters.
+- **Paper sizes (A1–A4)** — pick *A staand* / *A liggend* as the canvas format
+  (the photo is centre-cropped to the 1:√2 ratio) and export PNG at exact
+  print resolution (A4–A1 at 150/300 dpi, up to 9933 px). The SVG export gets
+  real mm dimensions (`width="420mm"`), so it opens at true size in
+  Illustrator/Inkscape. A guard warns when the canvas ratio doesn't match.
 - **Real dithering algorithms** — Floyd–Steinberg error diffusion and ordered
   Bayer 4×4 / 8×8, on top of the original tone-bucket mapping.
 - **Source colour mode** — every cell picks its colour from the image itself,

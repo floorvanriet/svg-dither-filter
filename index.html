@@ -89,10 +89,12 @@
   <div class="grp">
     <h2>Source</h2>
     <input type="file" id="media" accept="image/*,video/*" />
-    <label>Aspect ratio</label>
+    <label>Formaat (foto wordt passend gecropt)</label>
     <div class="seg" id="aspect">
-      <button data-v="orig" class="on">Original</button>
-      <button data-v="square">1 : 1</button>
+      <button data-v="orig" class="on">Origineel</button>
+      <button data-v="square">1:1</button>
+      <button data-v="aport">A staand</button>
+      <button data-v="aland">A liggend</button>
     </div>
     <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
       Houd de muis ingedrukt op het canvas om het origineel te zien.</div>
@@ -238,15 +240,21 @@
     <h2>Artwork export</h2>
     <div class="btnrow" style="margin-top:0">
       <select id="pngScale">
-        <option value="960">PNG · 960px</option>
-        <option value="1920" selected>PNG · 1920px</option>
-        <option value="2880">PNG · 2880px</option>
-        <option value="3840">PNG · 3840px</option>
+        <option value="1920">Scherm · 1920 px</option>
+        <option value="3840">Scherm · 3840 px (4K)</option>
+        <option value="a4-300">A4 · 300 dpi · 3508 px</option>
+        <option value="a3-300">A3 · 300 dpi · 4961 px</option>
+        <option value="a2-300" selected>A2 · 300 dpi · 7016 px</option>
+        <option value="a2-150">A2 · 150 dpi · 3508 px</option>
+        <option value="a1-300">A1 · 300 dpi · 9933 px</option>
+        <option value="a1-150">A1 · 150 dpi · 4967 px</option>
       </select>
       <button id="exportPngBtn">Download PNG</button>
     </div>
     <button id="exportSvgBtn" style="width:100%;margin-top:6px">Download SVG (vector)</button>
-    <div class="hint">SVG is echte vector — oneindig schaalbaar, ideaal voor print en plotters. Bij video pakt de export het huidige frame.</div>
+    <div class="hint">Kies een A-formaat hierboven én zet Formaat (Source) op A staand/liggend
+      voor exact passend drukwerk. De SVG krijgt dan echte mm-afmetingen mee.
+      Bij video pakt de export het huidige frame.</div>
   </div>
 
   <div class="grp">
@@ -686,8 +694,14 @@ function srcSize(){
 function cropRect(){
   const [sw,sh]=srcSize();
   let cx=0, cy=0, cw=sw, ch=sh;
-  if (S.aspect==='square'){
-    const m=Math.min(sw,sh); cx=(sw-m)/2; cy=(sh-m)/2; cw=ch=m;
+  const target = S.aspect==='square' ? 1
+    : S.aspect==='aport' ? 1/Math.SQRT2     // A-papier staand (1:√2)
+    : S.aspect==='aland' ? Math.SQRT2       // A-papier liggend
+    : null;
+  if (target && sw && sh){
+    const cur=sw/sh;
+    if (cur>target){ cw=sh*target; cx=(sw-cw)/2; }   // te breed → zijkanten croppen
+    else { ch=sw/target; cy=(sh-ch)/2; }             // te hoog → boven/onder croppen
   }
   return [cx,cy,cw,ch];
 }
@@ -711,8 +725,9 @@ function renderTo(ctx, targetCanvas, maxDim){
     return true;
   }
   const {cols,rows,rowH}=gridFor(S,ar);
-  const cell=Math.max(2,Math.floor((ar>=1?maxDim:maxDim*ar)/cols));
-  targetCanvas.width=cols*cell;
+  // fractionele celmaat → exportmaat klopt exact op de gevraagde dpi
+  const cell=Math.max(2,(ar>=1?maxDim:maxDim*ar)/cols);
+  targetCanvas.width=Math.round(cols*cell);
   targetCanvas.height=Math.round(((rows-1)*rowH+1)*cell);
   sample.width=cols; sample.height=rows;
   sctx.clearRect(0,0,cols,rows);
@@ -1210,17 +1225,41 @@ document.getElementById('slotDelBtn').addEventListener('click', ()=>{
 refreshSlotPresetList();
 
 /* ---------- artwork export: PNG ---------- */
-document.getElementById('exportPngBtn').addEventListener('click', ()=>{
+const PAPER = { a4:[210,297], a3:[297,420], a2:[420,594], a1:[594,841] }; // mm
+function exportTarget(){
+  const v = document.getElementById('pngScale').value;
+  if (/^\d+$/.test(v)) return { maxDim:+v, label:'' };
+  const [f,dpi] = v.split('-');
+  return {
+    maxDim: Math.round(PAPER[f][1]/25.4*+dpi),
+    label: f.toUpperCase()+'-'+dpi+'dpi',
+    paper: PAPER[f],
+  };
+}
+function aRatioOk(){
+  const [,,cw,ch]=cropRect();
+  if(!cw||!ch) return false;
+  const ratio=Math.max(cw,ch)/Math.min(cw,ch);
+  return Math.abs(ratio-Math.SQRT2)<0.01;
+}
+document.getElementById('exportPngBtn').addEventListener('click', e=>{
   if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
-  const w = +document.getElementById('pngScale').value;
-  const c = document.createElement('canvas');
-  renderTo(c.getContext('2d'), c, w);
-  c.toBlob(blob=>{
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='dither-art-'+c.width+'x'+c.height+'.png'; a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  },'image/png');
+  const t = exportTarget();
+  if (t.paper && !aRatioOk() &&
+      !confirm('Het canvas heeft niet de A-verhouding (1:√2).\nZet "Formaat" bij Source op A staand of A liggend voor exact passend drukwerk.\nToch exporteren?')) return;
+  const btn=e.target, old=btn.textContent;
+  btn.textContent='Bezig…'; btn.disabled=true;
+  setTimeout(()=>{
+    const c = document.createElement('canvas');
+    renderTo(c.getContext('2d'), c, t.maxDim);
+    c.toBlob(blob=>{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='dither-art'+(t.label?'-'+t.label:'')+'-'+c.width+'x'+c.height+'.png'; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      btn.textContent=old; btn.disabled=false;
+    },'image/png');
+  }, 30);
 });
 
 /* ---------- artwork export: vector SVG ---------- */
@@ -1330,11 +1369,22 @@ function buildArtSVG(){
 }
 document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
   if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
-  const svg=buildArtSVG();
+  const t = exportTarget();
+  if (t.paper && !aRatioOk() &&
+      !confirm('Het canvas heeft niet de A-verhouding (1:√2).\nZet "Formaat" bij Source op A staand of A liggend voor exact passend drukwerk.\nToch exporteren?')) return;
+  let svg=buildArtSVG();
   if(!svg){ alert('Kon geen SVG bouwen.'); return; }
+  if (t.paper){
+    // geef de SVG echte papierafmetingen in mm, georiënteerd naar het canvas
+    const [,,cw,ch]=cropRect();
+    const land = cw>=ch;
+    const wmm = land ? t.paper[1] : t.paper[0];
+    const hmm = land ? t.paper[0] : t.paper[1];
+    svg = svg.replace('<svg ', `<svg width="${wmm}mm" height="${hmm}mm" `);
+  }
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
-  a.download='dither-art.svg'; a.click();
+  a.download='dither-art'+(t.label?'-'+t.label.replace(/-\d+dpi/,''):'')+'.svg'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
 
@@ -1453,7 +1503,9 @@ const LUT=toneLUT(CFG);
 function draw(src,sw,sh){
  if(!sw||!sh)return;
  let X=0,Y=0,W=sw,H=sh;
- if(CFG.aspect==='square'){const m=Math.min(sw,sh);X=(sw-m)/2;Y=(sh-m)/2;W=H=m;}
+ const tgt=CFG.aspect==='square'?1:CFG.aspect==='aport'?1/Math.SQRT2:CFG.aspect==='aland'?Math.SQRT2:null;
+ if(tgt){const cur=sw/sh;
+  if(cur>tgt){W=sh*tgt;X=(sw-W)/2;}else{H=sw/tgt;Y=(sh-H)/2;}}
  const r=cv.clientWidth/cv.clientHeight||W/H;
  if(CFG.renderMode==='cmyk'){
    const cols=CFG.grid;
