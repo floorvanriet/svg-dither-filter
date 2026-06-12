@@ -1,4 +1,4 @@
-# SVG Dither Filter 2.1
+# SVG Dither Filter 2.2
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
@@ -16,6 +16,19 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 ![Demo of the SVG dither filter applied to a video](assets/demo.gif)
 
 ## Features
+
+### Print engine (new in 2.2)
+
+- **CMYK print mode** — the image is separated into four ink screens (cyan,
+  magenta, yellow, black) at the classic angles (15°/75°/0°/45°), multiply-
+  blended like real offset print, with authentic halftone rosettes. Channel
+  toggles give instant duotone/tritone poster looks; any built-in shape can
+  be the halftone dot. Exports to PNG **and** vector SVG (4 ink groups).
+- **Blue-noise dithering** — a precomputed 32×32 void-and-cluster matrix for
+  organic, clump-free grain (vs. the regular Bayer crosshatch).
+- **Zoom & pan** — scroll to zoom (up to 12×, rendered at higher resolution so
+  dots stay crisp), drag to pan, double-click to reset. Hold still to compare
+  with the original.
 
 ### Artwork engine (new in 2.1)
 
@@ -38,10 +51,10 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ### Presets (new in 2.0, expanded in 2.1)
 
-- **14 built-in looks** — V1 original, Pointillism, Flow Lines, Mosaic,
-  Halftone, Riso Print, Newsprint, Terminal, Blueprint, Pop Art, Cyber,
-  Retro Game, Candy, Ink Hatch. A preset bundles every setting, colour, and
-  shape — including uploaded SVGs.
+- **16 built-in looks** — V1 original, CMYK Poster, Duotone Punch,
+  Pointillism, Flow Lines, Mosaic, Halftone, Riso Print, Newsprint, Terminal,
+  Blueprint, Pop Art, Cyber, Retro Game, Candy, Ink Hatch. A preset bundles
+  every setting, colour, and shape — including uploaded SVGs.
 - **Save / load your own presets** — stored in `localStorage`, plus
   export/import as a JSON file to share or back up.
 - **Reset to original** — one click back to the exact v1 defaults.
@@ -133,7 +146,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html      # the entire 2.1 tool — UI, presets, dither engine, exporters
+├── index.html      # the entire 2.2 tool — UI, presets, dither engine, exporters
 ├── index-v1.html   # the original v1, untouched
 ├── assets/         # demo media (mp4 + gif preview)
 ├── README.md

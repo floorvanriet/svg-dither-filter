@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.1</title>
+<title>SVG Dither Filter 2.2</title>
 <style>
   :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff; }
   * { box-sizing:border-box; }
@@ -13,7 +13,10 @@
            overflow-y:auto; padding:16px; }
   #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
            background:#000 repeating-conic-gradient(#111 0 25%,#181818 0 50%) 0/24px 24px;
-           position:relative; }
+           position:relative; overflow:hidden; }
+  #zoomBadge { position:absolute; top:10px; right:12px; z-index:2; display:none;
+           background:rgba(13,13,15,.85); border:1px solid var(--line); border-radius:5px;
+           padding:3px 8px; font-size:11px; color:var(--mut); pointer-events:none; }
   #stage.drag::after { content:'Drop afbeelding of video'; position:absolute; inset:12px;
            border:2px dashed var(--acc); border-radius:12px; display:flex; align-items:center;
            justify-content:center; font-size:16px; color:var(--acc); background:rgba(13,13,15,.7); }
@@ -58,7 +61,7 @@
 <body>
 <div id="panel">
   <h1>SVG DITHER FILTER</h1>
-  <p class="ver">v2.1 · <a href="index-v1.html">open origineel (v1)</a></p>
+  <p class="ver">v2.2 · <a href="index-v1.html">open origineel (v1)</a></p>
 
   <div class="grp">
     <h2>Presets</h2>
@@ -105,6 +108,7 @@
       <option value="fs">Floyd–Steinberg</option>
       <option value="bayer4">Bayer 4×4 (ordered)</option>
       <option value="bayer8">Bayer 8×8 (ordered)</option>
+      <option value="blue">Blue noise 32×32</option>
     </select>
   </div>
 
@@ -127,6 +131,28 @@
   </div>
 
   <div class="grp">
+    <h2>Render mode</h2>
+    <div class="seg" id="renderMode">
+      <button data-v="shapes" class="on">Shapes</button>
+      <button data-v="cmyk">CMYK print</button>
+    </div>
+    <div id="cmykWrap" style="display:none">
+      <label>Dot shape</label>
+      <select id="cmykShape" style="width:100%"></select>
+      <label>Kanalen (uitvinken = duotone/tritone)</label>
+      <div class="row" style="gap:14px;margin-top:4px">
+        <label style="flex:none;margin:0"><input type="checkbox" id="chC" checked /> C</label>
+        <label style="flex:none;margin:0"><input type="checkbox" id="chM" checked /> M</label>
+        <label style="flex:none;margin:0"><input type="checkbox" id="chY" checked /> Y</label>
+        <label style="flex:none;margin:0"><input type="checkbox" id="chK" checked /> K</label>
+      </div>
+      <div class="hint">Vier inktrasters onder klassieke hoeken (C 15° · M 75° · Y 0° · K 45°),
+        multiply-gemengd zoals echt drukwerk. Angle draait alle rasters mee;
+        Max-scale regelt de dotgrootte. Shape-slots worden genegeerd.</div>
+    </div>
+  </div>
+
+  <div class="grp">
     <h2>Color</h2>
     <div class="seg" id="colorMode">
       <button data-v="tone" class="on">Per-tone kleur</button>
@@ -136,7 +162,8 @@
       <div class="row" style="margin-top:8px"><label>Saturation</label><span class="val" id="satV">100%</span></div>
       <input type="range" id="sat" min="0" max="250" value="100" />
     </div>
-    <div class="hint">Bronkleur = elke cel pakt de kleur van de afbeelding zelf.</div>
+    <div class="hint">Bronkleur = elke cel pakt de kleur van de afbeelding zelf.
+      Saturation werkt ook in CMYK-modus.</div>
   </div>
 
   <div class="grp">
@@ -211,7 +238,7 @@
   </div>
 </div>
 
-<div id="stage"><canvas id="out"></canvas></div>
+<div id="stage"><canvas id="out"></canvas><div id="zoomBadge"></div></div>
 
 <script>
 const RASTER = 96;            // px each shape is rasterised at
@@ -222,6 +249,39 @@ const BAYER = {
   bayer8: [[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],
            [60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],
            [15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]],
+  // 32×32 void-and-cluster blue-noise threshold matrix (precomputed)
+  blue: [[415,66,466,670,187,525,308,779,644,384,554,24,321,163,471,89,783,314,726,420,42,161,697,866,572,219,319,637,879,367,580,103],
+[810,936,558,1005,380,843,598,69,463,927,725,620,241,970,907,528,636,840,116,989,610,332,480,1021,49,404,704,928,84,188,293,901],
+[158,221,619,275,105,434,691,962,169,282,121,867,358,807,694,284,28,395,500,891,550,792,210,623,745,155,519,442,833,750,497,649],
+[536,350,741,21,806,912,236,348,754,534,991,495,70,426,135,216,875,596,182,259,72,940,291,115,841,957,272,12,605,1010,397,34],
+[853,447,924,656,502,152,567,30,836,401,203,781,590,657,1009,742,457,967,712,363,761,431,675,378,458,562,790,352,228,127,687,951],
+[780,114,302,194,391,764,1022,477,631,87,685,918,6,304,377,539,55,324,650,141,863,0,527,900,56,195,653,975,730,468,325,261],
+[61,710,996,595,894,65,307,716,258,876,329,450,247,848,166,800,934,100,828,493,978,604,230,1001,706,309,864,79,533,905,180,581],
+[490,406,530,246,683,855,429,183,933,582,146,749,560,952,482,617,232,407,571,198,278,729,343,157,813,484,122,386,622,23,825,972],
+[641,168,830,2,353,129,543,799,370,36,512,998,110,711,41,676,292,751,904,40,446,796,102,634,417,585,915,774,280,433,752,360],
+[890,91,941,758,465,965,621,97,984,673,820,398,223,344,428,889,134,503,1014,689,376,557,870,945,19,249,515,199,1017,663,137,231],
+[721,575,326,192,651,279,736,229,489,301,175,898,642,784,963,191,834,599,327,77,923,172,475,303,669,977,720,346,44,847,544,300],
+[982,443,793,521,873,412,45,910,768,435,603,16,270,568,67,529,383,9,255,815,624,233,766,83,382,165,808,107,601,947,472,64],
+[387,25,260,113,1007,156,579,337,844,86,948,723,486,868,311,759,985,648,462,739,119,508,1006,702,851,547,459,899,402,215,696,817],
+[633,906,597,684,368,717,498,204,662,541,153,361,1018,104,439,148,703,211,885,409,953,345,593,425,54,239,643,286,778,526,323,171],
+[748,478,212,857,62,809,938,20,993,405,254,798,680,217,842,583,926,96,556,288,832,26,205,881,318,960,744,5,144,920,82,1000],
+[283,125,949,535,299,452,245,609,315,731,882,59,518,627,339,262,474,364,57,719,159,532,666,791,123,496,564,992,427,655,374,559],
+[835,419,338,765,639,162,892,777,124,464,588,186,416,937,39,776,661,1008,802,611,976,455,265,932,615,184,357,821,225,714,865,43],
+[618,698,8,1020,92,392,516,672,74,922,829,290,986,707,138,902,179,517,316,227,897,373,76,740,400,701,93,886,594,267,460,196],
+[966,506,240,565,824,727,974,342,218,551,371,1,762,461,545,390,856,13,437,109,682,578,849,17,981,469,297,32,509,120,929,788],
+[310,149,861,445,197,274,27,438,805,999,692,160,613,235,80,296,722,635,959,763,150,492,328,207,546,909,801,646,1013,734,355,58],
+[584,743,366,921,664,602,869,143,629,263,491,874,331,913,971,586,794,244,354,872,281,1023,786,626,253,139,413,330,164,553,424,659],
+[248,994,111,48,494,320,956,522,724,53,411,99,812,671,422,147,476,73,566,513,33,715,388,101,839,678,757,222,942,827,88,908],
+[499,399,804,709,174,772,90,375,209,935,771,563,189,514,22,837,997,201,930,418,654,177,917,444,988,505,78,606,479,277,695,181],
+[877,630,294,549,973,408,831,573,887,305,645,1019,276,735,359,625,312,686,747,117,862,600,271,52,570,349,958,35,858,372,770,15],
+[576,133,846,226,453,10,251,681,130,467,38,389,118,954,224,880,46,393,823,238,333,473,753,818,200,295,888,718,136,538,1004,441],
+[944,347,50,674,893,612,738,995,351,785,531,838,690,454,577,769,504,154,548,1003,4,939,523,140,700,638,403,456,243,647,322,208],
+[797,733,481,1016,145,317,501,75,185,931,242,607,170,911,63,410,979,269,616,449,679,94,883,362,1011,18,782,173,816,914,60,688],
+[112,396,540,273,775,385,854,555,660,430,878,11,336,795,298,668,108,895,732,190,789,306,421,592,250,485,552,964,95,591,507,264],
+[884,178,652,81,916,202,47,961,287,755,106,713,990,487,542,213,814,335,68,381,968,640,214,845,737,71,903,289,379,746,423,987],
+[608,826,955,440,569,628,819,414,142,587,510,268,394,632,132,925,705,589,483,860,126,561,29,983,167,341,614,693,206,852,3,334],
+[520,237,31,356,728,256,488,699,340,1012,803,193,943,51,850,257,436,14,946,524,285,756,451,665,511,822,432,128,1002,470,667,151],
+[708,313,767,871,131,980,7,896,220,85,859,448,677,760,574,365,1015,176,658,234,811,919,369,98,266,950,773,37,537,252,787,969]],
 };
 
 /* ---------- built-in shape library ---------- */
@@ -252,7 +312,11 @@ const DEFAULTS = {
   bright:0, contrast:0, gamma:100, dither:'none',
   gridType:'square', gap:0, bgT:false,
   colorMode:'tone', sat:100, sJit:0, rotJit:0, rotMode:'fixed',
+  renderMode:'shapes', cmykShape:'circle',
+  cmykC:true, cmykM:true, cmykY:true, cmykK:true,
 };
+const INKS = { c:'#00AEEF', m:'#EC008C', y:'#FFF200', k:'#1A1A1A' };
+const SCREEN_ANGLES = { c:15, m:75, y:0, k:45 };
 const S = Object.assign({ aspect:'orig' }, DEFAULTS, {
   slots: Array.from({length:7}, (_,i)=>{
     const g = Math.round(i/6*210);
@@ -316,7 +380,7 @@ function computeCells(data,cols,rows,cfg,lut,BAYERM){
         if(x+1<cols)W[i+cols+1]+=err*1/16;
       }
     }
-  } else if(cfg.dither==='bayer4'||cfg.dither==='bayer8'){
+  } else if(BAYERM[cfg.dither]){ // any ordered threshold matrix (bayer/blue noise)
     const M=BAYERM[cfg.dither],m=M.length,d=m*m;
     for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
       const i=y*cols+x;
@@ -379,6 +443,60 @@ function drawCells(ctx,cell,cols,rows,rowH,cfg,cache,cells,tmp,tctx,RAST){
     }
   }
 }
+function rgb2cmyk(r,g,b){
+  const R=r/255,G=g/255,Bv=b/255;
+  const K=1-Math.max(R,G,Bv);
+  if(K>=0.999)return[0,0,0,1];
+  const d=1-K;
+  return[(1-R-K)/d,(1-G-K)/d,(1-Bv-K)/d,K];
+}
+function adjustBuffer(data,cfg){ // brightness/contrast/saturation on RGB, in place
+  const b=(cfg.bright||0)*2.55, c=1+(cfg.contrast||0)/100;
+  const sat=(cfg.sat===undefined?100:cfg.sat)/100;
+  const cl=v=>v<0?0:v>255?255:v;
+  for(let i=0;i<data.length;i+=4){
+    let r=data[i],g=data[i+1],bl=data[i+2];
+    const gr=0.299*r+0.587*g+0.114*bl;
+    r=gr+(r-gr)*sat; g=gr+(g-gr)*sat; bl=gr+(bl-gr)*sat;
+    data[i]=cl((r+b-128)*c+128);
+    data[i+1]=cl((g+b-128)*c+128);
+    data[i+2]=cl((bl+b-128)*c+128);
+  }
+}
+function drawCMYK(ctx,W,H,cell,cfg,buf,bw,bh,inks,ANGLES){
+  ctx.clearRect(0,0,W,H);
+  if(!cfg.bgT){ ctx.fillStyle=cfg.bg; ctx.fillRect(0,0,W,H); }
+  const maxS=(cfg.sMax===undefined?100:cfg.sMax)/100;
+  const chans=['y','c','m','k'].filter(ch=>cfg['cmyk'+ch.toUpperCase()]!==false);
+  const diag=Math.sqrt(W*W+H*H), n=Math.ceil(diag/cell/2)+1;
+  const cx0=W/2, cy0=H/2;
+  ctx.save();
+  ctx.globalCompositeOperation='multiply';
+  for(const ch of chans){
+    const img=inks[ch]; if(!img)continue;
+    const angDeg=ANGLES[ch]+(cfg.rot||0), ang=angDeg*Math.PI/180;
+    const cos=Math.cos(ang), sin=Math.sin(ang);
+    for(let v=-n;v<=n;v++)for(let u=-n;u<=n;u++){
+      const px=cx0+(u*cos-v*sin)*cell;
+      const py=cy0+(u*sin+v*cos)*cell;
+      if(px<-cell||px>W+cell||py<-cell||py>H+cell)continue;
+      const bx=Math.max(0,Math.min(bw-1,(px/W*bw)|0));
+      const by=Math.max(0,Math.min(bh-1,(py/H*bh)|0));
+      const p=(by*bw+bx)*4;
+      if(buf[p+3]<8)continue;
+      const cmyk=rgb2cmyk(buf[p],buf[p+1],buf[p+2]);
+      const val=ch==='c'?cmyk[0]:ch==='m'?cmyk[1]:ch==='y'?cmyk[2]:cmyk[3];
+      const sc=Math.sqrt(val)*cell*maxS;   // sqrt → area-true ink coverage
+      if(sc<=0.4)continue;
+      ctx.save();
+      ctx.translate(px,py);
+      if(angDeg)ctx.rotate(ang);
+      ctx.drawImage(img,-sc/2,-sc/2,sc,sc);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
 function recolorSVG(svgText, color){
   const doc = new DOMParser().parseFromString(svgText,'image/svg+xml');
   const svg = doc.documentElement;
@@ -435,6 +553,15 @@ const BUILTIN_PRESETS = {
   'Halftone': {
     grid:84, bg:'#f5f1e6', gridType:'hex', invert:true, sMin:0, sMax:140,
     slots: mkSlots('circle', Array(7).fill('#171513')),
+  },
+  'CMYK Poster': {
+    renderMode:'cmyk', grid:80, bg:'#ffffff', sMax:112, sat:125, contrast:8,
+    slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
+  },
+  'Duotone Punch': {
+    renderMode:'cmyk', grid:64, bg:'#fdf6ee', sMax:118, sat:115, contrast:12,
+    cmykC:false, cmykY:false,
+    slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
   },
   'Flow Lines': {
     grid:64, bg:'#0b0d12', colorMode:'source', sat:170, bright:15, rotMode:'flow',
@@ -513,7 +640,18 @@ function buildCache(i){
   return Promise.all([rasterizeSVG(colored,RASTER), rasterizeSVG(masked,RASTER)])
     .then(([canvas,mask])=>{ cache[i] = canvas ? { key, canvas, mask } : null; });
 }
-function rebuildAll(){ return Promise.all(S.slots.map((_,i)=>buildCache(i))); }
+/* CMYK ink dots: chosen shape rasterised in the four process colours */
+const cmykInks = { key:null, c:null, m:null, y:null, k:null };
+function buildInkCache(){
+  const shape=SHAPES[S.cmykShape]||SHAPES.circle;
+  if (cmykInks.key===S.cmykShape) return Promise.resolve();
+  return Promise.all(Object.keys(INKS).map(ch=>
+    rasterizeSVG(recolorSVG(shape.svg, INKS[ch]), RASTER).then(c=>{ cmykInks[ch]=c; })
+  )).then(()=>{ cmykInks.key=S.cmykShape; });
+}
+function rebuildAll(){
+  return Promise.all([...S.slots.map((_,i)=>buildCache(i)), buildInkCache()]);
+}
 
 /* ---------- render ---------- */
 function srcSize(){
@@ -534,6 +672,20 @@ function renderTo(ctx, targetCanvas, maxDim){
   const [cx,cy,cw,ch]=cropRect();
   if(!cw||!ch) return false;
   const ar=cw/ch;
+  if (S.renderMode==='cmyk'){
+    const cols=S.grid;
+    const cell=Math.max(2,(ar>=1?maxDim:maxDim*ar)/cols);
+    const W=Math.round(cols*cell), H=Math.round(W/ar);
+    targetCanvas.width=W; targetCanvas.height=H;
+    const bw=Math.min(cols*2,480), bh=Math.max(1,Math.round(bw/ar));
+    sample.width=bw; sample.height=bh;
+    sctx.clearRect(0,0,bw,bh);
+    sctx.drawImage(media, cx,cy,cw,ch, 0,0,bw,bh);
+    const buf=sctx.getImageData(0,0,bw,bh);
+    adjustBuffer(buf.data,S);
+    drawCMYK(ctx,W,H,cell,S,buf.data,bw,bh,cmykInks,SCREEN_ANGLES);
+    return true;
+  }
   const {cols,rows,rowH}=gridFor(S,ar);
   const cell=Math.max(2,Math.floor((ar>=1?maxDim:maxDim*ar)/cols));
   targetCanvas.width=cols*cell;
@@ -548,21 +700,63 @@ function renderTo(ctx, targetCanvas, maxDim){
 }
 
 let comparing = false;   // hold mouse on canvas → show source
+let zoom = 1, panX = 0, panY = 0;
 function render(){
   if (media){
+    // higher zoom → render at higher resolution so dots stay crisp
+    const dim = zoom<=1 ? 960 : zoom<=2.5 ? 1600 : 2400;
     if (comparing){
       const [cx,cy,cw,ch]=cropRect();
       if (cw&&ch) octx.drawImage(media, cx,cy,cw,ch, 0,0,out.width,out.height);
     } else {
-      renderTo(octx, out, 960);
+      renderTo(octx, out, dim);
     }
   }
   requestAnimationFrame(render);
 }
-out.title='Houd ingedrukt om het origineel te zien';
-out.addEventListener('pointerdown', e=>{ comparing=true; e.preventDefault(); });
-window.addEventListener('pointerup', ()=>comparing=false);
-out.addEventListener('pointerleave', ()=>comparing=false);
+
+/* ---------- zoom / pan / compare gestures ---------- */
+const zoomBadge=document.getElementById('zoomBadge');
+function applyView(){
+  out.style.transform = zoom===1 ? '' : `translate(${panX}px,${panY}px) scale(${zoom})`;
+  zoomBadge.style.display = zoom>1 ? 'block' : 'none';
+  zoomBadge.textContent = Math.round(zoom*100)+'% · dubbelklik = reset';
+  out.style.cursor = zoom>1 ? 'grab' : 'zoom-in';
+}
+out.title='Scroll = zoom · sleep = pan · ingedrukt houden = origineel · dubbelklik = reset';
+document.getElementById('stage').addEventListener('wheel', e=>{
+  if(!media) return;
+  e.preventDefault();
+  const r=out.getBoundingClientRect();
+  const qx=e.clientX-(r.left+r.width/2), qy=e.clientY-(r.top+r.height/2);
+  const z2=Math.min(12,Math.max(1,zoom*Math.exp(-e.deltaY*0.0022)));
+  if (z2===1){ panX=0; panY=0; }
+  else { panX+=qx*(1-z2/zoom); panY+=qy*(1-z2/zoom); }
+  zoom=z2; applyView();
+},{passive:false});
+let pdown=null, gesture=null;   // gesture: 'pan' | 'compare'
+out.addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  out.setPointerCapture(e.pointerId);
+  pdown={x:e.clientX,y:e.clientY,px:panX,py:panY,
+    t:setTimeout(()=>{ if(gesture===null){ gesture='compare'; comparing=true; } },160)};
+});
+out.addEventListener('pointermove', e=>{
+  if(!pdown) return;
+  const dx=e.clientX-pdown.x, dy=e.clientY-pdown.y;
+  if (gesture===null && zoom>1 && Math.hypot(dx,dy)>5){
+    gesture='pan'; clearTimeout(pdown.t); out.style.cursor='grabbing';
+  }
+  if (gesture==='pan'){ panX=pdown.px+dx; panY=pdown.py+dy; applyView(); }
+});
+function endGesture(){
+  if (pdown) clearTimeout(pdown.t);
+  pdown=null; gesture=null; comparing=false;
+  applyView();
+}
+out.addEventListener('pointerup', endGesture);
+out.addEventListener('pointercancel', endGesture);
+out.addEventListener('dblclick', ()=>{ zoom=1; panX=panY=0; applyView(); });
 
 /* ---------- media loading ---------- */
 function loadFile(f){
@@ -606,6 +800,17 @@ bindSeg('mode','mode', ()=>{ document.getElementById('singleWrap').style.display
 bindSeg('gridType','gridType');
 bindSeg('rotMode','rotMode');
 bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none'; });
+bindSeg('renderMode','renderMode', ()=>{ document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none'; });
+
+/* CMYK controls */
+document.getElementById('cmykShape').innerHTML = Object.entries(SHAPES)
+  .map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+document.getElementById('cmykShape').addEventListener('change', async e=>{
+  S.cmykShape=e.target.value; await buildInkCache();
+});
+[['chC','cmykC'],['chM','cmykM'],['chY','cmykY'],['chK','cmykK']].forEach(([id,key])=>{
+  document.getElementById(id).addEventListener('change', e=>S[key]=e.target.checked);
+});
 
 const RANGES = [
   ['grid','grid',x=>x], ['sMin','sMin',x=>x+'%'], ['sMax','sMax',x=>x+'%'],
@@ -686,13 +891,19 @@ async function applyPreset(cfg){
   await rebuildAll();
 }
 function syncUI(){
-  [['aspect',S.aspect],['mode',S.mode],['gridType',S.gridType],['colorMode',S.colorMode],['rotMode',S.rotMode]]
+  [['aspect',S.aspect],['mode',S.mode],['gridType',S.gridType],['colorMode',S.colorMode],['rotMode',S.rotMode],['renderMode',S.renderMode]]
     .forEach(([id,val])=>{
       [...document.getElementById(id).children].forEach(b=>
         b.classList.toggle('on', b.dataset.v===val));
     });
   document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none';
   document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none';
+  document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none';
+  document.getElementById('cmykShape').value = S.cmykShape;
+  document.getElementById('chC').checked = S.cmykC;
+  document.getElementById('chM').checked = S.cmykM;
+  document.getElementById('chY').checked = S.cmykY;
+  document.getElementById('chK').checked = S.cmykK;
   RANGES.forEach(([id,key,fmt])=>{
     document.getElementById(id).value = S[key];
     const v=document.getElementById(id+'V');
@@ -796,6 +1007,20 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
   }
   const shapes=Math.random()<0.5 ? pick(keys)
     : Array.from({length:7},()=>pick(keys));
+  if (Math.random()<0.18){ // sometimes: a CMYK print roll
+    applyPreset({
+      renderMode:'cmyk', grid:Math.round(rnd(48,110)),
+      bg: Math.random()<0.8 ? '#ffffff' : bg,
+      sMax:Math.round(rnd(95,130)), sat:Math.round(rnd(100,160)),
+      contrast:Math.round(rnd(0,20)), rot:Math.random()<0.3?Math.round(rnd(0,30)):0,
+      cmykShape: Math.random()<0.6 ? 'circle' : pick(keys),
+      cmykC:Math.random()<0.85, cmykM:Math.random()<0.85,
+      cmykY:Math.random()<0.7, cmykK:true,
+      slots:mkSlots(shapes,colors),
+    });
+    presetSel.value='';
+    return;
+  }
   applyPreset({
     grid:Math.round(rnd(36,130)), bg,
     invert: mono ? light : false,                // ink on paper reads dark-is-big
@@ -841,7 +1066,53 @@ function parseShapeForSVG(svgText){
   });
   return { viewBox: svg.getAttribute('viewBox')||'0 0 100 100', inner: svg.innerHTML };
 }
+function buildArtSVGCMYK(){
+  const [cx,cy,cw,ch]=cropRect();
+  if(!cw||!ch) return null;
+  const ar=cw/ch;
+  const U=100; // svg units per screen cell
+  const cols=S.grid;
+  const W=cols*U, H=Math.round(W/ar);
+  const bw=Math.min(cols*2,480), bh=Math.max(1,Math.round(bw/ar));
+  sample.width=bw; sample.height=bh;
+  sctx.clearRect(0,0,bw,bh);
+  sctx.drawImage(media, cx,cy,cw,ch, 0,0,bw,bh);
+  const buf=sctx.getImageData(0,0,bw,bh);
+  adjustBuffer(buf.data,S);
+  const r1=n=>Math.round(n*10)/10;
+  const p=parseShapeForSVG((SHAPES[S.cmykShape]||SHAPES.circle).svg);
+  const maxS=(S.sMax===undefined?100:S.sMax)/100;
+  const chans=['y','c','m','k'].filter(ch=>S['cmyk'+ch.toUpperCase()]!==false);
+  const diag=Math.sqrt(W*W+H*H), n=Math.ceil(diag/U/2)+1;
+  let body='';
+  for(const ch of chans){
+    const angDeg=SCREEN_ANGLES[ch]+(S.rot||0), ang=angDeg*Math.PI/180;
+    const cos=Math.cos(ang), sin=Math.sin(ang);
+    let g=`<g fill="${INKS[ch]}" style="mix-blend-mode:multiply">\n`;
+    for(let v=-n;v<=n;v++)for(let u=-n;u<=n;u++){
+      const px=W/2+(u*cos-v*sin)*U;
+      const py=H/2+(u*sin+v*cos)*U;
+      if(px<-U||px>W+U||py<-U||py>H+U)continue;
+      const bx=Math.max(0,Math.min(bw-1,(px/W*bw)|0));
+      const by=Math.max(0,Math.min(bh-1,(py/H*bh)|0));
+      const q=(by*bw+bx)*4;
+      if(buf.data[q+3]<8)continue;
+      const cmyk=rgb2cmyk(buf.data[q],buf.data[q+1],buf.data[q+2]);
+      const val=ch==='c'?cmyk[0]:ch==='m'?cmyk[1]:ch==='y'?cmyk[2]:cmyk[3];
+      const sc=Math.sqrt(val)*U*maxS;
+      if(sc<=0.4)continue;
+      const tf=`translate(${r1(px)} ${r1(py)})`+(angDeg?` rotate(${r1(angDeg)})`:'');
+      g+=`<use href="#dot" x="${r1(-sc/2)}" y="${r1(-sc/2)}" width="${r1(sc)}" height="${r1(sc)}" transform="${tf}"/>\n`;
+    }
+    body+=g+'</g>\n';
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">\n<defs>\n`
+    + `<symbol id="dot" viewBox="${p.viewBox}" preserveAspectRatio="none">${p.inner}</symbol>\n</defs>\n`
+    + (S.bgT?'':`<rect width="${W}" height="${H}" fill="${S.bg}"/>\n`)
+    + body + '</svg>';
+}
 function buildArtSVG(){
+  if (S.renderMode==='cmyk') return buildArtSVGCMYK();
   const [cx,cy,cw,ch]=cropRect();
   if(!cw||!ch) return null;
   const ar=cw/ch;
@@ -908,6 +1179,7 @@ function currentCfg(){
     color:s.color,
     svg: s.shape==='custom' ? s.svg : (s.shape==='circle' ? null : SHAPES[s.shape].svg),
   }));
+  cfg.cmykShapeSvg=(SHAPES[S.cmykShape]||SHAPES.circle).svg;
   return cfg;
 }
 
@@ -957,11 +1229,16 @@ const DEFAULT_SVG=${JSON.stringify(DEFAULT_SVG)};
 const VIDEO=${JSON.stringify(videoUrl)};
 const RASTER=96;
 const BAYER=${JSON.stringify(BAYER)};
+const INKS=${JSON.stringify(INKS)};
+const SCREEN_ANGLES=${JSON.stringify(SCREEN_ANGLES)};
 ${hash2.toString()}
 ${toneLUT.toString()}
 ${gridFor.toString()}
 ${computeCells.toString()}
 ${drawCells.toString()}
+${rgb2cmyk.toString()}
+${adjustBuffer.toString()}
+${drawCMYK.toString()}
 ${recolorSVG.toString()}
 ${rasterizeSVG.toString()}
 const cv=document.getElementById('dcanvas'),cx=cv.getContext('2d');
@@ -976,6 +1253,12 @@ function build(i){
   return Promise.all([rasterizeSVG(col,RASTER),rasterizeSVG(msk,RASTER)])
     .then(([c,m])=>{cache[i]=c?{canvas:c,mask:m}:null;});
 }
+const inks={};
+function buildInks(){
+  const src=CFG.cmykShapeSvg||DEFAULT_SVG;
+  return Promise.all(Object.keys(INKS).map(ch=>
+    rasterizeSVG(recolorSVG(src,INKS[ch]),RASTER).then(c=>{inks[ch]=c;})));
+}
 const vid=document.createElement('video');
 vid.src=VIDEO;vid.loop=true;vid.muted=true;vid.playsInline=true;vid.autoplay=true;
 let ready=false;vid.addEventListener('loadeddata',()=>{ready=true;vid.play();});
@@ -989,6 +1272,19 @@ function frame(){requestAnimationFrame(frame);
  let X=0,Y=0,W=sw,H=sh;
  if(CFG.aspect==='square'){const m=Math.min(sw,sh);X=(sw-m)/2;Y=(sh-m)/2;W=H=m;}
  const r=cv.clientWidth/cv.clientHeight||W/H;
+ if(CFG.renderMode==='cmyk'){
+   const cols=CFG.grid;
+   const cell=Math.max(2,(r>=1?960:960*r)/cols);
+   const CW=Math.round(cols*cell),CH=Math.round(CW/r);
+   cv.width=CW;cv.height=CH;
+   const bw=Math.min(cols*2,480),bh=Math.max(1,Math.round(bw/r));
+   sm.width=bw;sm.height=bh;sc.clearRect(0,0,bw,bh);
+   sc.drawImage(vid,X,Y,W,H,0,0,bw,bh);
+   const buf=sc.getImageData(0,0,bw,bh);
+   adjustBuffer(buf.data,CFG);
+   drawCMYK(cx,CW,CH,cell,CFG,buf.data,bw,bh,inks,SCREEN_ANGLES);
+   return;
+ }
  const g=gridFor(CFG,r);
  const cell=Math.max(2,Math.floor((r>=1?960:960*r)/g.cols));
  cv.width=g.cols*cell;cv.height=Math.round(((g.rows-1)*g.rowH+1)*cell);
@@ -998,7 +1294,7 @@ function frame(){requestAnimationFrame(frame);
  const cells=computeCells(data,g.cols,g.rows,CFG,LUT,BAYER);
  drawCells(cx,cell,g.cols,g.rows,g.rowH,CFG,cache,cells,tmp,tctx,RASTER);
 }
-Promise.all(CFG.slots.map((_,i)=>build(i))).then(()=>requestAnimationFrame(frame));
+Promise.all([...CFG.slots.map((_,i)=>build(i)),buildInks()]).then(()=>requestAnimationFrame(frame));
 <\/script></body></html>`;
 }
 
