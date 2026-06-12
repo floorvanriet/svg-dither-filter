@@ -46,6 +46,15 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Transparent background** — for PNG/SVG export over your own backdrop.
 - **Drag & drop + paste (⌘V)** — and hold the mouse on the canvas to compare
   with the original.
+- **Unsplash search** — search photos in the Source panel and load one with a
+  click (CORS-clean, so all exports keep working). Shows attribution and fires
+  the download ping per Unsplash guidelines. Same query again = next page.
+  Put your Access Key in a local `unsplash-key.js` (gitignored):
+  `window.UNSPLASH_KEY = '…'` — or paste it in the one-time prompt.
+- **Hero export for images** — leave the URL empty and the current image is
+  embedded as a data-URL: a fully standalone HTML file, no hosting needed.
+  A URL ending in .mp4/.webm/.mov gives the video hero; any other URL is
+  treated as an image.
 - **Shuffle** — one button that rolls a random-but-tasteful combination of
   palette, shapes, grid, and dithering. Great for discovery.
 

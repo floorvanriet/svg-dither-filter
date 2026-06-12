@@ -50,6 +50,12 @@
   .svgrow .up { flex:none; width:26px; text-align:center; padding:4px 0; font-size:11px; }
   .svgrow .up.has { border-color:var(--acc); color:var(--acc); }
   .hint { color:var(--mut); font-size:10px; margin-top:6px; }
+  #unsGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:8px; }
+  #unsGrid:empty { display:none; }
+  #unsGrid img { width:100%; height:56px; object-fit:cover; border-radius:4px; cursor:pointer;
+                 border:1px solid var(--line); display:block; }
+  #unsGrid img:hover { border-color:var(--acc); }
+  #unsCredit a { color:var(--acc); text-decoration:none; }
   .btnrow { display:flex; gap:6px; margin-top:8px; }
   .btnrow button { flex:1; font-size:11px; padding:6px 4px; }
   .btnrow select { font-size:11px; }
@@ -90,6 +96,13 @@
     </div>
     <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
       Houd de muis ingedrukt op het canvas om het origineel te zien.</div>
+    <label>Unsplash</label>
+    <div class="row">
+      <input type="text" id="unsQ" placeholder="zoek foto's…" style="flex:1;min-width:0;background:#202026;color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
+      <button id="unsBtn" style="flex:none">Zoek</button>
+    </div>
+    <div id="unsGrid"></div>
+    <div id="unsCredit" class="hint"></div>
   </div>
 
   <div class="grp">
@@ -238,16 +251,19 @@
 
   <div class="grp">
     <h2>Hero export</h2>
-    <label>Hero video URL (for HTML export)</label>
-    <input type="text" id="vidUrl" placeholder="video.mp4 or https://..." style="width:100%;background:#202026;color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
+    <label>Media URL — video óf afbeelding (leeg = huidige afbeelding embedden)</label>
+    <input type="text" id="vidUrl" placeholder="https://…/video.mp4 of foto.jpg — of laat leeg" style="width:100%;background:#202026;color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
     <button id="exportHtmlBtn" style="width:100%;margin-top:8px">Download HTML hero</button>
     <button id="exportBtn" style="width:100%;margin-top:6px">Copy config for React hero</button>
-    <div class="hint">HTML = drop-in standalone page. JSON = paste back to Claude for a &lt;DitherHero&gt; React component.</div>
+    <div class="hint">Zonder URL wordt je huidige afbeelding in het bestand ge-embed —
+      direct te openen, geen hosting nodig. Met URL blijft het bestand klein.
+      HTML = drop-in standalone page. JSON = paste back to Claude voor een &lt;DitherHero&gt; React component.</div>
   </div>
 </div>
 
 <div id="stage"><canvas id="out"></canvas><div id="zoomBadge"></div></div>
 
+<script src="unsplash-key.js"></script>
 <script>
 const RASTER = 96;            // px each shape is rasterised at
 const DEFAULT_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg>';
@@ -794,6 +810,68 @@ document.addEventListener('paste', e=>{
   if (it) loadFile(it.getAsFile());
 });
 
+/* ---------- Unsplash search ---------- */
+// key komt uit unsplash-key.js (gitignored) of localStorage; anders eenmalige prompt
+const UNS_LS = 'unsplashKey';
+let unsPage = 1, unsLastQ = '';
+function unsKey(){
+  let k = localStorage.getItem(UNS_LS) || window.UNSPLASH_KEY;
+  if (!k){
+    k = prompt('Unsplash Access Key (wordt lokaal opgeslagen):');
+    if (k){ k=k.trim(); localStorage.setItem(UNS_LS, k); }
+  }
+  return k;
+}
+async function unsSearch(){
+  const q = document.getElementById('unsQ').value.trim();
+  if (!q) return;
+  unsPage = q===unsLastQ ? unsPage+1 : 1;   // zelfde zoekterm nogmaals = volgende pagina
+  unsLastQ = q;
+  const key = unsKey(); if (!key) return;
+  const grid = document.getElementById('unsGrid');
+  grid.innerHTML = '<span class="hint">Zoeken…</span>';
+  try {
+    const res = await fetch('https://api.unsplash.com/search/photos?query='
+      +encodeURIComponent(q)+'&page='+unsPage+'&per_page=12&client_id='+key);
+    if (res.status===401 || res.status===403){
+      localStorage.removeItem(UNS_LS);
+      const k = prompt('Unsplash key ongeldig of limiet bereikt. Andere Access Key:');
+      if (k){ localStorage.setItem(UNS_LS, k.trim()); unsLastQ=''; return unsSearch(); }
+      grid.innerHTML=''; return;
+    }
+    const data = await res.json();
+    if (!data.results || !data.results.length){
+      grid.innerHTML = '<span class="hint">Geen resultaten.</span>'; return;
+    }
+    grid.innerHTML = '';
+    data.results.forEach(ph=>{
+      const im = document.createElement('img');
+      im.src = ph.urls.thumb;
+      im.title = (ph.alt_description||'') + ' — ' + ph.user.name;
+      im.addEventListener('click', ()=>unsLoad(ph));
+      grid.appendChild(im);
+    });
+  } catch(err){
+    grid.innerHTML = '<span class="hint">Fout bij zoeken: '+err.message+'</span>';
+  }
+}
+function unsLoad(ph){
+  const img = new Image();
+  img.crossOrigin = 'anonymous';   // CORS-clean → canvas blijft exporteerbaar
+  img.onload = ()=>{
+    media = img; isVideo = false;
+    document.getElementById('unsCredit').innerHTML =
+      'Foto: <a href="'+ph.user.links.html+'?utm_source=svg_dither_filter&utm_medium=referral" target="_blank">'
+      +ph.user.name+'</a> · <a href="https://unsplash.com/?utm_source=svg_dither_filter&utm_medium=referral" target="_blank">Unsplash</a>';
+  };
+  img.src = ph.urls.raw + '&w=1600&q=85&fm=jpg&fit=max';
+  // download-tracking ping (verplicht volgens Unsplash API-richtlijnen)
+  const dl = ph.links.download_location;
+  fetch(dl + (dl.includes('?')?'&':'?') + 'client_id='+unsKey()).catch(()=>{});
+}
+document.getElementById('unsBtn').addEventListener('click', unsSearch);
+document.getElementById('unsQ').addEventListener('keydown', e=>{ if (e.key==='Enter') unsSearch(); });
+
 /* ---------- controls ---------- */
 function bindSeg(id, key, after){
   document.getElementById(id).addEventListener('click', e=>{
@@ -1284,15 +1362,36 @@ document.getElementById('exportBtn').addEventListener('click', e=>{
 
 document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
   const cfg = currentCfg();
-  const vid = document.getElementById('vidUrl').value.trim() || 'video.mp4';
-  const html = heroHTML(cfg, vid);
+  const url = document.getElementById('vidUrl').value.trim();
+  let spec;
+  if (url){
+    const isVid = /\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(url);
+    spec = { kind: isVid?'video':'image', src:url };
+  } else if (media && !isVideo){
+    // geen URL → embed de huidige afbeelding als data-URL: werkt overal standalone
+    try {
+      const w=media.naturalWidth, h=media.naturalHeight;
+      const k=Math.min(1, 1600/Math.max(w,h));
+      const c=document.createElement('canvas');
+      c.width=Math.round(w*k); c.height=Math.round(h*k);
+      c.getContext('2d').drawImage(media,0,0,c.width,c.height);
+      spec = { kind:'image', src:c.toDataURL('image/jpeg',0.85) };
+    } catch(e){
+      alert('Kan de afbeelding niet embedden (CORS). Vul een media-URL in.'); return;
+    }
+  } else if (media && isVideo){
+    alert('Je bron is een lokale video — vul de gehoste video-URL in voor de hero.'); return;
+  } else {
+    alert('Upload eerst een afbeelding, of vul een media-URL in.'); return;
+  }
+  const html = heroHTML(cfg, spec);
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([html],{type:'text/html'}));
   a.download = 'dither-hero.html'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 });
 
-function heroHTML(cfg, videoUrl){
+function heroHTML(cfg, mediaSpec){
   // the render core functions are embedded verbatim so hero output
   // always matches what the tool shows
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
@@ -1317,7 +1416,7 @@ function heroHTML(cfg, videoUrl){
 <script>
 const CFG=${JSON.stringify(cfg)};
 const DEFAULT_SVG=${JSON.stringify(DEFAULT_SVG)};
-const VIDEO=${JSON.stringify(videoUrl)};
+const MEDIA=${JSON.stringify(mediaSpec)};
 const RASTER=96;
 const BAYER=${JSON.stringify(BAYER)};
 const INKS=${JSON.stringify(INKS)};
@@ -1350,16 +1449,9 @@ function buildInks(){
   return Promise.all(Object.keys(INKS).map(ch=>
     rasterizeSVG(recolorSVG(src,INKS[ch]),RASTER).then(c=>{inks[ch]=c;})));
 }
-const vid=document.createElement('video');
-vid.src=VIDEO;vid.loop=true;vid.muted=true;vid.playsInline=true;vid.autoplay=true;
-let ready=false;vid.addEventListener('loadeddata',()=>{ready=true;vid.play();});
-let visible=true;
-new IntersectionObserver(es=>{visible=es[0].isIntersecting;
- if(visible)vid.play();else vid.pause();},{threshold:0}).observe(document.getElementById('hero'));
 const LUT=toneLUT(CFG);
-function frame(){requestAnimationFrame(frame);
- if(!ready||!visible)return;
- const sw=vid.videoWidth,sh=vid.videoHeight;if(!sw||!sh)return;
+function draw(src,sw,sh){
+ if(!sw||!sh)return;
  let X=0,Y=0,W=sw,H=sh;
  if(CFG.aspect==='square'){const m=Math.min(sw,sh);X=(sw-m)/2;Y=(sh-m)/2;W=H=m;}
  const r=cv.clientWidth/cv.clientHeight||W/H;
@@ -1370,7 +1462,7 @@ function frame(){requestAnimationFrame(frame);
    cv.width=CW;cv.height=CH;
    const bw=Math.min(cols*2,480),bh=Math.max(1,Math.round(bw/r));
    sm.width=bw;sm.height=bh;sc.clearRect(0,0,bw,bh);
-   sc.drawImage(vid,X,Y,W,H,0,0,bw,bh);
+   sc.drawImage(src,X,Y,W,H,0,0,bw,bh);
    const buf=sc.getImageData(0,0,bw,bh);
    adjustBuffer(buf.data,CFG);
    drawCMYK(cx,CW,CH,cell,CFG,buf.data,bw,bh,inks,SCREEN_ANGLES);
@@ -1380,12 +1472,34 @@ function frame(){requestAnimationFrame(frame);
  const cell=Math.max(2,Math.floor((r>=1?960:960*r)/g.cols));
  cv.width=g.cols*cell;cv.height=Math.round(((g.rows-1)*g.rowH+1)*cell);
  sm.width=g.cols;sm.height=g.rows;sc.clearRect(0,0,g.cols,g.rows);
- sc.drawImage(vid,X,Y,W,H,0,0,g.cols,g.rows);
+ sc.drawImage(src,X,Y,W,H,0,0,g.cols,g.rows);
  const data=sc.getImageData(0,0,g.cols,g.rows).data;
  const cells=computeCells(data,g.cols,g.rows,CFG,LUT,BAYER);
  drawCells(cx,cell,g.cols,g.rows,g.rowH,CFG,cache,cells,tmp,tctx,RASTER);
 }
-Promise.all([...CFG.slots.map((_,i)=>build(i)),buildInks()]).then(()=>requestAnimationFrame(frame));
+let ready=false,built=false;
+const buildAll=Promise.all([...CFG.slots.map((_,i)=>build(i)),buildInks()]);
+if(MEDIA.kind==='image'){
+ const im=new Image();
+ if(MEDIA.src.indexOf('data:')!==0)im.crossOrigin='anonymous';
+ const redraw=()=>{ if(built&&ready)draw(im,im.naturalWidth,im.naturalHeight); };
+ im.onload=()=>{ready=true;redraw();};
+ im.onerror=()=>{document.querySelector('.content p').textContent='Kon afbeelding niet laden: '+MEDIA.src;};
+ im.src=MEDIA.src;
+ let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,120);});
+ buildAll.then(()=>{built=true;redraw();});
+}else{
+ const vid=document.createElement('video');
+ vid.src=MEDIA.src;vid.loop=true;vid.muted=true;vid.playsInline=true;vid.autoplay=true;
+ vid.addEventListener('loadeddata',()=>{ready=true;vid.play();});
+ let visible=true;
+ new IntersectionObserver(es=>{visible=es[0].isIntersecting;
+  if(visible)vid.play();else vid.pause();},{threshold:0}).observe(document.getElementById('hero'));
+ function frame(){requestAnimationFrame(frame);
+  if(!ready||!visible||!built)return;
+  draw(vid,vid.videoWidth,vid.videoHeight);}
+ buildAll.then(()=>{built=true;requestAnimationFrame(frame);});
+}
 <\/script></body></html>`;
 }
 
