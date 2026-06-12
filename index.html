@@ -71,7 +71,11 @@
 
   <div class="grp">
     <h2>Presets</h2>
-    <select id="presetSel"><option value="">— kies een preset —</option></select>
+    <div class="row">
+      <button id="presetPrev" title="Vorige preset" style="flex:none;padding:6px 10px">◀</button>
+      <select id="presetSel" style="flex:1;min-width:0"><option value="">— kies een preset —</option></select>
+      <button id="presetNext" title="Volgende preset" style="flex:none;padding:6px 10px">▶</button>
+    </div>
     <div class="btnrow">
       <button id="savePresetBtn">Opslaan…</button>
       <button id="delPresetBtn">Verwijder</button>
@@ -224,7 +228,11 @@
 
   <div class="grp">
     <h2>Shapes — shadow → highlight</h2>
-    <select id="slotPresetSel" style="width:100%;margin-bottom:6px"><option value="">— shape &amp; kleur preset —</option></select>
+    <div class="row" style="margin-bottom:6px">
+      <button id="slotPrev" title="Vorige set" style="flex:none;padding:6px 10px">◀</button>
+      <select id="slotPresetSel" style="flex:1;min-width:0"><option value="">— shape &amp; kleur preset —</option></select>
+      <button id="slotNext" title="Volgende set" style="flex:none;padding:6px 10px">▶</button>
+    </div>
     <div class="btnrow" style="margin-top:0;margin-bottom:10px">
       <button id="slotShapesBtn" title="Neem alleen de shapes over">Alleen shapes</button>
       <button id="slotColorsBtn" title="Neem alleen de kleuren over">Alleen kleuren</button>
@@ -644,6 +652,126 @@ const BUILTIN_PRESETS = {
     slots: mkSlots(['circle','vline','hline','hline','xmark','cross','square'],
       ramp('#8a8378','#14110c')),
   },
+
+  /* — print & druk (2.3) — */
+  // Ben-Day dots zijn uniform van grootte; toon komt uit het Bayer-patroon
+  'Ben-Day Pop': {
+    grid:64, bg:'#f6eddc', invert:true, dither:'bayer4', contrast:15,
+    sMin:88, sMax:88,
+    slots: mkSlots('circle', Array(7).fill('#d8262c')),
+  },
+  'Sunday Comics': {
+    renderMode:'cmyk', grid:44, bg:'#f3e8cf', sMax:105, sat:135, contrast:10,
+    slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
+  },
+  'Sepia Krant': {
+    grid:92, bg:'#efe3cd', gridType:'hex', invert:true, gamma:90, sMin:0, sMax:128,
+    slots: mkSlots('circle', Array(7).fill('#4a3526')),
+  },
+  'Manga Screentone': {
+    grid:130, bg:'#ffffff', invert:true, dither:'bayer8', contrast:25, sMin:0, sMax:105,
+    slots: mkSlots('circle', Array(7).fill('#111111')),
+  },
+  'Stippelgravure': {
+    grid:140, bg:'#f8f4ea', invert:true, dither:'blue', gamma:85, sMin:8, sMax:95, sJit:25,
+    slots: mkSlots('circle', Array(7).fill('#1b1812')),
+  },
+
+  /* — kunst (2.3) — */
+  'Kusama Rood': {
+    grid:44, bg:'#d8232a', sMin:12, sMax:115, sJit:18,
+    slots: mkSlots('circle', ramp('#7e0f14','#ffffff')),
+  },
+  'Hirst Spots': {
+    grid:22, bg:'#fafafa', gap:42, sMin:85, sMax:85,
+    slots: mkSlots('circle', ['#e63946','#f4a261','#2a9d8f','#264653','#e9c46a','#9b5de5','#00b4d8']),
+  },
+  // primairen in de middentonen zodat het onderwerp kleur krijgt; schaduw zwart, licht wit
+  'Mondriaan': {
+    grid:36, bg:'#f4f1ea', gap:12, contrast:10, sMin:94, sMax:94,
+    slots: mkSlots('square', ['#16161d','#16161d','#1c3f94','#c8102e','#f7d038','#f4f1ea','#ffffff']),
+  },
+  'Byzantijns Goud': {
+    grid:72, bg:'#1f1812', gridType:'brick', gap:9, sMin:93, sMax:93,
+    slots: mkSlots('square', ['#2b1d12','#5b3a1e','#8a5a2a','#b8860b','#d4af37','#e8c96a','#f5e7b8']),
+  },
+  'Delfts Blauw': {
+    grid:96, bg:'#f4f6f3', gridType:'hex', invert:true, gamma:95, sMin:0, sMax:126,
+    slots: mkSlots('circle', ramp('#7da7d9','#16356b')),
+  },
+  'Cyanotype': {
+    grid:90, bg:'#123a63', gamma:105, sMin:6, sMax:112,
+    slots: mkSlots('circle', ramp('#1d4f7c','#eaf2fa')),
+  },
+  'Art Deco Goud': {
+    grid:64, bg:'#10131c', gap:8, sMin:10, sMax:105,
+    slots: mkSlots('diamond', ramp('#5c4716','#f3d27a')),
+  },
+
+  /* — retro tech (2.3) — */
+  'C64': {
+    grid:84, bg:'#1a1233', sMin:100, sMax:100,
+    slots: mkSlots('square', ['#000000','#403190','#8b3f96','#7869c4','#b86962','#94e089','#bfce72']),
+  },
+  'CGA': {
+    grid:96, bg:'#000000', sMin:100, sMax:100,
+    slots: mkSlots('square', ['#000000','#0000aa','#aa00aa','#55ffff','#ff55ff','#ffffff','#ffffff']),
+  },
+  'ZX Spectrum': {
+    grid:90, bg:'#000000', contrast:20, sMin:100, sMax:100,
+    slots: mkSlots('square', ['#000000','#0000d7','#d70000','#d700d7','#00d700','#00d7d7','#ffffff']),
+  },
+  'LED Matrix': {
+    grid:72, bg:'#0a0604', gap:22, sMin:55, sMax:95,
+    slots: mkSlots('circle', ramp('#3a0800','#ff4422')),
+  },
+  'Flip-Disc': {
+    grid:56, bg:'#101010', gap:10, sMin:92, sMax:92,
+    slots: mkSlots('circle', ramp('#1c1c1c','#d9d9d9')),
+  },
+  'CRT Lines': {
+    grid:120, bg:'#020403', colorMode:'source', sat:185, sMin:78, sMax:108,
+    slots: mkSlots('vline', ramp('#444444','#cccccc')),
+  },
+  'Lite-Brite': {
+    grid:52, bg:'#0b0a08', colorMode:'source', sat:200, bright:8, gamma:115, gap:26, sMin:60, sMax:100,
+    slots: mkSlots('circle', ramp('#333333','#ffffff')),
+  },
+
+  /* — sfeer & materiaal (2.3) — */
+  'LEGO': {
+    grid:52, bg:'#181818', colorMode:'source', sat:140, gap:7, sMin:95, sMax:95,
+    slots: mkSlots('rounded', ramp('#333333','#cccccc')),
+  },
+  'Borduurwerk': {
+    grid:84, bg:'#e8dcc4', colorMode:'source', sat:120, rotJit:7, sMin:88, sMax:88,
+    slots: mkSlots('xmark', ramp('#444444','#aaaaaa')),
+  },
+  'Vaporwave': {
+    grid:68, bg:'#16082f', dither:'bayer8', rndRot:true, sMin:18, sMax:108,
+    slots: mkSlots(['diamond','diamond','circle','circle','diamond','circle','star'],
+      ['#2d1b69','#6320ee','#b84ce0','#ff6ec7','#ff9de2','#7af5ff','#fffbe0']),
+  },
+  'Confetti': {
+    grid:36, bg:'#faf5ec', gap:12, sJit:55, rotJit:70, sMin:55, sMax:100,
+    slots: mkSlots(['circle','triangle','square','star','diamond','hline','heart'],
+      ['#e63946','#457b9d','#f4a261','#2a9d8f','#9b5de5','#ffb703','#06d6a0']),
+  },
+  'Bokeh': {
+    grid:34, bg:'#04060c', colorMode:'source', sat:160, dither:'blue', sJit:55, sMin:35, sMax:135,
+    slots: mkSlots('circle', ramp('#222222','#eeeeee')),
+  },
+};
+const PRESET_CATEGORIES = {
+  'Basis': ['V1 — Origineel'],
+  'Print & druk': ['Halftone','Newsprint','Riso Print','CMYK Poster','Duotone Punch',
+    'Ben-Day Pop','Sunday Comics','Sepia Krant','Manga Screentone','Stippelgravure',
+    'Ink Hatch','Blueprint'],
+  'Kunst': ['Pointillism','Flow Lines','Kusama Rood','Hirst Spots','Mondriaan',
+    'Byzantijns Goud','Delfts Blauw','Cyanotype','Art Deco Goud','Mosaic'],
+  'Retro tech': ['Terminal','Retro Game','C64','CGA','ZX Spectrum','LED Matrix',
+    'Flip-Disc','CRT Lines','Lite-Brite'],
+  'Sfeer': ['Pop Art','Cyber','Candy','Vaporwave','Confetti','Bokeh','LEGO','Borduurwerk'],
 };
 
 const LS_KEY = 'ditherPresets2';
@@ -659,6 +787,15 @@ const tctx = tmp.getContext('2d');
 
 let media = null;       // HTMLImageElement | HTMLVideoElement
 let isVideo = false;
+let mediaName = 'artwork';   // bronnaam voor export-bestandsnamen
+function slugify(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48);
+}
+function artFileName(){
+  const preset = presetSel.value ? presetSel.value.slice(2) : 'eigen-stijl';
+  return (slugify(mediaName)||'artwork')+'-'+(slugify(preset)||'eigen-stijl');
+}
 
 /* ---------- shape cache (coloured canvas + white mask) ---------- */
 function buildCache(i){
@@ -800,6 +937,7 @@ out.addEventListener('dblclick', ()=>{ zoom=1; panX=panY=0; applyView(); });
 /* ---------- media loading ---------- */
 function loadFile(f){
   if(!f) return;
+  mediaName = slugify((f.name||'').replace(/\.[^.]+$/,'')) || 'plak-afbeelding';
   const url = URL.createObjectURL(f);
   if (f.type.startsWith('video')){
     const v=document.createElement('video');
@@ -875,6 +1013,7 @@ function unsLoad(ph){
   img.crossOrigin = 'anonymous';   // CORS-clean → canvas blijft exporteerbaar
   img.onload = ()=>{
     media = img; isVideo = false;
+    mediaName = slugify(ph.alt_description || ph.user.name) || 'unsplash';
     document.getElementById('unsCredit').innerHTML =
       'Foto: <a href="'+ph.user.links.html+'?utm_source=svg_dither_filter&utm_medium=referral" target="_blank">'
       +ph.user.name+'</a> · <a href="https://unsplash.com/?utm_source=svg_dither_filter&utm_medium=referral" target="_blank">Unsplash</a>';
@@ -1022,15 +1161,19 @@ function syncUI(){
 const presetSel = document.getElementById('presetSel');
 function refreshPresetList(keep){
   const custom = customPresets();
-  presetSel.innerHTML = '<option value="">— kies een preset —</option>'
-    + '<optgroup label="Ingebouwd">'
-    + Object.keys(BUILTIN_PRESETS).map(n=>`<option value="b:${n}">${n}</option>`).join('')
-    + '</optgroup>'
-    + (Object.keys(custom).length
-      ? '<optgroup label="Eigen presets">'
-        + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('')
-        + '</optgroup>'
-      : '');
+  const inCat = new Set(Object.values(PRESET_CATEGORIES).flat());
+  const rest = Object.keys(BUILTIN_PRESETS).filter(n=>!inCat.has(n));
+  let html = '<option value="">— kies een preset —</option>';
+  for (const [cat,names] of Object.entries(PRESET_CATEGORIES)){
+    const have = names.filter(n=>BUILTIN_PRESETS[n]);
+    if (have.length) html += `<optgroup label="${cat}">`
+      + have.map(n=>`<option value="b:${n}">${n}</option>`).join('') + '</optgroup>';
+  }
+  if (rest.length) html += '<optgroup label="Overig">'
+    + rest.map(n=>`<option value="b:${n}">${n}</option>`).join('') + '</optgroup>';
+  if (Object.keys(custom).length) html += '<optgroup label="Eigen presets">'
+    + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('') + '</optgroup>';
+  presetSel.innerHTML = html;
   presetSel.value = keep || '';
 }
 presetSel.addEventListener('change', ()=>{
@@ -1039,6 +1182,20 @@ presetSel.addEventListener('change', ()=>{
   const cfg = v[0]==='b' ? BUILTIN_PRESETS[name] : customPresets()[name];
   if (cfg) applyPreset(cfg);
 });
+
+/* ◀ ▶ — stap door alle presets heen, direct toegepast */
+function stepSelect(sel, dir, fire){
+  const opts=[...sel.querySelectorAll('option')].map(o=>o.value).filter(v=>v);
+  if (!opts.length) return;
+  let i = opts.indexOf(sel.value);
+  if (i===-1) i = dir>0 ? -1 : 0;
+  i = (i+dir+opts.length)%opts.length;
+  sel.value = opts[i];
+  fire();
+}
+const firePreset = ()=>presetSel.dispatchEvent(new Event('change'));
+document.getElementById('presetPrev').addEventListener('click', ()=>stepSelect(presetSel,-1,firePreset));
+document.getElementById('presetNext').addEventListener('click', ()=>stepSelect(presetSel, 1,firePreset));
 
 document.getElementById('savePresetBtn').addEventListener('click', ()=>{
   const name = prompt('Naam voor deze preset:'); if(!name) return;
@@ -1197,6 +1354,9 @@ async function applySlotSet(set, what){ // what: 'both' | 'shapes' | 'colors'
   await rebuildAll();
 }
 slotPresetSel.addEventListener('change', ()=>applySlotSet(selectedSlotSet(),'both'));
+const fireSlot = ()=>applySlotSet(selectedSlotSet(),'both');
+document.getElementById('slotPrev').addEventListener('click', ()=>stepSelect(slotPresetSel,-1,fireSlot));
+document.getElementById('slotNext').addEventListener('click', ()=>stepSelect(slotPresetSel, 1,fireSlot));
 document.getElementById('slotShapesBtn').addEventListener('click', ()=>{
   const s=selectedSlotSet();
   if(!s){ alert('Kies eerst een shape & kleur preset.'); return; }
@@ -1255,7 +1415,7 @@ document.getElementById('exportPngBtn').addEventListener('click', e=>{
     c.toBlob(blob=>{
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
-      a.download='dither-art'+(t.label?'-'+t.label:'')+'-'+c.width+'x'+c.height+'.png'; a.click();
+      a.download=artFileName()+(t.label?'-'+t.label:'')+'-'+c.width+'x'+c.height+'.png'; a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),1000);
       btn.textContent=old; btn.disabled=false;
     },'image/png');
@@ -1384,7 +1544,7 @@ document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
   }
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
-  a.download='dither-art'+(t.label?'-'+t.label.replace(/-\d+dpi/,''):'')+'.svg'; a.click();
+  a.download=artFileName()+(t.label?'-'+t.label.replace(/-\d+dpi/,''):'')+'.svg'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
 
@@ -1437,7 +1597,7 @@ document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
   const html = heroHTML(cfg, spec);
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([html],{type:'text/html'}));
-  a.download = 'dither-hero.html'; a.click();
+  a.download = artFileName()+'-hero.html'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 });
 

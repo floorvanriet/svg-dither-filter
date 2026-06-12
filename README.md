@@ -65,10 +65,19 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ### Presets (new in 2.0, expanded in 2.1)
 
-- **16 built-in looks** — V1 original, CMYK Poster, Duotone Punch,
-  Pointillism, Flow Lines, Mosaic, Halftone, Riso Print, Newsprint, Terminal,
-  Blueprint, Pop Art, Cyber, Retro Game, Candy, Ink Hatch. A preset bundles
-  every setting, colour, and shape — including uploaded SVGs.
+- **40 built-in looks in 5 categories** — *Print & druk* (Halftone, Newsprint,
+  Riso, CMYK Poster, Duotone, Ben-Day Pop, Sunday Comics, Sepia Krant, Manga
+  Screentone, Stippelgravure, Ink Hatch, Blueprint), *Kunst* (Pointillism,
+  Flow Lines, Kusama Rood, Hirst Spots, Mondriaan, Byzantijns Goud, Delfts
+  Blauw, Cyanotype, Art Deco Goud, Mosaic), *Retro tech* (Terminal, Retro
+  Game, C64, CGA, ZX Spectrum, LED Matrix, Flip-Disc, CRT Lines, Lite-Brite),
+  *Sfeer* (Pop Art, Cyber, Candy, Vaporwave, Confetti, Bokeh, LEGO,
+  Borduurwerk) and the V1 original. A preset bundles every setting, colour,
+  and shape — including uploaded SVGs.
+- **◀ ▶ navigation** — step through all presets (and shape/colour sets) with
+  prev/next buttons; each step applies instantly.
+- **Smart filenames** — exports are named after the source and preset, e.g.
+  `meisje-met-de-parel-delfts-blauw-A2-300dpi-4961x7016.png`.
 - **Save / load your own presets** — stored in `localStorage`, plus
   export/import as a JSON file to share or back up.
 - **Reset to original** — one click back to the exact v1 defaults.
