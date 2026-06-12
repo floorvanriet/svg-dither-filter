@@ -1,10 +1,11 @@
-# SVG Dither Filter
+# SVG Dither Filter 2.0
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
-shape-based dither using your own SVGs — then exports the result as a ready-to-use
-**hero background**.
+shape-based dither using built-in shapes or your own SVGs — then exports the
+result as a ready-to-use **hero background**.
 
 No build step, no install. Open `index.html` in a browser and go.
+The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ![status](https://img.shields.io/badge/build-none%20required-success)
 ![license](https://img.shields.io/badge/license-MIT-blue)
@@ -15,6 +16,15 @@ No build step, no install. Open `index.html` in a browser and go.
 
 ## Features
 
+- **Presets (new in 2.0)** — 9 built-in looks (Newsprint, Terminal, Blueprint,
+  Pop Art, Cyber, Retro Game, Candy, Ink Hatch, and the V1 original). A preset
+  bundles every setting, colour, and shape — including uploaded SVGs.
+- **Save / load your own presets (new in 2.0)** — stored in `localStorage`,
+  plus export/import as a JSON file to share or back up.
+- **Reset to original (new in 2.0)** — one click back to the exact v1 defaults.
+- **Built-in shape library (new in 2.0)** — 12 shapes (circle, square, rounded,
+  diamond, triangle, cross, X, star, ring, H/V line, heart) selectable per slot;
+  uploading your own SVG still works per slot.
 - **Image & video input** — drag in a still or a video; video is filtered live, frame by frame.
 - **Aspect ratio** — keep the original or center-crop to **1:1**.
 - **Grid resolution** — 4–160 cells across; rows derived from the aspect ratio.
@@ -41,12 +51,16 @@ open index.html        # macOS
 
 ## Using the tool
 
-1. **Source** — upload an image or video; pick **Original** or **1 : 1**.
-2. **Grid** — set resolution and background colour.
-3. **Tone mapping** — toggle invert; choose *Per-tone* or *Single* shape mode.
-4. **Shape scale** — set min/max size driven by midtone brightness.
-5. **Pixel rotation** — pick a 90° angle, optionally randomise per cell.
-6. **Shapes** — upload SVGs into slots 1 (shadow) → 7 (highlight) and recolour each.
+1. **Presets** — pick a built-in look as a starting point, save your own with
+   **Opslaan…**, or share one via **Export/Import JSON**. **Reset naar
+   origineel** restores the exact v1 defaults.
+2. **Source** — upload an image or video; pick **Original** or **1 : 1**.
+3. **Grid** — set resolution and background colour.
+4. **Tone mapping** — toggle invert; choose *Per-tone* or *Single* shape mode.
+5. **Shape scale** — set min/max size driven by midtone brightness.
+6. **Pixel rotation** — pick a 90° angle, optionally randomise per cell.
+7. **Shapes** — pick a built-in shape per slot 1 (shadow) → 7 (highlight), or
+   upload your own SVG with ⬆, and recolour each.
 
 ## Exporting a hero background
 
@@ -86,8 +100,9 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html   # the entire tool — UI, dither engine, and exporters
-├── assets/      # demo media (mp4 + gif preview)
+├── index.html      # the entire 2.0 tool — UI, presets, dither engine, exporters
+├── index-v1.html   # the original v1, untouched
+├── assets/         # demo media (mp4 + gif preview)
 ├── README.md
 └── LICENSE
 ```

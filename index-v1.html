@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.0</title>
+<title>SVG Dither Filter</title>
 <style>
   :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff; }
   * { box-sizing:border-box; }
@@ -14,9 +14,7 @@
   #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
            background:#000 repeating-conic-gradient(#111 0 25%,#181818 0 50%) 0/24px 24px; }
   canvas { max-width:100%; max-height:100%; box-shadow:0 0 0 1px var(--line); }
-  h1 { font-size:14px; margin:0 0 2px; letter-spacing:.04em; }
-  .ver { font-size:10px; color:var(--mut); margin:0 0 14px; }
-  .ver a { color:var(--acc); text-decoration:none; }
+  h1 { font-size:14px; margin:0 0 14px; letter-spacing:.04em; }
   .grp { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
   .grp h2 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--mut);
             margin:0 0 10px; }
@@ -38,38 +36,14 @@
   .seg button.on { background:var(--acc); border-color:var(--acc); color:#fff; }
   .val { color:var(--txt); font-variant-numeric:tabular-nums; min-width:38px; text-align:right; }
   .svgrow { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
-  .svgrow span { width:54px; font-size:10px; color:var(--mut); flex:none; }
-  .svgrow select { flex:1; min-width:0; font-size:11px; padding:4px 4px; }
-  .svgrow .up { flex:none; width:26px; text-align:center; padding:4px 0; font-size:11px; }
-  .svgrow .up.has { border-color:var(--acc); color:var(--acc); }
+  .svgrow span { width:62px; font-size:10px; color:var(--mut); }
+  .svgrow input[type=file]{ flex:1; }
   .hint { color:var(--mut); font-size:10px; margin-top:6px; }
-  .btnrow { display:flex; gap:6px; margin-top:8px; }
-  .btnrow button { flex:1; font-size:11px; padding:6px 4px; }
-  #presetSel { width:100%; }
-  #resetBtn { width:100%; margin-top:8px; border-color:#6b4a1f; }
-  #resetBtn:hover { border-color:#d99a3d; }
 </style>
 </head>
 <body>
 <div id="panel">
   <h1>SVG DITHER FILTER</h1>
-  <p class="ver">v2.0 · <a href="index-v1.html">open origineel (v1)</a></p>
-
-  <div class="grp">
-    <h2>Presets</h2>
-    <select id="presetSel"><option value="">— kies een preset —</option></select>
-    <div class="btnrow">
-      <button id="savePresetBtn">Opslaan…</button>
-      <button id="delPresetBtn">Verwijder</button>
-    </div>
-    <div class="btnrow">
-      <button id="exportPresetBtn">Export JSON</button>
-      <button id="importPresetBtn">Import JSON</button>
-    </div>
-    <input type="file" id="presetFile" accept=".json,application/json" style="display:none" />
-    <button id="resetBtn">↺ Reset naar origineel</button>
-    <div class="hint">Een preset bewaart alle settings, kleuren en shapes — ook geüploade SVGs.</div>
-  </div>
 
   <div class="grp">
     <h2>Source</h2>
@@ -128,7 +102,7 @@
   <div class="grp">
     <h2>Shapes — shadow → highlight</h2>
     <div id="svgList"></div>
-    <div class="hint">Kies per slot een ingebouwde shape, of upload een eigen SVG met ⬆ (blauw = eigen SVG actief). Slot 1 = donkerste, slot 7 = lichtste.</div>
+    <div class="hint">Upload up to 7 SVGs. Empty slots fall back to a circle. Slot 1 = darkest, slot 7 = brightest.</div>
   </div>
 
   <div class="grp">
@@ -148,105 +122,12 @@ const RASTER = 96;            // px each shape is rasterised at
 const DEFAULT_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg>';
 const TONE_LABELS = ['Shadow','Dark','Low-mid','Mid','High-mid','Light','Highlight'];
 
-/* ---------- built-in shape library ---------- */
-const NS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
-const SHAPES = {
-  circle:   { label:'● Circle',    svg: NS+'<circle cx="50" cy="50" r="46"/></svg>' },
-  square:   { label:'■ Square',    svg: NS+'<rect x="8" y="8" width="84" height="84"/></svg>' },
-  rounded:  { label:'▢ Rounded',   svg: NS+'<rect x="8" y="8" width="84" height="84" rx="22"/></svg>' },
-  diamond:  { label:'◆ Diamond',   svg: NS+'<polygon points="50,4 96,50 50,96 4,50"/></svg>' },
-  triangle: { label:'▲ Triangle',  svg: NS+'<polygon points="50,8 96,92 4,92"/></svg>' },
-  cross:    { label:'✚ Cross',     svg: NS+'<rect x="38" y="6" width="24" height="88"/><rect x="6" y="38" width="88" height="24"/></svg>' },
-  xmark:    { label:'✕ X',         svg: NS+'<g transform="rotate(45 50 50)"><rect x="40" y="-8" width="20" height="116"/><rect x="-8" y="40" width="116" height="20"/></g></svg>' },
-  star:     { label:'★ Star',      svg: NS+'<polygon points="50,4 61,37 96,37 68,58 78,92 50,72 22,92 32,58 4,37 39,37"/></svg>' },
-  ring:     { label:'◎ Ring',      svg: NS+'<path fill-rule="evenodd" d="M50 4a46 46 0 100 92 46 46 0 100-92zm0 24a22 22 0 110 44 22 22 0 110-44z"/></svg>' },
-  hline:    { label:'━ H line',    svg: NS+'<rect x="2" y="38" width="96" height="24"/></svg>' },
-  vline:    { label:'┃ V line',    svg: NS+'<rect x="38" y="2" width="24" height="96"/></svg>' },
-  heart:    { label:'♥ Heart',     svg: NS+'<path d="M50 90C22 66 5 48 5 30A23 23 0 0150 17 23 23 0 0195 30c0 18-17 36-45 60z"/></svg>' },
-};
-function svgFor(slot){
-  if (slot.shape === 'custom' && slot.svg) return slot.svg;
-  return (SHAPES[slot.shape] || SHAPES.circle).svg;
-}
-
-/* ---------- state ---------- */
 const S = {
   aspect:'orig', grid:64, bg:'#ffffff', invert:false, mode:'tone', single:0,
   sMin:10, sMax:100, rot:0, rndRot:false,
-  slots: Array.from({length:7}, (_,i)=>{
-    const g = Math.round(i/6*210);
-    return { shape:'circle', svg:null, color:'#'+g.toString(16).padStart(2,'0').repeat(3) };
-  }),
+  slots: Array.from({length:7}, (_,i)=>({ svg:null, color:'#000000' })),
 };
 const cache = new Array(7).fill(null);   // {key, canvas} rasterised+coloured shape
-
-/* ---------- built-in presets ---------- */
-function ramp(from,to){ // 7-step hex colour ramp
-  const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));
-  const a=h(from), b=h(to);
-  return Array.from({length:7},(_,i)=>'#'+a.map((v,c)=>
-    Math.round(v+(b[c]-v)*i/6).toString(16).padStart(2,'0')).join(''));
-}
-function mkSlots(shapes, colors){
-  return Array.from({length:7},(_,i)=>({
-    shape: Array.isArray(shapes)?shapes[i]:shapes, svg:null, color:colors[i] }));
-}
-const BUILTIN_PRESETS = {
-  'V1 — Origineel': {
-    grid:64, bg:'#ffffff', invert:false, mode:'tone', single:0,
-    sMin:10, sMax:100, rot:0, rndRot:false,
-    slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
-  },
-  'Newsprint': {
-    grid:96, bg:'#f2e9d8', invert:false, mode:'tone', single:0,
-    sMin:0, sMax:125, rot:0, rndRot:false,
-    slots: mkSlots('circle', Array(7).fill('#1d1a16')),
-  },
-  'Terminal': {
-    grid:80, bg:'#040804', invert:false, mode:'tone', single:0,
-    sMin:25, sMax:100, rot:0, rndRot:false,
-    slots: mkSlots('square', ramp('#0a2e0a','#39ff14')),
-  },
-  'Blueprint': {
-    grid:56, bg:'#0a3a8c', invert:false, mode:'tone', single:0,
-    sMin:15, sMax:95, rot:0, rndRot:false,
-    slots: mkSlots(['cross','cross','xmark','xmark','ring','circle','circle'],
-                   ramp('#3a6ec2','#ffffff')),
-  },
-  'Pop Art': {
-    grid:40, bg:'#ffe34d', invert:false, mode:'tone', single:0,
-    sMin:30, sMax:110, rot:0, rndRot:false,
-    slots: mkSlots('circle',
-      ['#1a1aff','#5b1e8f','#ff2d55','#ff5e3a','#ff8c00','#ff2d9b','#ffffff']),
-  },
-  'Cyber': {
-    grid:72, bg:'#0d0218', invert:false, mode:'tone', single:0,
-    sMin:15, sMax:105, rot:0, rndRot:true,
-    slots: mkSlots('diamond',
-      ['#2a0a4a','#5b1e8f','#8c2bd9','#c13ad9','#ff3df0','#5bd9ff','#9ffcff']),
-  },
-  'Retro Game': {
-    grid:96, bg:'#0f380f', invert:false, mode:'tone', single:0,
-    sMin:100, sMax:100, rot:0, rndRot:false,
-    slots: mkSlots('square', ramp('#0f380f','#9bbc0f')),
-  },
-  'Candy': {
-    grid:48, bg:'#fff0f5', invert:false, mode:'tone', single:0,
-    sMin:20, sMax:105, rot:0, rndRot:true,
-    slots: mkSlots(['heart','heart','star','star','heart','star','heart'],
-      ['#b83b6e','#e0529c','#f47ab8','#f9a8d4','#a78bfa','#7dd3fc','#fde68a']),
-  },
-  'Ink Hatch': {
-    grid:88, bg:'#faf7f0', invert:false, mode:'tone', single:0,
-    sMin:0, sMax:115, rot:0, rndRot:true,
-    slots: mkSlots(['square','cross','xmark','hline','hline','vline','circle'],
-      ramp('#14110c','#8a8378')),
-  },
-};
-
-const LS_KEY = 'ditherPresets2';
-function customPresets(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e){ return {}; } }
-function saveCustomPresets(p){ localStorage.setItem(LS_KEY, JSON.stringify(p)); }
 
 const out = document.getElementById('out');
 const octx = out.getContext('2d');
@@ -274,8 +155,8 @@ function recolorSVG(svgText, color){
 
 function buildCache(i){
   const slot = S.slots[i];
-  const src = svgFor(slot);
-  const key = slot.shape+'|'+slot.color+'|'+(slot.svg?slot.svg.length:0);
+  const src = slot.svg || DEFAULT_SVG;
+  const key = i+'|'+slot.color+'|'+(slot.svg?1:0);
   if (cache[i] && cache[i].key === key) return Promise.resolve();
   const colored = recolorSVG(src, slot.color);
   if (!colored){ cache[i]=null; return Promise.resolve(); }
@@ -404,169 +285,47 @@ document.getElementById('singleSel').addEventListener('change',e=>S.single=+e.ta
 
 /* ---------- 7 shape slots ---------- */
 const list=document.getElementById('svgList');
-const shapeOptions = Object.entries(SHAPES)
-  .map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')
-  + '<option value="custom">⬆ Eigen SVG</option>';
 S.slots.forEach((slot,i)=>{
   const row=document.createElement('div'); row.className='svgrow';
   row.innerHTML=`<span>${i+1} · ${TONE_LABELS[i]}</span>
-    <select data-i="${i}" class="shapeSel">${shapeOptions}</select>
-    <button class="up" data-i="${i}" title="Upload eigen SVG">⬆</button>
-    <input type="file" accept=".svg,image/svg+xml" data-i="${i}" style="display:none" />
-    <input type="color" value="${slot.color}" data-i="${i}" />`;
+    <input type="file" accept=".svg,image/svg+xml" data-i="${i}" />
+    <input type="color" value="#000000" data-i="${i}" />`;
   list.appendChild(row);
-});
-list.addEventListener('click', e=>{
-  const b=e.target.closest('button.up'); if(!b) return;
-  b.parentElement.querySelector('input[type=file]').click();
+  // stagger default colours shadow→highlight (dark→light grey) for instant feedback
+  const g = Math.round(i/6*210);
+  slot.color = '#'+g.toString(16).padStart(2,'0').repeat(3);
+  row.querySelector('input[type=color]').value = slot.color;
 });
 list.addEventListener('change', async e=>{
   const i=+e.target.dataset.i;
   if (e.target.type==='file'){
     const f=e.target.files[0]; if(!f) return;
     S.slots[i].svg = await f.text();
-    S.slots[i].shape = 'custom';
-    syncSlotRow(i);
-  } else if (e.target.classList.contains('shapeSel')){
-    S.slots[i].shape = e.target.value;
-    syncSlotRow(i);
   } else { S.slots[i].color = e.target.value; }
   await buildCache(i);
 });
-function syncSlotRow(i){
-  const row = list.children[i], slot = S.slots[i];
-  row.querySelector('.shapeSel').value = slot.shape;
-  row.querySelector('input[type=color]').value = slot.color;
-  row.querySelector('.up').classList.toggle('has', slot.shape==='custom' && !!slot.svg);
-}
-
-/* ---------- presets ---------- */
-function currentPresetCfg(){
-  return {
-    grid:S.grid, bg:S.bg, invert:S.invert, mode:S.mode, single:S.single,
-    sMin:S.sMin, sMax:S.sMax, rot:S.rot, rndRot:S.rndRot,
-    slots:S.slots.map(s=>({ shape:s.shape, svg:s.shape==='custom'?s.svg:null, color:s.color })),
-  };
-}
-async function applyPreset(cfg){
-  ['grid','bg','invert','mode','single','sMin','sMax','rot','rndRot'].forEach(k=>{
-    if (cfg[k] !== undefined) S[k] = cfg[k];
-  });
-  if (Array.isArray(cfg.slots)) cfg.slots.slice(0,7).forEach((sl,i)=>{
-    S.slots[i] = {
-      shape: sl.shape || (sl.svg ? 'custom' : 'circle'),
-      svg: sl.svg || null,
-      color: sl.color || '#000000',
-    };
-  });
-  syncUI();
-  await rebuildAll();
-}
-function syncUI(){
-  // segmented buttons
-  [['aspect',S.aspect],['mode',S.mode]].forEach(([id,val])=>{
-    [...document.getElementById(id).children].forEach(b=>
-      b.classList.toggle('on', b.dataset.v===val));
-  });
-  document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none';
-  // ranges + labels
-  [['grid',S.grid,x=>x],['sMin',S.sMin,x=>x+'%'],['sMax',S.sMax,x=>x+'%'],['rot',S.rot,x=>x+'°']]
-    .forEach(([id,val,fmt])=>{
-      document.getElementById(id).value = val;
-      document.getElementById(id+'V').textContent = fmt(val);
-    });
-  document.getElementById('bg').value = S.bg;
-  document.getElementById('invert').checked = S.invert;
-  document.getElementById('rndRot').checked = S.rndRot;
-  document.getElementById('singleSel').value = S.single;
-  S.slots.forEach((_,i)=>syncSlotRow(i));
-}
-
-const presetSel = document.getElementById('presetSel');
-function refreshPresetList(keep){
-  const custom = customPresets();
-  presetSel.innerHTML = '<option value="">— kies een preset —</option>'
-    + '<optgroup label="Ingebouwd">'
-    + Object.keys(BUILTIN_PRESETS).map(n=>`<option value="b:${n}">${n}</option>`).join('')
-    + '</optgroup>'
-    + (Object.keys(custom).length
-      ? '<optgroup label="Eigen presets">'
-        + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('')
-        + '</optgroup>'
-      : '');
-  presetSel.value = keep || '';
-}
-presetSel.addEventListener('change', ()=>{
-  const v = presetSel.value; if(!v) return;
-  const name = v.slice(2);
-  const cfg = v[0]==='b' ? BUILTIN_PRESETS[name] : customPresets()[name];
-  if (cfg) applyPreset(cfg);
-});
-
-document.getElementById('savePresetBtn').addEventListener('click', ()=>{
-  const name = prompt('Naam voor deze preset:'); if(!name) return;
-  const p = customPresets();
-  p[name.trim()] = currentPresetCfg();
-  saveCustomPresets(p);
-  refreshPresetList('c:'+name.trim());
-});
-document.getElementById('delPresetBtn').addEventListener('click', ()=>{
-  const v = presetSel.value;
-  if (!v || v[0]!=='c'){ alert('Selecteer eerst een eigen preset (ingebouwde kun je niet verwijderen).'); return; }
-  const name = v.slice(2);
-  if (!confirm(`Preset "${name}" verwijderen?`)) return;
-  const p = customPresets(); delete p[name]; saveCustomPresets(p);
-  refreshPresetList();
-});
-document.getElementById('exportPresetBtn').addEventListener('click', ()=>{
-  const v = presetSel.value;
-  const name = v ? v.slice(2) : 'dither-preset';
-  const cfg = currentPresetCfg();
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify({name, ...cfg},null,2)],{type:'application/json'}));
-  a.download = name.replace(/[^\w-]+/g,'-').toLowerCase()+'.json'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-});
-document.getElementById('importPresetBtn').addEventListener('click', ()=>
-  document.getElementById('presetFile').click());
-document.getElementById('presetFile').addEventListener('change', async e=>{
-  const f = e.target.files[0]; if(!f) return;
-  try {
-    const cfg = JSON.parse(await f.text());
-    const name = (cfg.name || f.name.replace(/\.json$/i,'')).trim();
-    const p = customPresets(); p[name] = cfg; saveCustomPresets(p);
-    refreshPresetList('c:'+name);
-    await applyPreset(cfg);
-  } catch(err){ alert('Kon preset niet lezen: '+err.message); }
-  e.target.value = '';
-});
-document.getElementById('resetBtn').addEventListener('click', ()=>{
-  applyPreset(BUILTIN_PRESETS['V1 — Origineel']);
-  refreshPresetList('b:V1 — Origineel');
-});
-refreshPresetList();
 
 /* ---------- export config ---------- */
-function currentCfg(){
-  return {
+document.getElementById('exportBtn').addEventListener('click', e=>{
+  const cfg = {
     aspect:S.aspect, grid:S.grid, bg:S.bg, invert:S.invert, mode:S.mode,
     single:S.single, sMin:S.sMin, sMax:S.sMax, rot:S.rot, rndRot:S.rndRot,
-    // resolve built-in shapes to inline SVG so the export stays self-contained;
-    // null keeps the hero's built-in circle fallback
-    slots:S.slots.map(s=>({
-      color:s.color,
-      svg: s.shape==='custom' ? s.svg : (s.shape==='circle' ? null : SHAPES[s.shape].svg),
-    })),
+    slots:S.slots.map(s=>({ color:s.color, svg:s.svg }))   // svg = null → built-in circle
   };
-}
-
-document.getElementById('exportBtn').addEventListener('click', e=>{
-  const json = JSON.stringify(currentCfg());
+  const json = JSON.stringify(cfg);
   navigator.clipboard.writeText(json).then(
     ()=>{ e.target.textContent='Copied ✓ — paste to Claude'; setTimeout(()=>e.target.textContent='Copy config for React hero',2000); },
     ()=>{ prompt('Copy this config:', json); }
   );
 });
+
+function currentCfg(){
+  return {
+    aspect:S.aspect, grid:S.grid, bg:S.bg, invert:S.invert, mode:S.mode,
+    single:S.single, sMin:S.sMin, sMax:S.sMax, rot:S.rot, rndRot:S.rndRot,
+    slots:S.slots.map(s=>({ color:s.color, svg:s.svg }))
+  };
+}
 
 document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
   const cfg = currentCfg();
@@ -652,7 +411,6 @@ Promise.all(CFG.slots.map((_,i)=>build(i))).then(()=>requestAnimationFrame(frame
 }
 
 /* ---------- go ---------- */
-syncUI();
 rebuildAll().then(()=>requestAnimationFrame(render));
 </script>
 </body>
