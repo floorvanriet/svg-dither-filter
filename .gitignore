@@ -13,3 +13,5 @@ dither-hero.html
 
 # ...except the committed demo media used by the README
 !assets/demo.gif
+test-images/
+.claude/

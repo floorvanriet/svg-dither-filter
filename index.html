@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.0</title>
+<title>SVG Dither Filter 2.1</title>
 <style>
   :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff; }
   * { box-sizing:border-box; }
@@ -12,7 +12,11 @@
   #panel { width:330px; flex:none; background:var(--panel); border-right:1px solid var(--line);
            overflow-y:auto; padding:16px; }
   #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
-           background:#000 repeating-conic-gradient(#111 0 25%,#181818 0 50%) 0/24px 24px; }
+           background:#000 repeating-conic-gradient(#111 0 25%,#181818 0 50%) 0/24px 24px;
+           position:relative; }
+  #stage.drag::after { content:'Drop afbeelding of video'; position:absolute; inset:12px;
+           border:2px dashed var(--acc); border-radius:12px; display:flex; align-items:center;
+           justify-content:center; font-size:16px; color:var(--acc); background:rgba(13,13,15,.7); }
   canvas { max-width:100%; max-height:100%; box-shadow:0 0 0 1px var(--line); }
   h1 { font-size:14px; margin:0 0 2px; letter-spacing:.04em; }
   .ver { font-size:10px; color:var(--mut); margin:0 0 14px; }
@@ -32,7 +36,7 @@
   button { cursor:pointer; }
   button:hover { border-color:var(--acc); }
   .seg { display:flex; gap:0; }
-  .seg button { flex:1; border-radius:0; }
+  .seg button { flex:1; border-radius:0; padding:6px 4px; }
   .seg button:first-child{border-radius:5px 0 0 5px;}
   .seg button:last-child{border-radius:0 5px 5px 0;}
   .seg button.on { background:var(--acc); border-color:var(--acc); color:#fff; }
@@ -45,6 +49,7 @@
   .hint { color:var(--mut); font-size:10px; margin-top:6px; }
   .btnrow { display:flex; gap:6px; margin-top:8px; }
   .btnrow button { flex:1; font-size:11px; padding:6px 4px; }
+  .btnrow select { font-size:11px; }
   #presetSel { width:100%; }
   #resetBtn { width:100%; margin-top:8px; border-color:#6b4a1f; }
   #resetBtn:hover { border-color:#d99a3d; }
@@ -53,7 +58,7 @@
 <body>
 <div id="panel">
   <h1>SVG DITHER FILTER</h1>
-  <p class="ver">v2.0 · <a href="index-v1.html">open origineel (v1)</a></p>
+  <p class="ver">v2.1 · <a href="index-v1.html">open origineel (v1)</a></p>
 
   <div class="grp">
     <h2>Presets</h2>
@@ -67,6 +72,7 @@
       <button id="importPresetBtn">Import JSON</button>
     </div>
     <input type="file" id="presetFile" accept=".json,application/json" style="display:none" />
+    <button id="shuffleBtn" style="width:100%;margin-top:8px">🎲 Shuffle — verras me</button>
     <button id="resetBtn">↺ Reset naar origineel</button>
     <div class="hint">Een preset bewaart alle settings, kleuren en shapes — ook geüploade SVGs.</div>
   </div>
@@ -79,21 +85,62 @@
       <button data-v="orig" class="on">Original</button>
       <button data-v="square">1 : 1</button>
     </div>
+    <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
+      Houd de muis ingedrukt op het canvas om het origineel te zien.</div>
+  </div>
+
+  <div class="grp">
+    <h2>Tone</h2>
+    <div class="row"><label>Brightness</label><span class="val" id="brightV">0</span></div>
+    <input type="range" id="bright" min="-100" max="100" value="0" />
+    <div class="row"><label>Contrast</label><span class="val" id="contrastV">0</span></div>
+    <input type="range" id="contrast" min="-100" max="100" value="0" />
+    <div class="row"><label>Gamma</label><span class="val" id="gammaV">1.00</span></div>
+    <input type="range" id="gamma" min="20" max="300" value="100" />
+    <div class="row" style="margin-top:8px"><label>Invert</label>
+      <input type="checkbox" id="invert" /></div>
+    <label>Dithering</label>
+    <select id="ditherSel" style="width:100%">
+      <option value="none">Geen (tone buckets)</option>
+      <option value="fs">Floyd–Steinberg</option>
+      <option value="bayer4">Bayer 4×4 (ordered)</option>
+      <option value="bayer8">Bayer 8×8 (ordered)</option>
+    </select>
   </div>
 
   <div class="grp">
     <h2>Grid</h2>
     <div class="row"><label>Resolution</label><span class="val" id="gridV">64</span></div>
-    <input type="range" id="grid" min="4" max="160" value="64" />
+    <input type="range" id="grid" min="4" max="200" value="64" />
+    <label>Grid type</label>
+    <div class="seg" id="gridType">
+      <button data-v="square" class="on">Square</button>
+      <button data-v="brick">Brick</button>
+      <button data-v="hex">Hex</button>
+    </div>
+    <div class="row" style="margin-top:8px"><label>Gap</label><span class="val" id="gapV">0%</span></div>
+    <input type="range" id="gap" min="0" max="60" value="0" />
     <div class="row" style="margin-top:10px"><label>Background</label>
       <input type="color" id="bg" value="#ffffff" /></div>
+    <div class="row" style="margin-top:8px"><label>Transparant (PNG/SVG export)</label>
+      <input type="checkbox" id="bgT" /></div>
   </div>
 
   <div class="grp">
-    <h2>Tone mapping</h2>
-    <div class="row"><label>Invert</label>
-      <input type="checkbox" id="invert" /></div>
-    <label>Shape mode</label>
+    <h2>Color</h2>
+    <div class="seg" id="colorMode">
+      <button data-v="tone" class="on">Per-tone kleur</button>
+      <button data-v="source">Bronkleur</button>
+    </div>
+    <div id="satWrap" style="display:none">
+      <div class="row" style="margin-top:8px"><label>Saturation</label><span class="val" id="satV">100%</span></div>
+      <input type="range" id="sat" min="0" max="250" value="100" />
+    </div>
+    <div class="hint">Bronkleur = elke cel pakt de kleur van de afbeelding zelf.</div>
+  </div>
+
+  <div class="grp">
+    <h2>Shape mode</h2>
     <div class="seg" id="mode">
       <button data-v="tone" class="on">Per-tone (7)</button>
       <button data-v="single">Single</button>
@@ -115,12 +162,20 @@
     <input type="range" id="sMin" min="0" max="150" value="10" />
     <div class="row"><label>Max</label><span class="val" id="sMaxV">100%</span></div>
     <input type="range" id="sMax" min="0" max="200" value="100" />
+    <div class="row"><label>Size jitter</label><span class="val" id="sJitV">0%</span></div>
+    <input type="range" id="sJit" min="0" max="100" value="0" />
   </div>
 
   <div class="grp">
-    <h2>Pixel rotation</h2>
-    <div class="row"><label>Angle (90° snap)</label><span class="val" id="rotV">0°</span></div>
-    <input type="range" id="rot" min="0" max="270" step="90" value="0" />
+    <h2>Rotation</h2>
+    <div class="seg" id="rotMode">
+      <button data-v="fixed" class="on">Fixed</button>
+      <button data-v="flow">Flow (contour)</button>
+    </div>
+    <div class="row" style="margin-top:8px"><label>Angle</label><span class="val" id="rotV">0°</span></div>
+    <input type="range" id="rot" min="0" max="360" step="1" value="0" />
+    <div class="row"><label>Angle jitter</label><span class="val" id="rotJitV">0°</span></div>
+    <input type="range" id="rotJit" min="0" max="180" value="0" />
     <div class="row" style="margin-top:8px"><label>Random 90° per cell</label>
       <input type="checkbox" id="rndRot" /></div>
   </div>
@@ -129,6 +184,21 @@
     <h2>Shapes — shadow → highlight</h2>
     <div id="svgList"></div>
     <div class="hint">Kies per slot een ingebouwde shape, of upload een eigen SVG met ⬆ (blauw = eigen SVG actief). Slot 1 = donkerste, slot 7 = lichtste.</div>
+  </div>
+
+  <div class="grp">
+    <h2>Artwork export</h2>
+    <div class="btnrow" style="margin-top:0">
+      <select id="pngScale">
+        <option value="960">PNG · 960px</option>
+        <option value="1920" selected>PNG · 1920px</option>
+        <option value="2880">PNG · 2880px</option>
+        <option value="3840">PNG · 3840px</option>
+      </select>
+      <button id="exportPngBtn">Download PNG</button>
+    </div>
+    <button id="exportSvgBtn" style="width:100%;margin-top:6px">Download SVG (vector)</button>
+    <div class="hint">SVG is echte vector — oneindig schaalbaar, ideaal voor print en plotters. Bij video pakt de export het huidige frame.</div>
   </div>
 
   <div class="grp">
@@ -147,6 +217,12 @@
 const RASTER = 96;            // px each shape is rasterised at
 const DEFAULT_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg>';
 const TONE_LABELS = ['Shadow','Dark','Low-mid','Mid','High-mid','Light','Highlight'];
+const BAYER = {
+  bayer4: [[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]],
+  bayer8: [[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],
+           [60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],
+           [15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]],
+};
 
 /* ---------- built-in shape library ---------- */
 const NS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
@@ -170,93 +246,139 @@ function svgFor(slot){
 }
 
 /* ---------- state ---------- */
-const S = {
-  aspect:'orig', grid:64, bg:'#ffffff', invert:false, mode:'tone', single:0,
+const DEFAULTS = {
+  grid:64, bg:'#ffffff', invert:false, mode:'tone', single:0,
   sMin:10, sMax:100, rot:0, rndRot:false,
+  bright:0, contrast:0, gamma:100, dither:'none',
+  gridType:'square', gap:0, bgT:false,
+  colorMode:'tone', sat:100, sJit:0, rotJit:0, rotMode:'fixed',
+};
+const S = Object.assign({ aspect:'orig' }, DEFAULTS, {
   slots: Array.from({length:7}, (_,i)=>{
     const g = Math.round(i/6*210);
     return { shape:'circle', svg:null, color:'#'+g.toString(16).padStart(2,'0').repeat(3) };
   }),
-};
-const cache = new Array(7).fill(null);   // {key, canvas} rasterised+coloured shape
+});
+const cache = new Array(7).fill(null);   // {key, canvas (coloured), mask (white)}
 
-/* ---------- built-in presets ---------- */
-function ramp(from,to){ // 7-step hex colour ramp
-  const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));
-  const a=h(from), b=h(to);
-  return Array.from({length:7},(_,i)=>'#'+a.map((v,c)=>
-    Math.round(v+(b[c]-v)*i/6).toString(16).padStart(2,'0')).join(''));
+/* ---------- shared render core (pure: also embedded in hero export) ---------- */
+function hash2(x,y,s){
+  let h=((x*73856093)^(y*19349663)^(s*83492791))>>>0;
+  h=Math.imul(h^(h>>>13),0x5bd1e995)>>>0;
+  return ((h^(h>>>15))>>>0)/4294967295;
 }
-function mkSlots(shapes, colors){
-  return Array.from({length:7},(_,i)=>({
-    shape: Array.isArray(shapes)?shapes[i]:shapes, svg:null, color:colors[i] }));
+function toneLUT(cfg){
+  const b=(cfg.bright||0)/100, c=1+(cfg.contrast||0)/100, g=Math.max(0.05,(cfg.gamma||100)/100);
+  const lut=new Float32Array(256);
+  for(let i=0;i<256;i++){
+    let t=i/255 + b;
+    t=(t-0.5)*c+0.5;
+    t=Math.min(1,Math.max(0,t));
+    lut[i]=Math.pow(t,1/g);
+  }
+  return lut;
 }
-const BUILTIN_PRESETS = {
-  'V1 — Origineel': {
-    grid:64, bg:'#ffffff', invert:false, mode:'tone', single:0,
-    sMin:10, sMax:100, rot:0, rndRot:false,
-    slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
-  },
-  'Newsprint': {
-    grid:96, bg:'#f2e9d8', invert:false, mode:'tone', single:0,
-    sMin:0, sMax:125, rot:0, rndRot:false,
-    slots: mkSlots('circle', Array(7).fill('#1d1a16')),
-  },
-  'Terminal': {
-    grid:80, bg:'#040804', invert:false, mode:'tone', single:0,
-    sMin:25, sMax:100, rot:0, rndRot:false,
-    slots: mkSlots('square', ramp('#0a2e0a','#39ff14')),
-  },
-  'Blueprint': {
-    grid:56, bg:'#0a3a8c', invert:false, mode:'tone', single:0,
-    sMin:15, sMax:95, rot:0, rndRot:false,
-    slots: mkSlots(['cross','cross','xmark','xmark','ring','circle','circle'],
-                   ramp('#3a6ec2','#ffffff')),
-  },
-  'Pop Art': {
-    grid:40, bg:'#ffe34d', invert:false, mode:'tone', single:0,
-    sMin:30, sMax:110, rot:0, rndRot:false,
-    slots: mkSlots('circle',
-      ['#1a1aff','#5b1e8f','#ff2d55','#ff5e3a','#ff8c00','#ff2d9b','#ffffff']),
-  },
-  'Cyber': {
-    grid:72, bg:'#0d0218', invert:false, mode:'tone', single:0,
-    sMin:15, sMax:105, rot:0, rndRot:true,
-    slots: mkSlots('diamond',
-      ['#2a0a4a','#5b1e8f','#8c2bd9','#c13ad9','#ff3df0','#5bd9ff','#9ffcff']),
-  },
-  'Retro Game': {
-    grid:96, bg:'#0f380f', invert:false, mode:'tone', single:0,
-    sMin:100, sMax:100, rot:0, rndRot:false,
-    slots: mkSlots('square', ramp('#0f380f','#9bbc0f')),
-  },
-  'Candy': {
-    grid:48, bg:'#fff0f5', invert:false, mode:'tone', single:0,
-    sMin:20, sMax:105, rot:0, rndRot:true,
-    slots: mkSlots(['heart','heart','star','star','heart','star','heart'],
-      ['#b83b6e','#e0529c','#f47ab8','#f9a8d4','#a78bfa','#7dd3fc','#fde68a']),
-  },
-  'Ink Hatch': {
-    grid:88, bg:'#faf7f0', invert:false, mode:'tone', single:0,
-    sMin:0, sMax:115, rot:0, rndRot:true,
-    slots: mkSlots(['square','cross','xmark','hline','hline','vline','circle'],
-      ramp('#14110c','#8a8378')),
-  },
-};
-
-const LS_KEY = 'ditherPresets2';
-function customPresets(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e){ return {}; } }
-function saveCustomPresets(p){ localStorage.setItem(LS_KEY, JSON.stringify(p)); }
-
-const out = document.getElementById('out');
-const octx = out.getContext('2d');
-const sample = document.createElement('canvas');
-const sctx = sample.getContext('2d', { willReadFrequently:true });
-
-let media = null;       // HTMLImageElement | HTMLVideoElement
-let isVideo = false;
-
-/* ---------- shape rasterisation ---------- */
+function gridFor(cfg,ar){
+  const cols=cfg.grid;
+  const rowH=cfg.gridType==='hex'?0.866:1;
+  const rows=Math.max(1,Math.round(cols/ar/rowH));
+  return {cols,rows,rowH};
+}
+function computeCells(data,cols,rows,cfg,lut,BAYERM){
+  const n=cols*rows;
+  const T=new Float32Array(n);
+  const C=cfg.colorMode==='source'?new Array(n):null;
+  const sat=(cfg.sat===undefined?100:cfg.sat)/100;
+  for(let i=0;i<n;i++){
+    const p=i*4, a=data[p+3]/255;
+    const lum=(0.299*data[p]+0.587*data[p+1]+0.114*data[p+2])/255*a;
+    let t=lut[(lum*255)|0];
+    if(cfg.invert)t=1-t;
+    T[i]=t;
+    if(C){
+      const gr=0.299*data[p]+0.587*data[p+1]+0.114*data[p+2];
+      const f=v=>Math.max(0,Math.min(255,Math.round(gr+(v-gr)*sat)));
+      C[i]='rgb('+f(data[p])+','+f(data[p+1])+','+f(data[p+2])+')';
+    }
+  }
+  const B=new Uint8Array(n);
+  if(cfg.dither==='fs'){
+    const W=Float32Array.from(T);
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+      const i=y*cols+x;
+      const q=Math.max(0,Math.min(6,Math.round(W[i]*6)));
+      B[i]=q;
+      const err=W[i]-q/6;
+      if(x+1<cols)W[i+1]+=err*7/16;
+      if(y+1<rows){
+        if(x>0)W[i+cols-1]+=err*3/16;
+        W[i+cols]+=err*5/16;
+        if(x+1<cols)W[i+cols+1]+=err*1/16;
+      }
+    }
+  } else if(cfg.dither==='bayer4'||cfg.dither==='bayer8'){
+    const M=BAYERM[cfg.dither],m=M.length,d=m*m;
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+      const i=y*cols+x;
+      const t=T[i]+((M[y%m][x%m]+0.5)/d-0.5)/7;
+      B[i]=Math.max(0,Math.min(6,Math.floor(t*7)));
+    }
+  } else {
+    for(let i=0;i<n;i++)B[i]=Math.max(0,Math.min(6,Math.floor(T[i]*7)));
+  }
+  let A=null;
+  if(cfg.rotMode==='flow'){ // Sobel: shapes align to image contours
+    A=new Float32Array(n);
+    for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+      const xm=Math.max(0,x-1),xp=Math.min(cols-1,x+1);
+      const ym=Math.max(0,y-1),yp=Math.min(rows-1,y+1);
+      const gx=(T[ym*cols+xp]+2*T[y*cols+xp]+T[yp*cols+xp])
+              -(T[ym*cols+xm]+2*T[y*cols+xm]+T[yp*cols+xm]);
+      const gy=(T[yp*cols+xm]+2*T[yp*cols+x]+T[yp*cols+xp])
+              -(T[ym*cols+xm]+2*T[ym*cols+x]+T[ym*cols+xp]);
+      A[y*cols+x]=Math.atan2(gy,gx)*180/Math.PI+90;
+    }
+  }
+  return {T,B,C,A};
+}
+function drawCells(ctx,cell,cols,rows,rowH,cfg,cache,cells,tmp,tctx,RAST){
+  const W=Math.round(cols*cell), H=Math.round(((rows-1)*rowH+1)*cell);
+  ctx.clearRect(0,0,W,H);
+  if(!cfg.bgT){ ctx.fillStyle=cfg.bg; ctx.fillRect(0,0,W,H); }
+  const minS=cfg.sMin/100, maxS=cfg.sMax/100, gapF=1-(cfg.gap||0)/100;
+  const offGrid=cfg.gridType==='brick'||cfg.gridType==='hex';
+  for(let y=0;y<rows;y++){
+    const off=offGrid&&(y&1)?0.5:0;
+    const cy=(y*rowH+0.5)*cell;
+    for(let x=0;x<cols;x++){
+      const i=y*cols+x;
+      const idx=cfg.mode==='single'?cfg.single:cells.B[i];
+      const shp=cache[idx]; if(!shp)continue;
+      const t=cells.T[i];
+      let sc=(minS+(maxS-minS)*t)*cell*gapF;
+      if(cfg.sJit)sc*=1+(hash2(x,y,7)-0.5)*2*(cfg.sJit/100);
+      if(sc<=0.4)continue;
+      let ang=(cells.A?cells.A[i]:0)+(cfg.rot||0);
+      if(cfg.rndRot)ang+=Math.floor(hash2(x,y,3)*4)*90;
+      if(cfg.rotJit)ang+=(hash2(x,y,11)-0.5)*2*cfg.rotJit;
+      ctx.save();
+      ctx.translate((x+0.5+off)*cell,cy);
+      if(ang)ctx.rotate(ang*Math.PI/180);
+      if(cells.C&&shp.mask){
+        tctx.globalCompositeOperation='source-over';
+        tctx.clearRect(0,0,RAST,RAST);
+        tctx.drawImage(shp.mask,0,0);
+        tctx.globalCompositeOperation='source-in';
+        tctx.fillStyle=cells.C[i];
+        tctx.fillRect(0,0,RAST,RAST);
+        ctx.drawImage(tmp,-sc/2,-sc/2,sc,sc);
+      } else {
+        ctx.drawImage(shp.canvas,-sc/2,-sc/2,sc,sc);
+      }
+      ctx.restore();
+    }
+  }
+}
 function recolorSVG(svgText, color){
   const doc = new DOMParser().parseFromString(svgText,'image/svg+xml');
   const svg = doc.documentElement;
@@ -271,26 +393,125 @@ function recolorSVG(svgText, color){
   svg.insertBefore(style, svg.firstChild);
   return new XMLSerializer().serializeToString(svg);
 }
+function rasterizeSVG(svgText,RAST){
+  return new Promise(res=>{
+    const img=new Image();
+    const url=URL.createObjectURL(new Blob([svgText],{type:'image/svg+xml'}));
+    img.onload=()=>{
+      const c=document.createElement('canvas'); c.width=c.height=RAST;
+      c.getContext('2d').drawImage(img,0,0,RAST,RAST);
+      URL.revokeObjectURL(url); res(c);
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); res(null); };
+    img.src=url;
+  });
+}
 
+/* ---------- built-in presets ---------- */
+function ramp(from,to){ // 7-step hex colour ramp
+  const h=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));
+  const a=h(from), b=h(to);
+  return Array.from({length:7},(_,i)=>'#'+a.map((v,c)=>
+    Math.round(v+(b[c]-v)*i/6).toString(16).padStart(2,'0')).join(''));
+}
+function mkSlots(shapes, colors){
+  return Array.from({length:7},(_,i)=>({
+    shape: Array.isArray(shapes)?shapes[i]:shapes, svg:null, color:colors[i] }));
+}
+const BUILTIN_PRESETS = {
+  'V1 — Origineel': {
+    slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
+  },
+  'Pointillism': {
+    grid:110, bg:'#f7f2e9', colorMode:'source', sat:140, dither:'fs',
+    sMin:70, sMax:100, sJit:35,
+    slots: mkSlots('circle', ramp('#222222','#dddddd')),
+  },
+  'Mosaic': {
+    grid:72, bg:'#101013', gridType:'brick', colorMode:'source', sat:140,
+    sMin:90, sMax:90, gap:12,
+    slots: mkSlots('rounded', ramp('#333333','#cccccc')),
+  },
+  'Halftone': {
+    grid:84, bg:'#f5f1e6', gridType:'hex', invert:true, sMin:0, sMax:140,
+    slots: mkSlots('circle', Array(7).fill('#171513')),
+  },
+  'Flow Lines': {
+    grid:64, bg:'#0b0d12', colorMode:'source', sat:170, bright:15, rotMode:'flow',
+    sMin:85, sMax:120,
+    slots: mkSlots('hline', ramp('#444444','#cccccc')),
+  },
+  'Riso Print': {
+    grid:72, bg:'#fdf3e3', invert:true, dither:'bayer4', contrast:20,
+    sMin:0, sMax:120,
+    slots: mkSlots('circle', Array(7).fill('#2a1f66')),
+  },
+  'Newsprint': {
+    grid:96, bg:'#f2e9d8', invert:true, sMin:0, sMax:125,
+    slots: mkSlots('circle', Array(7).fill('#1d1a16')),
+  },
+  'Terminal': {
+    grid:80, bg:'#040804', sMin:25, sMax:100,
+    slots: mkSlots('square', ramp('#0a2e0a','#39ff14')),
+  },
+  'Blueprint': {
+    grid:56, bg:'#0a3a8c', sMin:15, sMax:95,
+    slots: mkSlots(['cross','cross','xmark','xmark','ring','circle','circle'],
+                   ramp('#3a6ec2','#ffffff')),
+  },
+  'Pop Art': {
+    grid:40, bg:'#ffe34d', sMin:30, sMax:110,
+    slots: mkSlots('circle',
+      ['#1a1aff','#5b1e8f','#ff2d55','#ff5e3a','#ff8c00','#ff2d9b','#ffffff']),
+  },
+  'Cyber': {
+    grid:72, bg:'#0d0218', sMin:15, sMax:105, rndRot:true,
+    slots: mkSlots('diamond',
+      ['#2a0a4a','#5b1e8f','#8c2bd9','#c13ad9','#ff3df0','#5bd9ff','#9ffcff']),
+  },
+  'Retro Game': {
+    grid:96, bg:'#0f380f', sMin:100, sMax:100,
+    slots: mkSlots('square', ramp('#0f380f','#9bbc0f')),
+  },
+  'Candy': {
+    grid:48, bg:'#fff0f5', sMin:20, sMax:105, rndRot:true,
+    slots: mkSlots(['heart','heart','star','star','heart','star','heart'],
+      ['#b83b6e','#e0529c','#f47ab8','#f9a8d4','#a78bfa','#7dd3fc','#fde68a']),
+  },
+  // invert flips tone, so slot 6 hits the SHADOWS here: densest shape goes last
+  'Ink Hatch': {
+    grid:88, bg:'#faf7f0', invert:true, gamma:75, contrast:-10,
+    sMin:18, sMax:110, rndRot:true,
+    slots: mkSlots(['circle','vline','hline','hline','xmark','cross','square'],
+      ramp('#8a8378','#14110c')),
+  },
+};
+
+const LS_KEY = 'ditherPresets2';
+function customPresets(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e){ return {}; } }
+function saveCustomPresets(p){ localStorage.setItem(LS_KEY, JSON.stringify(p)); }
+
+const out = document.getElementById('out');
+const octx = out.getContext('2d');
+const sample = document.createElement('canvas');
+const sctx = sample.getContext('2d', { willReadFrequently:true });
+const tmp = document.createElement('canvas'); tmp.width=tmp.height=RASTER;
+const tctx = tmp.getContext('2d');
+
+let media = null;       // HTMLImageElement | HTMLVideoElement
+let isVideo = false;
+
+/* ---------- shape cache (coloured canvas + white mask) ---------- */
 function buildCache(i){
   const slot = S.slots[i];
   const src = svgFor(slot);
   const key = slot.shape+'|'+slot.color+'|'+(slot.svg?slot.svg.length:0);
   if (cache[i] && cache[i].key === key) return Promise.resolve();
   const colored = recolorSVG(src, slot.color);
+  const masked  = recolorSVG(src, '#ffffff');
   if (!colored){ cache[i]=null; return Promise.resolve(); }
-  return new Promise(res=>{
-    const img = new Image();
-    const url = URL.createObjectURL(new Blob([colored],{type:'image/svg+xml'}));
-    img.onload = ()=>{
-      const c = document.createElement('canvas'); c.width=c.height=RASTER;
-      c.getContext('2d').drawImage(img,0,0,RASTER,RASTER);
-      cache[i] = { key, canvas:c };
-      URL.revokeObjectURL(url); res();
-    };
-    img.onerror = ()=>{ cache[i]=null; URL.revokeObjectURL(url); res(); };
-    img.src = url;
-  });
+  return Promise.all([rasterizeSVG(colored,RASTER), rasterizeSVG(masked,RASTER)])
+    .then(([canvas,mask])=>{ cache[i] = canvas ? { key, canvas, mask } : null; });
 }
 function rebuildAll(){ return Promise.all(S.slots.map((_,i)=>buildCache(i))); }
 
@@ -300,69 +521,52 @@ function srcSize(){
   return isVideo ? [media.videoWidth, media.videoHeight]
                  : [media.naturalWidth, media.naturalHeight];
 }
-
-function render(){
-  if (!media){ requestAnimationFrame(render); return; }
-  const [sw, sh] = srcSize();
-  if (!sw || !sh){ requestAnimationFrame(render); return; }
-
-  // crop rect on the source
+function cropRect(){
+  const [sw,sh]=srcSize();
   let cx=0, cy=0, cw=sw, ch=sh;
-  if (S.aspect === 'square'){
-    const m = Math.min(sw,sh); cx=(sw-m)/2; cy=(sh-m)/2; cw=ch=m;
+  if (S.aspect==='square'){
+    const m=Math.min(sw,sh); cx=(sw-m)/2; cy=(sh-m)/2; cw=ch=m;
   }
-  const ar = cw/ch;
-  const cols = S.grid;
-  const rows = Math.max(1, Math.round(cols/ar));
+  return [cx,cy,cw,ch];
+}
 
-  // output resolution
-  const maxDim = 960;
-  const cell = Math.max(2, Math.floor((ar>=1 ? maxDim : maxDim*ar)/cols));
-  out.width = cols*cell; out.height = rows*cell;
-
-  // sample down
+function renderTo(ctx, targetCanvas, maxDim){
+  const [cx,cy,cw,ch]=cropRect();
+  if(!cw||!ch) return false;
+  const ar=cw/ch;
+  const {cols,rows,rowH}=gridFor(S,ar);
+  const cell=Math.max(2,Math.floor((ar>=1?maxDim:maxDim*ar)/cols));
+  targetCanvas.width=cols*cell;
+  targetCanvas.height=Math.round(((rows-1)*rowH+1)*cell);
   sample.width=cols; sample.height=rows;
   sctx.clearRect(0,0,cols,rows);
   sctx.drawImage(media, cx,cy,cw,ch, 0,0,cols,rows);
-  const data = sctx.getImageData(0,0,cols,rows).data;
+  const data=sctx.getImageData(0,0,cols,rows).data;
+  const cells=computeCells(data,cols,rows,S,toneLUT(S),BAYER);
+  drawCells(ctx,cell,cols,rows,rowH,S,cache,cells,tmp,tctx,RASTER);
+  return true;
+}
 
-  octx.fillStyle = S.bg;
-  octx.fillRect(0,0,out.width,out.height);
-
-  const minS = S.sMin/100, maxS = S.sMax/100;
-  for (let y=0;y<rows;y++){
-    for (let x=0;x<cols;x++){
-      const p=(y*cols+x)*4;
-      const a=data[p+3]/255;
-      let lum=(0.299*data[p]+0.587*data[p+1]+0.114*data[p+2])/255;
-      lum*=a;                                  // treat transparent as dark
-      let t = lum;
-      if (S.invert) t = 1-t;
-
-      const bucket = Math.min(6, Math.max(0, Math.floor(t*7)));
-      const idx = S.mode==='single' ? S.single : bucket;
-      const shp = cache[idx]; if (!shp) continue;
-
-      const scale = (minS + (maxS-minS)*t) * cell;
-      if (scale <= 0.4) continue;
-
-      let ang = S.rot;
-      if (S.rndRot) ang = (((x*73856093) ^ (y*19349663)) >>> 0) % 4 * 90;
-
-      const ccx = x*cell + cell/2, ccy = y*cell + cell/2;
-      octx.save();
-      octx.translate(ccx, ccy);
-      if (ang) octx.rotate(ang*Math.PI/180);
-      octx.drawImage(shp.canvas, -scale/2, -scale/2, scale, scale);
-      octx.restore();
+let comparing = false;   // hold mouse on canvas → show source
+function render(){
+  if (media){
+    if (comparing){
+      const [cx,cy,cw,ch]=cropRect();
+      if (cw&&ch) octx.drawImage(media, cx,cy,cw,ch, 0,0,out.width,out.height);
+    } else {
+      renderTo(octx, out, 960);
     }
   }
   requestAnimationFrame(render);
 }
+out.title='Houd ingedrukt om het origineel te zien';
+out.addEventListener('pointerdown', e=>{ comparing=true; e.preventDefault(); });
+window.addEventListener('pointerup', ()=>comparing=false);
+out.addEventListener('pointerleave', ()=>comparing=false);
 
 /* ---------- media loading ---------- */
-document.getElementById('media').addEventListener('change', e=>{
-  const f = e.target.files[0]; if(!f) return;
+function loadFile(f){
+  if(!f) return;
   const url = URL.createObjectURL(f);
   if (f.type.startsWith('video')){
     const v=document.createElement('video');
@@ -373,34 +577,54 @@ document.getElementById('media').addEventListener('change', e=>{
     img.onload=()=>{ media=img; isVideo=false; };
     img.src=url;
   }
+}
+document.getElementById('media').addEventListener('change', e=>loadFile(e.target.files[0]));
+
+const stage=document.getElementById('stage');
+stage.addEventListener('dragover', e=>{ e.preventDefault(); stage.classList.add('drag'); });
+stage.addEventListener('dragleave', ()=>stage.classList.remove('drag'));
+stage.addEventListener('drop', e=>{
+  e.preventDefault(); stage.classList.remove('drag');
+  loadFile(e.dataTransfer.files[0]);
+});
+document.addEventListener('paste', e=>{
+  const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image'));
+  if (it) loadFile(it.getAsFile());
 });
 
 /* ---------- controls ---------- */
-function bindSeg(id, key){
+function bindSeg(id, key, after){
   document.getElementById(id).addEventListener('click', e=>{
     const b=e.target.closest('button'); if(!b) return;
     [...e.currentTarget.children].forEach(c=>c.classList.remove('on'));
     b.classList.add('on'); S[key]=b.dataset.v;
-    if (key==='mode')
-      document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none';
+    after&&after();
   });
 }
-bindSeg('aspect','aspect'); bindSeg('mode','mode');
+bindSeg('aspect','aspect');
+bindSeg('mode','mode', ()=>{ document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none'; });
+bindSeg('gridType','gridType');
+bindSeg('rotMode','rotMode');
+bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none'; });
 
-const rng = (id,key,fmt,after)=>{
+const RANGES = [
+  ['grid','grid',x=>x], ['sMin','sMin',x=>x+'%'], ['sMax','sMax',x=>x+'%'],
+  ['rot','rot',x=>x+'°'], ['bright','bright',x=>x], ['contrast','contrast',x=>x],
+  ['gamma','gamma',x=>(x/100).toFixed(2)], ['gap','gap',x=>x+'%'],
+  ['sat','sat',x=>x+'%'], ['sJit','sJit',x=>x+'%'], ['rotJit','rotJit',x=>x+'°'],
+];
+RANGES.forEach(([id,key,fmt])=>{
   const el=document.getElementById(id), v=document.getElementById(id+'V');
-  const upd=()=>{ S[key]=+el.value; if(v)v.textContent=fmt(el.value); after&&after(); };
+  const upd=()=>{ S[key]=+el.value; if(v)v.textContent=fmt(el.value); };
   el.addEventListener('input',upd); upd();
-};
-rng('grid','grid',x=>x);
-rng('sMin','sMin',x=>x+'%');
-rng('sMax','sMax',x=>x+'%');
-rng('rot','rot',x=>x+'°');
+});
 
 document.getElementById('bg').addEventListener('input',e=>S.bg=e.target.value);
 document.getElementById('invert').addEventListener('change',e=>S.invert=e.target.checked);
 document.getElementById('rndRot').addEventListener('change',e=>S.rndRot=e.target.checked);
+document.getElementById('bgT').addEventListener('change',e=>S.bgT=e.target.checked);
 document.getElementById('singleSel').addEventListener('change',e=>S.single=+e.target.value);
+document.getElementById('ditherSel').addEventListener('change',e=>S.dither=e.target.value);
 
 /* ---------- 7 shape slots ---------- */
 const list=document.getElementById('svgList');
@@ -442,15 +666,14 @@ function syncSlotRow(i){
 
 /* ---------- presets ---------- */
 function currentPresetCfg(){
-  return {
-    grid:S.grid, bg:S.bg, invert:S.invert, mode:S.mode, single:S.single,
-    sMin:S.sMin, sMax:S.sMax, rot:S.rot, rndRot:S.rndRot,
-    slots:S.slots.map(s=>({ shape:s.shape, svg:s.shape==='custom'?s.svg:null, color:s.color })),
-  };
+  const cfg={};
+  Object.keys(DEFAULTS).forEach(k=>cfg[k]=S[k]);
+  cfg.slots=S.slots.map(s=>({ shape:s.shape, svg:s.shape==='custom'?s.svg:null, color:s.color }));
+  return cfg;
 }
 async function applyPreset(cfg){
-  ['grid','bg','invert','mode','single','sMin','sMax','rot','rndRot'].forEach(k=>{
-    if (cfg[k] !== undefined) S[k] = cfg[k];
+  Object.keys(DEFAULTS).forEach(k=>{
+    S[k] = cfg[k] !== undefined ? cfg[k] : DEFAULTS[k];
   });
   if (Array.isArray(cfg.slots)) cfg.slots.slice(0,7).forEach((sl,i)=>{
     S.slots[i] = {
@@ -463,22 +686,24 @@ async function applyPreset(cfg){
   await rebuildAll();
 }
 function syncUI(){
-  // segmented buttons
-  [['aspect',S.aspect],['mode',S.mode]].forEach(([id,val])=>{
-    [...document.getElementById(id).children].forEach(b=>
-      b.classList.toggle('on', b.dataset.v===val));
-  });
-  document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none';
-  // ranges + labels
-  [['grid',S.grid,x=>x],['sMin',S.sMin,x=>x+'%'],['sMax',S.sMax,x=>x+'%'],['rot',S.rot,x=>x+'°']]
-    .forEach(([id,val,fmt])=>{
-      document.getElementById(id).value = val;
-      document.getElementById(id+'V').textContent = fmt(val);
+  [['aspect',S.aspect],['mode',S.mode],['gridType',S.gridType],['colorMode',S.colorMode],['rotMode',S.rotMode]]
+    .forEach(([id,val])=>{
+      [...document.getElementById(id).children].forEach(b=>
+        b.classList.toggle('on', b.dataset.v===val));
     });
+  document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none';
+  document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none';
+  RANGES.forEach(([id,key,fmt])=>{
+    document.getElementById(id).value = S[key];
+    const v=document.getElementById(id+'V');
+    if(v)v.textContent = fmt(S[key]);
+  });
   document.getElementById('bg').value = S.bg;
   document.getElementById('invert').checked = S.invert;
   document.getElementById('rndRot').checked = S.rndRot;
+  document.getElementById('bgT').checked = S.bgT;
   document.getElementById('singleSel').value = S.single;
+  document.getElementById('ditherSel').value = S.dither;
   S.slots.forEach((_,i)=>syncSlotRow(i));
 }
 
@@ -546,18 +771,144 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
 });
 refreshPresetList();
 
-/* ---------- export config ---------- */
+/* ---------- shuffle: random but tasteful exploration ---------- */
+function hslToHex(h,s,l){
+  s/=100; l/=100;
+  const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  return '#'+[f(0),f(8),f(4)].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('');
+}
+document.getElementById('shuffleBtn').addEventListener('click', ()=>{
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+  const keys=Object.keys(SHAPES);
+  const mono=Math.random()<0.35;                 // single-ink look vs colour ramp
+  const light=Math.random()<0.6;                 // paper vs dark background
+  const h=rnd(0,360), h2=h+rnd(120,240);         // base hue + far accent
+  const bg=light ? hslToHex(h,rnd(10,35),rnd(88,96)) : hslToHex(h,rnd(25,60),rnd(5,13));
+  let colors;
+  if (mono){
+    const ink=light ? hslToHex(h2,rnd(40,80),rnd(14,30)) : hslToHex(h2,rnd(55,95),rnd(60,82));
+    colors=Array(7).fill(ink);
+  } else {
+    colors=Array.from({length:7},(_,i)=>
+      hslToHex(h+(h2-h)*i/6, rnd(50,85), light ? 16+i*9 : 22+i*10));
+  }
+  const shapes=Math.random()<0.5 ? pick(keys)
+    : Array.from({length:7},()=>pick(keys));
+  applyPreset({
+    grid:Math.round(rnd(36,130)), bg,
+    invert: mono ? light : false,                // ink on paper reads dark-is-big
+    dither:pick(['none','none','fs','bayer4','bayer8']),
+    gridType:pick(['square','square','brick','hex']),
+    gap:Math.random()<0.3?Math.round(rnd(5,25)):0,
+    sMin:Math.round(rnd(0,60)), sMax:Math.round(rnd(85,140)),
+    sJit:Math.random()<0.4?Math.round(rnd(10,50)):0,
+    rotJit:Math.random()<0.25?Math.round(rnd(10,60)):0,
+    rotMode:Math.random()<0.2?'flow':'fixed',
+    rndRot:Math.random()<0.3,
+    colorMode:Math.random()<0.3?'source':'tone',
+    sat:Math.round(rnd(100,180)),
+    contrast:Math.round(rnd(-10,25)),
+    slots:mkSlots(shapes,colors),
+  });
+  presetSel.value='';
+});
+
+/* ---------- artwork export: PNG ---------- */
+document.getElementById('exportPngBtn').addEventListener('click', ()=>{
+  if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
+  const w = +document.getElementById('pngScale').value;
+  const c = document.createElement('canvas');
+  renderTo(c.getContext('2d'), c, w);
+  c.toBlob(blob=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='dither-art-'+c.width+'x'+c.height+'.png'; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  },'image/png');
+});
+
+/* ---------- artwork export: vector SVG ---------- */
+function parseShapeForSVG(svgText){
+  const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
+  const svg=doc.documentElement;
+  if(svg.nodeName.toLowerCase()!=='svg')return null;
+  svg.querySelectorAll('*').forEach(el=>{
+    if(el.getAttribute('fill')!=='none')el.removeAttribute('fill');
+    const st=el.getAttribute('style');
+    if(st)el.setAttribute('style',st.replace(/fill\s*:[^;]+;?/gi,''));
+  });
+  return { viewBox: svg.getAttribute('viewBox')||'0 0 100 100', inner: svg.innerHTML };
+}
+function buildArtSVG(){
+  const [cx,cy,cw,ch]=cropRect();
+  if(!cw||!ch) return null;
+  const ar=cw/ch;
+  const {cols,rows,rowH}=gridFor(S,ar);
+  sample.width=cols; sample.height=rows;
+  sctx.clearRect(0,0,cols,rows);
+  sctx.drawImage(media, cx,cy,cw,ch, 0,0,cols,rows);
+  const data=sctx.getImageData(0,0,cols,rows).data;
+  const cells=computeCells(data,cols,rows,S,toneLUT(S),BAYER);
+
+  const U=100; // svg units per cell
+  const W=cols*U, H=Math.round(((rows-1)*rowH+1)*U);
+  const r1=n=>Math.round(n*10)/10;
+  const used=new Set();
+  const minS=S.sMin/100, maxS=S.sMax/100, gapF=1-(S.gap||0)/100;
+  const offGrid=S.gridType==='brick'||S.gridType==='hex';
+  let body='';
+  for(let y=0;y<rows;y++){
+    const off=offGrid&&(y&1)?0.5:0;
+    const py=(y*rowH+0.5)*U;
+    for(let x=0;x<cols;x++){
+      const i=y*cols+x;
+      const idx=S.mode==='single'?S.single:cells.B[i];
+      if(!cache[idx])continue;
+      used.add(idx);
+      const t=cells.T[i];
+      let sc=(minS+(maxS-minS)*t)*U*gapF;
+      if(S.sJit)sc*=1+(hash2(x,y,7)-0.5)*2*(S.sJit/100);
+      if(sc<=0.4)continue;
+      let ang=(cells.A?cells.A[i]:0)+(S.rot||0);
+      if(S.rndRot)ang+=Math.floor(hash2(x,y,3)*4)*90;
+      if(S.rotJit)ang+=(hash2(x,y,11)-0.5)*2*S.rotJit;
+      const fill=cells.C?cells.C[i]:S.slots[idx].color;
+      const tf=`translate(${r1((x+0.5+off)*U)} ${r1(py)})`+(ang?` rotate(${r1(ang)})`:'');
+      body+=`<use href="#s${idx}" x="${r1(-sc/2)}" y="${r1(-sc/2)}" width="${r1(sc)}" height="${r1(sc)}" fill="${fill}" transform="${tf}"/>\n`;
+    }
+  }
+  let defs='';
+  used.forEach(idx=>{
+    const p=parseShapeForSVG(svgFor(S.slots[idx]));
+    if(p)defs+=`<symbol id="s${idx}" viewBox="${p.viewBox}" preserveAspectRatio="none">${p.inner}</symbol>\n`;
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">\n<defs>\n${defs}</defs>\n`
+    + (S.bgT?'':`<rect width="${W}" height="${H}" fill="${S.bg}"/>\n`)
+    + body + '</svg>';
+}
+document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
+  if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
+  const svg=buildArtSVG();
+  if(!svg){ alert('Kon geen SVG bouwen.'); return; }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));
+  a.download='dither-art.svg'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+
+/* ---------- hero / react export ---------- */
 function currentCfg(){
-  return {
-    aspect:S.aspect, grid:S.grid, bg:S.bg, invert:S.invert, mode:S.mode,
-    single:S.single, sMin:S.sMin, sMax:S.sMax, rot:S.rot, rndRot:S.rndRot,
-    // resolve built-in shapes to inline SVG so the export stays self-contained;
-    // null keeps the hero's built-in circle fallback
-    slots:S.slots.map(s=>({
-      color:s.color,
-      svg: s.shape==='custom' ? s.svg : (s.shape==='circle' ? null : SHAPES[s.shape].svg),
-    })),
-  };
+  const cfg=currentPresetCfg();
+  cfg.aspect=S.aspect;
+  // resolve built-in shapes to inline SVG so the export stays self-contained;
+  // null keeps the hero's built-in circle fallback
+  cfg.slots=S.slots.map(s=>({
+    color:s.color,
+    svg: s.shape==='custom' ? s.svg : (s.shape==='circle' ? null : SHAPES[s.shape].svg),
+  }));
+  return cfg;
 }
 
 document.getElementById('exportBtn').addEventListener('click', e=>{
@@ -579,13 +930,13 @@ document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
 });
 
 function heroHTML(cfg, videoUrl){
-  const DEF = DEFAULT_SVG;
-  // self-contained hero: covers its section, video source dithered, content overlaid
+  // the render core functions are embedded verbatim so hero output
+  // always matches what the tool shows
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Hero</title>
 <style>
 *{box-sizing:border-box;margin:0}
-.dither-hero{position:relative;width:100%;height:100vh;overflow:hidden;background:${cfg.bg}}
+.dither-hero{position:relative;width:100%;height:100vh;overflow:hidden;background:${cfg.bgT?'transparent':cfg.bg}}
 .dither-hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .dither-hero .content{position:relative;z-index:1;height:100%;display:flex;
  flex-direction:column;align-items:center;justify-content:center;text-align:center;
@@ -602,51 +953,51 @@ function heroHTML(cfg, videoUrl){
 </section>
 <script>
 const CFG=${JSON.stringify(cfg)};
-const DEFAULT_SVG=${JSON.stringify(DEF)};
+const DEFAULT_SVG=${JSON.stringify(DEFAULT_SVG)};
 const VIDEO=${JSON.stringify(videoUrl)};
 const RASTER=96;
+const BAYER=${JSON.stringify(BAYER)};
+${hash2.toString()}
+${toneLUT.toString()}
+${gridFor.toString()}
+${computeCells.toString()}
+${drawCells.toString()}
+${recolorSVG.toString()}
+${rasterizeSVG.toString()}
 const cv=document.getElementById('dcanvas'),cx=cv.getContext('2d');
 const sm=document.createElement('canvas'),sc=sm.getContext('2d',{willReadFrequently:true});
+const tmp=document.createElement('canvas');tmp.width=tmp.height=RASTER;
+const tctx=tmp.getContext('2d');
 const cache=new Array(7).fill(null);
-function recolor(t,c){const d=new DOMParser().parseFromString(t,'image/svg+xml');
- const s=d.documentElement;if(s.nodeName.toLowerCase()!=='svg')return null;
- s.querySelectorAll('*').forEach(e=>{if(e.getAttribute('fill')!=='none')e.removeAttribute('fill');
- let st=e.getAttribute('style');if(st)e.setAttribute('style',st.replace(/fill\\s*:[^;]+;?/gi,''));});
- const y=d.createElementNS('http://www.w3.org/2000/svg','style');y.textContent='*{fill:'+c+'}';
- s.insertBefore(y,s.firstChild);return new XMLSerializer().serializeToString(s);}
-function build(i){return new Promise(r=>{const sl=CFG.slots[i];const src=sl.svg||DEFAULT_SVG;
- const col=recolor(src,sl.color);if(!col){cache[i]=null;return r();}
- const im=new Image();const u=URL.createObjectURL(new Blob([col],{type:'image/svg+xml'}));
- im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=RASTER;
- c.getContext('2d').drawImage(im,0,0,RASTER,RASTER);cache[i]={canvas:c};URL.revokeObjectURL(u);r();};
- im.onerror=()=>{cache[i]=null;URL.revokeObjectURL(u);r();};im.src=u;});}
+function build(i){
+  const sl=CFG.slots[i], src=sl.svg||DEFAULT_SVG;
+  const col=recolorSVG(src,sl.color), msk=recolorSVG(src,'#ffffff');
+  if(!col){cache[i]=null;return Promise.resolve();}
+  return Promise.all([rasterizeSVG(col,RASTER),rasterizeSVG(msk,RASTER)])
+    .then(([c,m])=>{cache[i]=c?{canvas:c,mask:m}:null;});
+}
 const vid=document.createElement('video');
 vid.src=VIDEO;vid.loop=true;vid.muted=true;vid.playsInline=true;vid.autoplay=true;
 let ready=false;vid.addEventListener('loadeddata',()=>{ready=true;vid.play();});
 let visible=true;
 new IntersectionObserver(es=>{visible=es[0].isIntersecting;
  if(visible)vid.play();else vid.pause();},{threshold:0}).observe(document.getElementById('hero'));
+const LUT=toneLUT(CFG);
 function frame(){requestAnimationFrame(frame);
- if(!ready||!visible)return;const sw=vid.videoWidth,sh=vid.videoHeight;if(!sw||!sh)return;
+ if(!ready||!visible)return;
+ const sw=vid.videoWidth,sh=vid.videoHeight;if(!sw||!sh)return;
  let X=0,Y=0,W=sw,H=sh;
  if(CFG.aspect==='square'){const m=Math.min(sw,sh);X=(sw-m)/2;Y=(sh-m)/2;W=H=m;}
- const r=cv.clientWidth/cv.clientHeight||W/H;const cols=CFG.grid;
- const rows=Math.max(1,Math.round(cols/r));
- const cell=Math.max(2,Math.floor((r>=1?960:960*r)/cols));
- cv.width=cols*cell;cv.height=rows*cell;
- sm.width=cols;sm.height=rows;sc.clearRect(0,0,cols,rows);
- sc.drawImage(vid,X,Y,W,H,0,0,cols,rows);
- const d=sc.getImageData(0,0,cols,rows).data;
- cx.fillStyle=CFG.bg;cx.fillRect(0,0,cv.width,cv.height);
- const mn=CFG.sMin/100,mx=CFG.sMax/100;
- for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const p=(y*cols+x)*4;
- const a=d[p+3]/255;let l=(0.299*d[p]+0.587*d[p+1]+0.114*d[p+2])/255*a;
- let t=CFG.invert?1-l:l;const b=Math.min(6,Math.max(0,Math.floor(t*7)));
- const idx=CFG.mode==='single'?CFG.single:b;const sh=cache[idx];if(!sh)continue;
- const sz=(mn+(mx-mn)*t)*cell;if(sz<=0.4)continue;
- let ang=CFG.rot;if(CFG.rndRot)ang=(((x*73856093)^(y*19349663))>>>0)%4*90;
- cx.save();cx.translate(x*cell+cell/2,y*cell+cell/2);
- if(ang)cx.rotate(ang*Math.PI/180);cx.drawImage(sh.canvas,-sz/2,-sz/2,sz,sz);cx.restore();}}
+ const r=cv.clientWidth/cv.clientHeight||W/H;
+ const g=gridFor(CFG,r);
+ const cell=Math.max(2,Math.floor((r>=1?960:960*r)/g.cols));
+ cv.width=g.cols*cell;cv.height=Math.round(((g.rows-1)*g.rowH+1)*cell);
+ sm.width=g.cols;sm.height=g.rows;sc.clearRect(0,0,g.cols,g.rows);
+ sc.drawImage(vid,X,Y,W,H,0,0,g.cols,g.rows);
+ const data=sc.getImageData(0,0,g.cols,g.rows).data;
+ const cells=computeCells(data,g.cols,g.rows,CFG,LUT,BAYER);
+ drawCells(cx,cell,g.cols,g.rows,g.rowH,CFG,cache,cells,tmp,tctx,RASTER);
+}
 Promise.all(CFG.slots.map((_,i)=>build(i))).then(()=>requestAnimationFrame(frame));
 <\/script></body></html>`;
 }

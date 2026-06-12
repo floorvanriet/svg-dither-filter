@@ -1,8 +1,9 @@
-# SVG Dither Filter 2.0
+# SVG Dither Filter 2.1
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
-result as a ready-to-use **hero background**.
+result as **print-ready PNG/vector-SVG artwork** or a ready-to-use **hero
+background**.
 
 No build step, no install. Open `index.html` in a browser and go.
 The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
@@ -16,18 +17,43 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ## Features
 
-- **Presets (new in 2.0)** — 9 built-in looks (Newsprint, Terminal, Blueprint,
-  Pop Art, Cyber, Retro Game, Candy, Ink Hatch, and the V1 original). A preset
-  bundles every setting, colour, and shape — including uploaded SVGs.
-- **Save / load your own presets (new in 2.0)** — stored in `localStorage`,
-  plus export/import as a JSON file to share or back up.
-- **Reset to original (new in 2.0)** — one click back to the exact v1 defaults.
-- **Built-in shape library (new in 2.0)** — 12 shapes (circle, square, rounded,
-  diamond, triangle, cross, X, star, ring, H/V line, heart) selectable per slot;
+### Artwork engine (new in 2.1)
+
+- **Artwork export** — high-res PNG (960–3840 px) and **true vector SVG**
+  (symbols + uses): infinitely scalable, ideal for print and pen plotters.
+- **Real dithering algorithms** — Floyd–Steinberg error diffusion and ordered
+  Bayer 4×4 / 8×8, on top of the original tone-bucket mapping.
+- **Source colour mode** — every cell picks its colour from the image itself,
+  with a saturation boost slider. Pointillism & mosaic looks in one click.
+- **Flow rotation** — shapes align to the image contours (Sobel gradients), so
+  strokes follow hair, waves, and brushwork. Try *Flow Lines* on Starry Night.
+- **Tone curve** — brightness / contrast / gamma before tone mapping.
+- **Grid types** — square, brick (offset), and hexagonal packing, plus a gap
+  control and per-cell size/angle jitter.
+- **Transparent background** — for PNG/SVG export over your own backdrop.
+- **Drag & drop + paste (⌘V)** — and hold the mouse on the canvas to compare
+  with the original.
+- **Shuffle** — one button that rolls a random-but-tasteful combination of
+  palette, shapes, grid, and dithering. Great for discovery.
+
+### Presets (new in 2.0, expanded in 2.1)
+
+- **14 built-in looks** — V1 original, Pointillism, Flow Lines, Mosaic,
+  Halftone, Riso Print, Newsprint, Terminal, Blueprint, Pop Art, Cyber,
+  Retro Game, Candy, Ink Hatch. A preset bundles every setting, colour, and
+  shape — including uploaded SVGs.
+- **Save / load your own presets** — stored in `localStorage`, plus
+  export/import as a JSON file to share or back up.
+- **Reset to original** — one click back to the exact v1 defaults.
+- **Built-in shape library** — 12 shapes (circle, square, rounded, diamond,
+  triangle, cross, X, star, ring, H/V line, heart) selectable per slot;
   uploading your own SVG still works per slot.
+
+### Core (v1)
+
 - **Image & video input** — drag in a still or a video; video is filtered live, frame by frame.
 - **Aspect ratio** — keep the original or center-crop to **1:1**.
-- **Grid resolution** — 4–160 cells across; rows derived from the aspect ratio.
+- **Grid resolution** — 4–200 cells across; rows derived from the aspect ratio.
 - **Background colour** — solid fill behind the shapes.
 - **7 SVG shapes** — upload up to seven SVGs, one per tone, each with its own colour.
   Empty slots fall back to a built-in circle.
@@ -54,13 +80,20 @@ open index.html        # macOS
 1. **Presets** — pick a built-in look as a starting point, save your own with
    **Opslaan…**, or share one via **Export/Import JSON**. **Reset naar
    origineel** restores the exact v1 defaults.
-2. **Source** — upload an image or video; pick **Original** or **1 : 1**.
-3. **Grid** — set resolution and background colour.
-4. **Tone mapping** — toggle invert; choose *Per-tone* or *Single* shape mode.
-5. **Shape scale** — set min/max size driven by midtone brightness.
-6. **Pixel rotation** — pick a 90° angle, optionally randomise per cell.
-7. **Shapes** — pick a built-in shape per slot 1 (shadow) → 7 (highlight), or
+2. **Source** — upload, drop, or paste an image or video; pick **Original** or
+   **1 : 1**. Hold the mouse on the canvas to peek at the original.
+3. **Tone** — brightness/contrast/gamma, invert, and the dithering algorithm.
+4. **Grid** — resolution, square/brick/hex packing, gap, and background.
+5. **Color** — per-tone palette or colours sampled from the source image.
+6. **Shape scale** — min/max size driven by brightness, plus size jitter.
+7. **Rotation** — fixed angle or *Flow* (shapes follow image contours),
+   angle jitter, optional random 90° per cell.
+8. **Shapes** — pick a built-in shape per slot 1 (shadow) → 7 (highlight), or
    upload your own SVG with ⬆, and recolour each.
+9. **Artwork export** — download as PNG (up to 3840 px) or vector SVG.
+
+> Ink-style presets (Halftone, Newsprint, Ink Hatch, Riso) use **Invert**: with
+> a single dark ink on light paper, dark areas should get the *large* dots.
 
 ## Exporting a hero background
 
@@ -100,7 +133,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html      # the entire 2.0 tool — UI, presets, dither engine, exporters
+├── index.html      # the entire 2.1 tool — UI, presets, dither engine, exporters
 ├── index-v1.html   # the original v1, untouched
 ├── assets/         # demo media (mp4 + gif preview)
 ├── README.md
