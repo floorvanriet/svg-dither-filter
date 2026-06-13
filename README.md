@@ -2,8 +2,7 @@
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
-result as **print-ready PNG/vector-SVG artwork** or a ready-to-use **hero
-background**.
+result as **print-ready PNG/vector-SVG artwork**.
 
 No build step, no install. Open `index.html` in a browser and go.
 The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
@@ -56,10 +55,6 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
   the download ping per Unsplash guidelines. Same query again = next page.
   Put your Access Key in a local `unsplash-key.js` (gitignored):
   `window.UNSPLASH_KEY = '…'` — or paste it in the one-time prompt.
-- **Hero export for images** — leave the URL empty and the current image is
-  embedded as a data-URL: a fully standalone HTML file, no hosting needed.
-  A URL ending in .mp4/.webm/.mov gives the video hero; any other URL is
-  treated as an image.
 - **Shuffle** — one button that rolls a random-but-tasteful combination of
   palette, shapes, grid, and dithering. Great for discovery.
 
@@ -105,8 +100,6 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
   shape for every cell (scaled by brightness).
 - **Shape scale (midtone min → max)** — per-cell size interpolates with brightness.
 - **Pixel rotation** — global angle snapped to 90°, plus optional random 90° per cell.
-- **Hero export** — emit a standalone HTML hero page, or copy a JSON config for a
-  React component.
 
 ## Quick start
 
@@ -131,29 +124,11 @@ open index.html        # macOS
    angle jitter, optional random 90° per cell.
 8. **Shapes** — pick a built-in shape per slot 1 (shadow) → 7 (highlight), or
    upload your own SVG with ⬆, and recolour each.
-9. **Artwork export** — download as PNG (up to 3840 px) or vector SVG.
+9. **Artwork export** — download as PNG (screen sizes or A4–A1 at 150/300 dpi)
+   or as true vector SVG with real mm dimensions.
 
 > Ink-style presets (Halftone, Newsprint, Ink Hatch, Riso) use **Invert**: with
 > a single dark ink on light paper, dark areas should get the *large* dots.
-
-## Exporting a hero background
-
-### Standalone HTML
-
-1. Tune the look (tune with a still — the dither settings transfer to video 1:1).
-2. Enter your **hero video URL** in the export field.
-3. Click **Download HTML hero** → produces `dither-hero.html`.
-
-The exported file is fully self-contained: a full-viewport `<section>` with the
-dither rendered onto a background `<canvas>`, your SVGs inlined, baked settings,
-and a sample headline/CTA layer (`mix-blend-mode: difference` keeps text legible
-over any tone). Rendering pauses off-screen via `IntersectionObserver`. Edit the
-`<h1>`/`<p>` for your real content.
-
-### React component
-
-Click **Copy config for React hero** to copy a JSON blob (settings + embedded
-SVGs). Feed that to your `<DitherHero>` component / generator of choice.
 
 ## Caveats
 
@@ -162,8 +137,8 @@ SVGs). Feed that to your `<DitherHero>` component / generator of choice.
   filter cannot read it.
 - **SVG recolouring** — colour is applied by overriding `fill`. SVGs whose shape is
   defined purely by `stroke` won't pick up the slot colour.
-- **Performance** — dithering video at a high grid is GPU/CPU heavy. For hero use,
-  prefer a short muted loop and a moderate grid.
+- **Performance** — dithering video at a high grid is GPU/CPU heavy; lower the grid
+  resolution if playback stutters.
 
 ## Browser support
 

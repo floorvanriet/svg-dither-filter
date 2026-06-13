@@ -264,17 +264,6 @@
       voor exact passend drukwerk. De SVG krijgt dan echte mm-afmetingen mee.
       Bij video pakt de export het huidige frame.</div>
   </div>
-
-  <div class="grp">
-    <h2>Hero export</h2>
-    <label>Media URL — video óf afbeelding (leeg = huidige afbeelding embedden)</label>
-    <input type="text" id="vidUrl" placeholder="https://…/video.mp4 of foto.jpg — of laat leeg" style="width:100%;background:#202026;color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
-    <button id="exportHtmlBtn" style="width:100%;margin-top:8px">Download HTML hero</button>
-    <button id="exportBtn" style="width:100%;margin-top:6px">Copy config for React hero</button>
-    <div class="hint">Zonder URL wordt je huidige afbeelding in het bestand ge-embed —
-      direct te openen, geen hosting nodig. Met URL blijft het bestand klein.
-      HTML = drop-in standalone page. JSON = paste back to Claude voor een &lt;DitherHero&gt; React component.</div>
-  </div>
 </div>
 
 <div id="stage"><canvas id="out"></canvas><div id="zoomBadge"></div></div>
@@ -365,7 +354,7 @@ const S = Object.assign({ aspect:'orig' }, DEFAULTS, {
 });
 const cache = new Array(7).fill(null);   // {key, canvas (coloured), mask (white)}
 
-/* ---------- shared render core (pure: also embedded in hero export) ---------- */
+/* ---------- shared render core ---------- */
 function hash2(x,y,s){
   let h=((x*73856093)^(y*19349663)^(s*83492791))>>>0;
   h=Math.imul(h^(h>>>13),0x5bd1e995)>>>0;
@@ -1547,173 +1536,6 @@ document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
   a.download=artFileName()+(t.label?'-'+t.label.replace(/-\d+dpi/,''):'')+'.svg'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
-
-/* ---------- hero / react export ---------- */
-function currentCfg(){
-  const cfg=currentPresetCfg();
-  cfg.aspect=S.aspect;
-  // resolve built-in shapes to inline SVG so the export stays self-contained;
-  // null keeps the hero's built-in circle fallback
-  cfg.slots=S.slots.map(s=>({
-    color:s.color,
-    svg: s.shape==='custom' ? s.svg : (s.shape==='circle' ? null : SHAPES[s.shape].svg),
-  }));
-  cfg.cmykShapeSvg=(SHAPES[S.cmykShape]||SHAPES.circle).svg;
-  return cfg;
-}
-
-document.getElementById('exportBtn').addEventListener('click', e=>{
-  const json = JSON.stringify(currentCfg());
-  navigator.clipboard.writeText(json).then(
-    ()=>{ e.target.textContent='Copied ✓ — paste to Claude'; setTimeout(()=>e.target.textContent='Copy config for React hero',2000); },
-    ()=>{ prompt('Copy this config:', json); }
-  );
-});
-
-document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
-  const cfg = currentCfg();
-  const url = document.getElementById('vidUrl').value.trim();
-  let spec;
-  if (url){
-    const isVid = /\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(url);
-    spec = { kind: isVid?'video':'image', src:url };
-  } else if (media && !isVideo){
-    // geen URL → embed de huidige afbeelding als data-URL: werkt overal standalone
-    try {
-      const w=media.naturalWidth, h=media.naturalHeight;
-      const k=Math.min(1, 1600/Math.max(w,h));
-      const c=document.createElement('canvas');
-      c.width=Math.round(w*k); c.height=Math.round(h*k);
-      c.getContext('2d').drawImage(media,0,0,c.width,c.height);
-      spec = { kind:'image', src:c.toDataURL('image/jpeg',0.85) };
-    } catch(e){
-      alert('Kan de afbeelding niet embedden (CORS). Vul een media-URL in.'); return;
-    }
-  } else if (media && isVideo){
-    alert('Je bron is een lokale video — vul de gehoste video-URL in voor de hero.'); return;
-  } else {
-    alert('Upload eerst een afbeelding, of vul een media-URL in.'); return;
-  }
-  const html = heroHTML(cfg, spec);
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([html],{type:'text/html'}));
-  a.download = artFileName()+'-hero.html'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-});
-
-function heroHTML(cfg, mediaSpec){
-  // the render core functions are embedded verbatim so hero output
-  // always matches what the tool shows
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Hero</title>
-<style>
-*{box-sizing:border-box;margin:0}
-.dither-hero{position:relative;width:100%;height:100vh;overflow:hidden;background:${cfg.bgT?'transparent':cfg.bg}}
-.dither-hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.dither-hero .content{position:relative;z-index:1;height:100%;display:flex;
- flex-direction:column;align-items:center;justify-content:center;text-align:center;
- color:#fff;font:600 clamp(28px,6vw,72px)/1.1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
- mix-blend-mode:difference;padding:24px}
-.dither-hero p{font-size:clamp(13px,1.6vw,18px);font-weight:400;margin-top:16px;opacity:.85}
-</style></head><body>
-<section class="dither-hero" id="hero">
-  <canvas id="dcanvas"></canvas>
-  <div class="content">
-    <h1>Your headline here</h1>
-    <p>Edit this markup — the dither layer sits behind it.</p>
-  </div>
-</section>
-<script>
-const CFG=${JSON.stringify(cfg)};
-const DEFAULT_SVG=${JSON.stringify(DEFAULT_SVG)};
-const MEDIA=${JSON.stringify(mediaSpec)};
-const RASTER=96;
-const BAYER=${JSON.stringify(BAYER)};
-const INKS=${JSON.stringify(INKS)};
-const SCREEN_ANGLES=${JSON.stringify(SCREEN_ANGLES)};
-${hash2.toString()}
-${toneLUT.toString()}
-${gridFor.toString()}
-${computeCells.toString()}
-${drawCells.toString()}
-${rgb2cmyk.toString()}
-${adjustBuffer.toString()}
-${drawCMYK.toString()}
-${recolorSVG.toString()}
-${rasterizeSVG.toString()}
-const cv=document.getElementById('dcanvas'),cx=cv.getContext('2d');
-const sm=document.createElement('canvas'),sc=sm.getContext('2d',{willReadFrequently:true});
-const tmp=document.createElement('canvas');tmp.width=tmp.height=RASTER;
-const tctx=tmp.getContext('2d');
-const cache=new Array(7).fill(null);
-function build(i){
-  const sl=CFG.slots[i], src=sl.svg||DEFAULT_SVG;
-  const col=recolorSVG(src,sl.color), msk=recolorSVG(src,'#ffffff');
-  if(!col){cache[i]=null;return Promise.resolve();}
-  return Promise.all([rasterizeSVG(col,RASTER),rasterizeSVG(msk,RASTER)])
-    .then(([c,m])=>{cache[i]=c?{canvas:c,mask:m}:null;});
-}
-const inks={};
-function buildInks(){
-  const src=CFG.cmykShapeSvg||DEFAULT_SVG;
-  return Promise.all(Object.keys(INKS).map(ch=>
-    rasterizeSVG(recolorSVG(src,INKS[ch]),RASTER).then(c=>{inks[ch]=c;})));
-}
-const LUT=toneLUT(CFG);
-function draw(src,sw,sh){
- if(!sw||!sh)return;
- let X=0,Y=0,W=sw,H=sh;
- const tgt=CFG.aspect==='square'?1:CFG.aspect==='aport'?1/Math.SQRT2:CFG.aspect==='aland'?Math.SQRT2:null;
- if(tgt){const cur=sw/sh;
-  if(cur>tgt){W=sh*tgt;X=(sw-W)/2;}else{H=sw/tgt;Y=(sh-H)/2;}}
- const r=cv.clientWidth/cv.clientHeight||W/H;
- if(CFG.renderMode==='cmyk'){
-   const cols=CFG.grid;
-   const cell=Math.max(2,(r>=1?960:960*r)/cols);
-   const CW=Math.round(cols*cell),CH=Math.round(CW/r);
-   cv.width=CW;cv.height=CH;
-   const bw=Math.min(cols*2,480),bh=Math.max(1,Math.round(bw/r));
-   sm.width=bw;sm.height=bh;sc.clearRect(0,0,bw,bh);
-   sc.drawImage(src,X,Y,W,H,0,0,bw,bh);
-   const buf=sc.getImageData(0,0,bw,bh);
-   adjustBuffer(buf.data,CFG);
-   drawCMYK(cx,CW,CH,cell,CFG,buf.data,bw,bh,inks,SCREEN_ANGLES);
-   return;
- }
- const g=gridFor(CFG,r);
- const cell=Math.max(2,Math.floor((r>=1?960:960*r)/g.cols));
- cv.width=g.cols*cell;cv.height=Math.round(((g.rows-1)*g.rowH+1)*cell);
- sm.width=g.cols;sm.height=g.rows;sc.clearRect(0,0,g.cols,g.rows);
- sc.drawImage(src,X,Y,W,H,0,0,g.cols,g.rows);
- const data=sc.getImageData(0,0,g.cols,g.rows).data;
- const cells=computeCells(data,g.cols,g.rows,CFG,LUT,BAYER);
- drawCells(cx,cell,g.cols,g.rows,g.rowH,CFG,cache,cells,tmp,tctx,RASTER);
-}
-let ready=false,built=false;
-const buildAll=Promise.all([...CFG.slots.map((_,i)=>build(i)),buildInks()]);
-if(MEDIA.kind==='image'){
- const im=new Image();
- if(MEDIA.src.indexOf('data:')!==0)im.crossOrigin='anonymous';
- const redraw=()=>{ if(built&&ready)draw(im,im.naturalWidth,im.naturalHeight); };
- im.onload=()=>{ready=true;redraw();};
- im.onerror=()=>{document.querySelector('.content p').textContent='Kon afbeelding niet laden: '+MEDIA.src;};
- im.src=MEDIA.src;
- let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redraw,120);});
- buildAll.then(()=>{built=true;redraw();});
-}else{
- const vid=document.createElement('video');
- vid.src=MEDIA.src;vid.loop=true;vid.muted=true;vid.playsInline=true;vid.autoplay=true;
- vid.addEventListener('loadeddata',()=>{ready=true;vid.play();});
- let visible=true;
- new IntersectionObserver(es=>{visible=es[0].isIntersecting;
-  if(visible)vid.play();else vid.pause();},{threshold:0}).observe(document.getElementById('hero'));
- function frame(){requestAnimationFrame(frame);
-  if(!ready||!visible||!built)return;
-  draw(vid,vid.videoWidth,vid.videoHeight);}
- buildAll.then(()=>{built=true;requestAnimationFrame(frame);});
-}
-<\/script></body></html>`;
-}
 
 /* ---------- go ---------- */
 syncUI();
