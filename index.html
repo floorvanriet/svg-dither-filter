@@ -48,6 +48,9 @@
   #themeBtn { flex:none; padding:5px 9px; font-size:14px; line-height:1; }
   button { cursor:pointer; }
   button:hover { border-color:var(--acc); }
+  select:disabled, button:disabled, input:disabled { opacity:.38; cursor:not-allowed; }
+  .lock { color:#d99a3d; font-size:10px; margin:2px 0 8px; }
+  :root[data-theme="light"] .lock { color:#b06a12; }
   .seg { display:flex; gap:0; }
   .seg button { flex:1; border-radius:0; padding:6px 4px; }
   .seg button:first-child{border-radius:5px 0 0 5px;}
@@ -243,6 +246,7 @@
 
   <div class="grp">
     <h2>Shapes &amp; kleuren — shadow → highlight</h2>
+    <div id="colorLock" class="lock" style="display:none"></div>
     <label style="margin-top:0">Shape-set</label>
     <div class="row">
       <button id="shapePrev" title="Vorige shape-set" style="flex:none;padding:6px 10px">◀</button>
@@ -1050,8 +1054,8 @@ bindSeg('aspect','aspect');
 bindSeg('mode','mode', ()=>{ document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none'; });
 bindSeg('gridType','gridType');
 bindSeg('rotMode','rotMode');
-bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none'; });
-bindSeg('renderMode','renderMode', ()=>{ document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none'; });
+bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none'; refreshColorLock(); });
+bindSeg('renderMode','renderMode', ()=>{ document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none'; refreshColorLock(); });
 
 /* CMYK controls */
 document.getElementById('cmykShape').innerHTML = Object.entries(SHAPES)
@@ -1167,6 +1171,30 @@ function syncUI(){
   document.getElementById('singleSel').value = S.single;
   document.getElementById('ditherSel').value = S.dither;
   S.slots.forEach((_,i)=>syncSlotRow(i));
+  refreshColorLock();
+}
+
+/* dim de slot-controls in modi waar ze niets doen, met uitleg waarom */
+function refreshColorLock(){
+  const cmyk = S.renderMode==='cmyk';
+  const source = S.colorMode==='source';
+  const colorsOff = cmyk || source;   // slotkleuren + palet tellen niet mee
+  const shapesOff = cmyk;             // CMYK heeft z'n eigen dot-shape
+  const lock = document.getElementById('colorLock');
+  lock.textContent = cmyk
+    ? '⚠ CMYK-modus tekent met vaste proceskleuren (C·M·Y·K) en z\'n eigen dot-shape — de slots hieronder tellen niet mee. Kies daar de dot-shape; zet Render mode op “Shapes” voor losse kleuren.'
+    : source
+    ? '⚠ Kleuren komen uit de bron-afbeelding. Zet Color op “Per-tone kleur” om hier eigen slotkleuren te kiezen.'
+    : '';
+  lock.style.display = colorsOff ? 'block' : 'none';
+  // kleur-controls
+  list.querySelectorAll('input[type=color]').forEach(c=>c.disabled=colorsOff);
+  ['palSel','palPrev','palNext','palDel','savePal'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.disabled=colorsOff; });
+  // shape-controls (alleen uit in CMYK)
+  list.querySelectorAll('.shapeSel,.up').forEach(el=>el.disabled=shapesOff);
+  ['shapeSetSel','shapePrev','shapeNext','shapeDel','saveShapeSet'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.disabled=shapesOff; });
 }
 
 const presetSel = document.getElementById('presetSel');
