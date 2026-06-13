@@ -3,24 +3,33 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.2</title>
+<title>SVG Dither Filter 2.3</title>
 <style>
-  :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff; }
+  :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff;
+          --ctrl:#202026; --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
+  :root[data-theme="light"] {
+          --bg:#f3f3f5; --panel:#ffffff; --line:#d9d9df; --txt:#1c1c22; --mut:#6c6c75; --acc:#3b6fe0;
+          --ctrl:#ececed; --stage:#d6d6da; --mat:#ffffff; --matline:#c2c2cb; --overlay:255,255,255; }
   * { box-sizing:border-box; }
   body { margin:0; font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
          background:var(--bg); color:var(--txt); display:flex; height:100vh; overflow:hidden; }
   #panel { width:330px; flex:none; background:var(--panel); border-right:1px solid var(--line);
            overflow-y:auto; padding:16px; }
-  #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:24px;
-           background:#000 repeating-conic-gradient(#111 0 25%,#181818 0 50%) 0/24px 24px;
-           position:relative; overflow:hidden; }
+  #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:32px;
+           background:var(--stage); position:relative; overflow:hidden;
+           transition:background .2s; }
   #zoomBadge { position:absolute; top:10px; right:12px; z-index:2; display:none;
-           background:rgba(13,13,15,.85); border:1px solid var(--line); border-radius:5px;
+           background:rgba(var(--overlay),.85); border:1px solid var(--line); border-radius:5px;
            padding:3px 8px; font-size:11px; color:var(--mut); pointer-events:none; }
   #stage.drag::after { content:'Drop afbeelding of video'; position:absolute; inset:12px;
            border:2px dashed var(--acc); border-radius:12px; display:flex; align-items:center;
-           justify-content:center; font-size:16px; color:var(--acc); background:rgba(13,13,15,.7); }
-  canvas { max-width:100%; max-height:100%; box-shadow:0 0 0 1px var(--line); }
+           justify-content:center; font-size:16px; color:var(--acc); background:rgba(var(--overlay),.7); }
+  /* subtiele lijst met passe-partout: mat-rand + dunne lijst + slagschaduw */
+  canvas { max-width:100%; max-height:100%;
+           box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline),
+                      0 12px 38px rgba(0,0,0,.45); }
+  :root[data-theme="light"] canvas { box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline),
+                      0 12px 34px rgba(0,0,0,.20); }
   h1 { font-size:14px; margin:0 0 2px; letter-spacing:.04em; }
   .ver { font-size:10px; color:var(--mut); margin:0 0 14px; }
   .ver a { color:var(--acc); text-decoration:none; }
@@ -34,8 +43,9 @@
   input[type=file] { width:100%; font-size:11px; color:var(--mut); }
   input[type=color] { width:34px; height:26px; padding:0; border:1px solid var(--line);
                        background:none; border-radius:4px; }
-  select, button { background:#202026; color:var(--txt); border:1px solid var(--line);
+  select, button { background:var(--ctrl); color:var(--txt); border:1px solid var(--line);
                     border-radius:5px; padding:6px 8px; font:inherit; }
+  #themeBtn { flex:none; padding:5px 9px; font-size:14px; line-height:1; }
   button { cursor:pointer; }
   button:hover { border-color:var(--acc); }
   .seg { display:flex; gap:0; }
@@ -66,8 +76,13 @@
 </head>
 <body>
 <div id="panel">
-  <h1>SVG DITHER FILTER</h1>
-  <p class="ver">v2.2 · <a href="index-v1.html">open origineel (v1)</a></p>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+    <div>
+      <h1>SVG DITHER FILTER</h1>
+      <p class="ver">v2.3 · <a href="index-v1.html">open origineel (v1)</a></p>
+    </div>
+    <button id="themeBtn" title="Licht / donker thema">🌙</button>
+  </div>
 
   <div class="grp">
     <h2>Presets</h2>
@@ -104,7 +119,7 @@
       Houd de muis ingedrukt op het canvas om het origineel te zien.</div>
     <label>Unsplash</label>
     <div class="row">
-      <input type="text" id="unsQ" placeholder="zoek foto's…" style="flex:1;min-width:0;background:#202026;color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
+      <input type="text" id="unsQ" placeholder="zoek foto's…" style="flex:1;min-width:0;background:var(--ctrl);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
       <button id="unsBtn" style="flex:none">Zoek</button>
     </div>
     <div id="unsGrid"></div>
@@ -227,21 +242,28 @@
   </div>
 
   <div class="grp">
-    <h2>Shapes — shadow → highlight</h2>
-    <div class="row" style="margin-bottom:6px">
-      <button id="slotPrev" title="Vorige set" style="flex:none;padding:6px 10px">◀</button>
-      <select id="slotPresetSel" style="flex:1;min-width:0"><option value="">— shape &amp; kleur preset —</option></select>
-      <button id="slotNext" title="Volgende set" style="flex:none;padding:6px 10px">▶</button>
+    <h2>Shapes &amp; kleuren — shadow → highlight</h2>
+    <label style="margin-top:0">Shape-set</label>
+    <div class="row">
+      <button id="shapePrev" title="Vorige shape-set" style="flex:none;padding:6px 10px">◀</button>
+      <select id="shapeSetSel" style="flex:1;min-width:0"></select>
+      <button id="shapeNext" title="Volgende shape-set" style="flex:none;padding:6px 10px">▶</button>
+      <button id="shapeDel" title="Verwijder eigen shape-set" style="flex:none;padding:6px 9px">✕</button>
     </div>
-    <div class="btnrow" style="margin-top:0;margin-bottom:10px">
-      <button id="slotShapesBtn" title="Neem alleen de shapes over">Alleen shapes</button>
-      <button id="slotColorsBtn" title="Neem alleen de kleuren over">Alleen kleuren</button>
-      <button id="slotSaveBtn" title="Bewaar huidige shapes + kleuren als set">Opslaan…</button>
-      <button id="slotDelBtn" title="Verwijder eigen set">✕</button>
+    <label>Kleurenpalet</label>
+    <div class="row">
+      <button id="palPrev" title="Vorig palet" style="flex:none;padding:6px 10px">◀</button>
+      <select id="palSel" style="flex:1;min-width:0"></select>
+      <button id="palNext" title="Volgend palet" style="flex:none;padding:6px 10px">▶</button>
+      <button id="palDel" title="Verwijder eigen palet" style="flex:none;padding:6px 9px">✕</button>
     </div>
-    <div id="svgList"></div>
-    <div class="hint">Kies per slot een ingebouwde shape, of upload een eigen SVG met ⬆ (blauw = eigen SVG actief). Slot 1 = donkerste, slot 7 = lichtste.
-      De preset hierboven wisselt alleen shapes/kleuren — alle andere settings blijven staan.</div>
+    <div class="btnrow">
+      <button id="saveShapeSet">Shapes opslaan…</button>
+      <button id="savePal">Kleuren opslaan…</button>
+    </div>
+    <div id="svgList" style="margin-top:10px"></div>
+    <div class="hint">Shape-set en palet staan los van elkaar — combineer elke vorm met elk palet.
+      Of zet per slot een eigen shape (⬆ = eigen SVG) en kleur. Slot 1 = donkerste, slot 7 = lichtste.</div>
   </div>
 
   <div class="grp">
@@ -1287,91 +1309,88 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
   presetSel.value='';
 });
 
-/* ---------- slot presets: shapes & colours only ---------- */
-const SLOT_PRESETS = {
-  'V1 Grijs':       mkSlots('circle', ramp('#000000','#d2d2d2')),
-  'Mono inkt':      mkSlots('circle', Array(7).fill('#1d1a16')),
-  'Arcering':       mkSlots(['circle','vline','hline','hline','xmark','cross','square'],
-                            ramp('#8a8378','#14110c')),
-  'Game Boy':       mkSlots('square', ramp('#0f380f','#9bbc0f')),
-  'Neon':           mkSlots('diamond',
-                      ['#2a0a4a','#5b1e8f','#8c2bd9','#c13ad9','#ff3df0','#5bd9ff','#9ffcff']),
-  'Candy':          mkSlots(['heart','heart','star','star','heart','star','heart'],
-                      ['#b83b6e','#e0529c','#f47ab8','#f9a8d4','#a78bfa','#7dd3fc','#fde68a']),
-  'Zonsondergang':  mkSlots('circle',
-                      ['#1a0a2e','#4a1942','#83274f','#c43e4b','#ee6c45','#f9a03f','#ffd45e']),
-  'Oceaan':         mkSlots('circle',
-                      ['#03045e','#0b3d91','#0077b6','#0096c7','#00b4d8','#48cae4','#ade8f4']),
-  'Bos':            mkSlots(['triangle','triangle','circle','triangle','circle','circle','star'],
-                      ['#0b2818','#14452a','#1e6b3a','#2e8b4a','#5cab6d','#94c98f','#d8e8b0']),
-  'Pop CMYK':       mkSlots('circle',
-                      ['#1a1a1a','#00aeef','#0057a8','#ec008c','#ff5e3a','#fff200','#ffffff']),
+/* ---------- shape-sets & kleurpaletten — twee losse assen ----------
+   Shapes (wélke vorm) en kleuren (welk palet) zijn onafhankelijk:
+   combineer elke shape-set met elk palet. Volledige "looks" leven in
+   de hoofd-presets bovenaan. */
+function shapeArr(s){ return Array.isArray(s) ? s.slice(0,7) : Array.from({length:7},()=>s); }
+const SHAPE_SETS = {
+  'Cirkels':'circle', 'Vierkanten':'square', 'Afgerond':'rounded', 'Ruiten':'diamond',
+  'Ringen':'ring', 'Driehoeken':'triangle', 'Kruisjes':'xmark', 'Sterren':'star',
+  'Hartjes':'heart', 'Lijnen ─':'hline', 'Lijnen │':'vline',
+  'Arcering':            ['circle','vline','hline','hline','xmark','cross','square'],
+  'Sterren & hartjes':   ['heart','heart','star','star','heart','star','heart'],
+  'Gemengd':             ['circle','square','diamond','triangle','star','cross','ring'],
+  'Natuur':              ['triangle','triangle','circle','triangle','circle','circle','star'],
 };
-const LS_SLOTS = 'ditherSlotPresets2';
-function customSlotSets(){ try { return JSON.parse(localStorage.getItem(LS_SLOTS)) || {}; } catch(e){ return {}; } }
-function saveCustomSlotSets(p){ localStorage.setItem(LS_SLOTS, JSON.stringify(p)); }
-
-const slotPresetSel = document.getElementById('slotPresetSel');
-function refreshSlotPresetList(keep){
-  const custom = customSlotSets();
-  slotPresetSel.innerHTML = '<option value="">— shape &amp; kleur preset —</option>'
-    + '<optgroup label="Ingebouwd">'
-    + Object.keys(SLOT_PRESETS).map(n=>`<option value="b:${n}">${n}</option>`).join('')
-    + '</optgroup>'
-    + (Object.keys(custom).length
-      ? '<optgroup label="Eigen sets">'
-        + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('')
-        + '</optgroup>'
-      : '');
-  slotPresetSel.value = keep || '';
-}
-function selectedSlotSet(){
-  const v = slotPresetSel.value; if(!v) return null;
-  const name = v.slice(2);
-  return v[0]==='b' ? SLOT_PRESETS[name] : customSlotSets()[name];
-}
-async function applySlotSet(set, what){ // what: 'both' | 'shapes' | 'colors'
-  if (!set) return;
-  set.slice(0,7).forEach((sl,i)=>{
-    if (what!=='colors'){
-      S.slots[i].shape = sl.shape || (sl.svg ? 'custom' : 'circle');
-      S.slots[i].svg = sl.svg || null;
-    }
-    if (what!=='shapes' && sl.color) S.slots[i].color = sl.color;
+const COLOR_PALETTES = {
+  'V1 Grijs':       ramp('#000000','#d2d2d2'),
+  'Mono inkt':      Array(7).fill('#1d1a16'),
+  'Sepia':          ramp('#efe3cd','#4a3526'),
+  'Inkt op papier': ramp('#8a8378','#14110c'),
+  'Game Boy':       ramp('#0f380f','#9bbc0f'),
+  'Neon':           ['#2a0a4a','#5b1e8f','#8c2bd9','#c13ad9','#ff3df0','#5bd9ff','#9ffcff'],
+  'Candy':          ['#b83b6e','#e0529c','#f47ab8','#f9a8d4','#a78bfa','#7dd3fc','#fde68a'],
+  'Zonsondergang':  ['#1a0a2e','#4a1942','#83274f','#c43e4b','#ee6c45','#f9a03f','#ffd45e'],
+  'Oceaan':         ['#03045e','#0b3d91','#0077b6','#0096c7','#00b4d8','#48cae4','#ade8f4'],
+  'Bos':            ['#0b2818','#14452a','#1e6b3a','#2e8b4a','#5cab6d','#94c98f','#d8e8b0'],
+  'Pop CMYK':       ['#1a1a1a','#00aeef','#0057a8','#ec008c','#ff5e3a','#fff200','#ffffff'],
+  'Delfts Blauw':   ramp('#16356b','#eaf2fa'),
+  'Goud':           ramp('#2b1d12','#f5e7b8'),
+};
+async function applyShapeSet(set){
+  shapeArr(set).forEach((sh,i)=>{
+    if (sh && typeof sh==='object' && sh.custom){ S.slots[i].shape='custom'; S.slots[i].svg=sh.custom; }
+    else { S.slots[i].shape=sh; S.slots[i].svg=null; }
     syncSlotRow(i);
   });
   await rebuildAll();
 }
-slotPresetSel.addEventListener('change', ()=>applySlotSet(selectedSlotSet(),'both'));
-const fireSlot = ()=>applySlotSet(selectedSlotSet(),'both');
-document.getElementById('slotPrev').addEventListener('click', ()=>stepSelect(slotPresetSel,-1,fireSlot));
-document.getElementById('slotNext').addEventListener('click', ()=>stepSelect(slotPresetSel, 1,fireSlot));
-document.getElementById('slotShapesBtn').addEventListener('click', ()=>{
-  const s=selectedSlotSet();
-  if(!s){ alert('Kies eerst een shape & kleur preset.'); return; }
-  applySlotSet(s,'shapes');
-});
-document.getElementById('slotColorsBtn').addEventListener('click', ()=>{
-  const s=selectedSlotSet();
-  if(!s){ alert('Kies eerst een shape & kleur preset.'); return; }
-  applySlotSet(s,'colors');
-});
-document.getElementById('slotSaveBtn').addEventListener('click', ()=>{
-  const name = prompt('Naam voor deze shape & kleur set:'); if(!name) return;
-  const p = customSlotSets();
-  p[name.trim()] = S.slots.map(s=>({ shape:s.shape, svg:s.shape==='custom'?s.svg:null, color:s.color }));
-  saveCustomSlotSets(p);
-  refreshSlotPresetList('c:'+name.trim());
-});
-document.getElementById('slotDelBtn').addEventListener('click', ()=>{
-  const v = slotPresetSel.value;
-  if (!v || v[0]!=='c'){ alert('Selecteer eerst een eigen set (ingebouwde kun je niet verwijderen).'); return; }
-  const name = v.slice(2);
-  if (!confirm(`Set "${name}" verwijderen?`)) return;
-  const p = customSlotSets(); delete p[name]; saveCustomSlotSets(p);
-  refreshSlotPresetList();
-});
-refreshSlotPresetList();
+async function applyPalette(cols){
+  cols.slice(0,7).forEach((c,i)=>{ S.slots[i].color=c; syncSlotRow(i); });
+  await rebuildAll();
+}
+// gedeelde picker: ingebouwd + eigen, met ◀▶, opslaan en verwijderen
+function makeLibrary(o){
+  const sel = document.getElementById(o.selId);
+  const getCustom = ()=>{ try { return JSON.parse(localStorage.getItem(o.lsKey))||{}; } catch(e){ return {}; } };
+  const setCustom = c => localStorage.setItem(o.lsKey, JSON.stringify(c));
+  function refresh(keep){
+    const custom = getCustom();
+    sel.innerHTML = `<option value="">${o.label}</option>`
+      + '<optgroup label="Ingebouwd">'
+      + Object.keys(o.builtins).map(n=>`<option value="b:${n}">${n}</option>`).join('') + '</optgroup>'
+      + (Object.keys(custom).length ? '<optgroup label="Eigen">'
+        + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('') + '</optgroup>' : '');
+    sel.value = keep || '';
+  }
+  const valFor = v => v[0]==='b' ? o.builtins[v.slice(2)] : getCustom()[v.slice(2)];
+  const fire = ()=>{ if (sel.value) o.apply(valFor(sel.value)); };
+  sel.addEventListener('change', fire);
+  document.getElementById(o.prevId).addEventListener('click', ()=>stepSelect(sel,-1,fire));
+  document.getElementById(o.nextId).addEventListener('click', ()=>stepSelect(sel, 1,fire));
+  document.getElementById(o.saveId).addEventListener('click', ()=>{
+    const name = prompt(o.promptMsg); if(!name) return;
+    const c = getCustom(); c[name.trim()] = o.capture(); setCustom(c);
+    refresh('c:'+name.trim());
+  });
+  document.getElementById(o.delId).addEventListener('click', ()=>{
+    const v = sel.value;
+    if (!v || v[0]!=='c'){ alert('Selecteer eerst een eigen item (ingebouwde kun je niet verwijderen).'); return; }
+    const name = v.slice(2);
+    if (!confirm(`"${name}" verwijderen?`)) return;
+    const c=getCustom(); delete c[name]; setCustom(c); refresh();
+  });
+  refresh('');
+}
+makeLibrary({ selId:'shapeSetSel', prevId:'shapePrev', nextId:'shapeNext', delId:'shapeDel',
+  saveId:'saveShapeSet', builtins:SHAPE_SETS, lsKey:'ditherShapeSets', label:'— shape-set —',
+  apply:applyShapeSet, promptMsg:'Naam voor deze shape-set:',
+  capture:()=>S.slots.map(s=>s.shape==='custom'?{custom:s.svg}:s.shape) });
+makeLibrary({ selId:'palSel', prevId:'palPrev', nextId:'palNext', delId:'palDel',
+  saveId:'savePal', builtins:COLOR_PALETTES, lsKey:'ditherPalettes', label:'— palet —',
+  apply:applyPalette, promptMsg:'Naam voor dit kleurenpalet:',
+  capture:()=>S.slots.map(s=>s.color) });
 
 /* ---------- artwork export: PNG ---------- */
 const PAPER = { a4:[210,297], a3:[297,420], a2:[420,594], a1:[594,841] }; // mm
@@ -1536,6 +1555,18 @@ document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
   a.download=artFileName()+(t.label?'-'+t.label.replace(/-\d+dpi/,''):'')+'.svg'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
+
+/* ---------- light / dark thema ---------- */
+const themeBtn = document.getElementById('themeBtn');
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t==='light' ? '🌙' : '☀️';
+  themeBtn.title = t==='light' ? 'Schakel naar donker' : 'Schakel naar licht';
+  localStorage.setItem('ditherTheme', t);
+}
+themeBtn.addEventListener('click', ()=>
+  applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'));
+applyTheme(localStorage.getItem('ditherTheme') || 'dark');
 
 /* ---------- go ---------- */
 syncUI();

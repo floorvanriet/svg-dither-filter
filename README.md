@@ -1,4 +1,4 @@
-# SVG Dither Filter 2.2
+# SVG Dither Filter 2.3
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
@@ -69,8 +69,8 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
   *Sfeer* (Pop Art, Cyber, Candy, Vaporwave, Confetti, Bokeh, LEGO,
   Borduurwerk) and the V1 original. A preset bundles every setting, colour,
   and shape — including uploaded SVGs.
-- **◀ ▶ navigation** — step through all presets (and shape/colour sets) with
-  prev/next buttons; each step applies instantly.
+- **◀ ▶ navigation** — step through all presets (and shape-sets / palettes)
+  with prev/next buttons; each step applies instantly.
 - **Smart filenames** — exports are named after the source and preset, e.g.
   `meisje-met-de-parel-delfts-blauw-A2-300dpi-4961x7016.png`.
 - **Save / load your own presets** — stored in `localStorage`, plus
@@ -79,11 +79,15 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Built-in shape library** — 12 shapes (circle, square, rounded, diamond,
   triangle, cross, X, star, ring, H/V line, heart) selectable per slot;
   uploading your own SVG still works per slot.
-- **Shape & colour sets (new in 2.2)** — a second preset layer that swaps
-  *only* the 7 slots while every other setting stays put. 10 built-in sets
-  (V1 Grijs, Mono inkt, Arcering, Game Boy, Neon, Candy, Zonsondergang,
-  Oceaan, Bos, Pop CMYK), apply shapes-only or colours-only, and save your
-  own sets to `localStorage`.
+- **Independent shape-sets & palettes (new in 2.3)** — shapes (which mark)
+  and colours (which palette) are two separate axes: pick any of 15 shape-sets
+  and combine it with any of 13 palettes, each with its own ◀ ▶ navigation.
+  Changing one never touches the other or any other setting. Save your own
+  shape-sets and palettes to `localStorage`. (Full "looks" still live in the
+  main presets above.)
+- **Light / dark theme** — toggle the whole app between dark and light with the
+  ☀️/🌙 button; remembered across sessions. The preview sits in a subtle
+  passe-partout (mat + frame line + soft shadow) like a framed print.
 
 ### Core (v1)
 
@@ -149,7 +153,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html      # the entire 2.2 tool — UI, presets, dither engine, exporters
+├── index.html      # the entire 2.3 tool — UI, presets, dither engine, exporters
 ├── index-v1.html   # the original v1, untouched
 ├── assets/         # demo media (mp4 + gif preview)
 ├── README.md
