@@ -1,4 +1,4 @@
-# SVG Dither Filter 2.4
+# SVG Dither Filter 2.5
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
@@ -25,22 +25,21 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
   be the halftone dot. Exports to PNG **and** vector SVG (4 ink groups).
 - **Blue-noise dithering** — a precomputed 32×32 void-and-cluster matrix for
   organic, clump-free grain (vs. the regular Bayer crosshatch).
-- **Zoom & pan** — scroll to zoom (up to 12×, rendered at higher resolution so
-  dots stay crisp), drag to pan, double-click to reset. Hold still to compare
-  with the original.
-- **Reposition the crop** — when a paper/1:1 format is active, drag the image
-  directly on the canvas to choose which part of the photo stays in frame
-  (double-click recentres). The offset carries through to every export.
 
 ### Artwork engine (new in 2.1)
 
 - **Artwork export** — high-res PNG and **true vector SVG** (symbols + uses):
   infinitely scalable, ideal for print and pen plotters.
-- **Paper sizes (A1–A4)** — pick *A staand* / *A liggend* as the canvas format
-  (the photo is centre-cropped to the 1:√2 ratio) and export PNG at exact
-  print resolution (A4–A1 at 150/300 dpi, up to 9933 px). The SVG export gets
-  real mm dimensions (`width="420mm"`), so it opens at true size in
-  Illustrator/Inkscape. A guard warns when the canvas ratio doesn't match.
+- **Formats: print & wallpaper** — the Formaat dropdown crops the photo to a
+  ratio: *Origineel*, *1:1*, *A-papier staand/liggend* (print), or *Desktop
+  16:9 / Ultrawide 21:9 / Telefoon 9:19.5* (wallpaper). Export at exact pixels:
+  A4–A1 at 150/300 dpi (up to 9933 px, SVG carries real mm sizes for
+  Illustrator/Inkscape) or wallpaper sizes (1920×1080 … 4K, 5120×2194, phone
+  1080×2340 / 1284×2778). PNG snaps to the exact target dimensions; a guard
+  warns when the crop ratio doesn't match the chosen export.
+- **Crop zoom & pan** — scroll to zoom into the photo and drag to reposition;
+  this is a real *source* crop, so it carries through to every export (compose
+  a tight wallpaper or print). Double-click recentres; hold still to compare.
 - **Real dithering algorithms** — Floyd–Steinberg error diffusion and ordered
   Bayer 4×4 / 8×8, on top of the original tone-bucket mapping.
 - **Source colour mode** — every cell picks its colour from the image itself,
@@ -156,7 +155,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html      # the entire 2.4 tool — UI, presets, dither engine, exporters
+├── index.html      # the entire 2.5 tool — UI, presets, dither engine, exporters
 ├── index-v1.html   # the original v1, untouched
 ├── assets/         # demo media (mp4 + gif preview)
 ├── README.md

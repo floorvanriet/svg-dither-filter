@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.4</title>
+<title>SVG Dither Filter 2.5</title>
 <style>
   :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff;
           --ctrl:#202026; --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
@@ -82,7 +82,7 @@
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
     <div>
       <h1>SVG DITHER FILTER</h1>
-      <p class="ver">v2.4 · <a href="index-v1.html">open origineel (v1)</a></p>
+      <p class="ver">v2.5 · <a href="index-v1.html">open origineel (v1)</a></p>
     </div>
     <button id="themeBtn" title="Licht / donker thema">🌙</button>
   </div>
@@ -112,12 +112,19 @@
     <h2>Source</h2>
     <input type="file" id="media" accept="image/*,video/*" />
     <label>Formaat (foto wordt passend gecropt)</label>
-    <div class="seg" id="aspect">
-      <button data-v="orig" class="on">Origineel</button>
-      <button data-v="square">1:1</button>
-      <button data-v="aport">A staand</button>
-      <button data-v="aland">A liggend</button>
-    </div>
+    <select autocomplete="off" id="aspect" style="width:100%">
+      <option value="orig">Origineel — geen uitsnede</option>
+      <optgroup label="Print">
+        <option value="square">Vierkant 1:1</option>
+        <option value="aport">A-papier · staand</option>
+        <option value="aland">A-papier · liggend</option>
+      </optgroup>
+      <optgroup label="Wallpaper">
+        <option value="wide">Desktop 16:9</option>
+        <option value="ultrawide">Ultrawide 21:9</option>
+        <option value="tall">Telefoon 9:19.5</option>
+      </optgroup>
+    </select>
     <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
       Bij een uitsnede: sleep de afbeelding op het canvas om 'm te verschuiven (dubbelklik = centreren).
       Houd de muis ingedrukt om het origineel te zien.</div>
@@ -275,21 +282,33 @@
     <h2>Artwork export</h2>
     <div class="btnrow" style="margin-top:0">
       <select autocomplete="off" id="pngScale">
-        <option value="1920">Scherm · 1920 px</option>
-        <option value="3840">Scherm · 3840 px (4K)</option>
-        <option value="a4-300">A4 · 300 dpi · 3508 px</option>
-        <option value="a3-300">A3 · 300 dpi · 4961 px</option>
-        <option value="a2-300" selected>A2 · 300 dpi · 7016 px</option>
-        <option value="a2-150">A2 · 150 dpi · 3508 px</option>
-        <option value="a1-300">A1 · 300 dpi · 9933 px</option>
-        <option value="a1-150">A1 · 150 dpi · 4967 px</option>
+        <optgroup label="Scherm">
+          <option value="1920">Scherm · 1920 px</option>
+          <option value="3840">Scherm · 3840 px (4K)</option>
+        </optgroup>
+        <optgroup label="Wallpaper (zet Formaat op de juiste ratio)">
+          <option value="wp:1920:1080:Desktop-1080p">Desktop 1080p · 1920×1080</option>
+          <option value="wp:2560:1440:Desktop-1440p">Desktop 1440p · 2560×1440</option>
+          <option value="wp:3840:2160:Desktop-4K">Desktop 4K · 3840×2160</option>
+          <option value="wp:5120:2194:Ultrawide">Ultrawide · 5120×2194</option>
+          <option value="wp:1080:2340:Telefoon">Telefoon · 1080×2340</option>
+          <option value="wp:1284:2778:Telefoon-XL">Telefoon XL · 1284×2778</option>
+        </optgroup>
+        <optgroup label="Print (A-formaat)">
+          <option value="a4-300">A4 · 300 dpi · 3508 px</option>
+          <option value="a3-300">A3 · 300 dpi · 4961 px</option>
+          <option value="a2-300" selected>A2 · 300 dpi · 7016 px</option>
+          <option value="a2-150">A2 · 150 dpi · 3508 px</option>
+          <option value="a1-300">A1 · 300 dpi · 9933 px</option>
+          <option value="a1-150">A1 · 150 dpi · 4967 px</option>
+        </optgroup>
       </select>
       <button id="exportPngBtn">Download PNG</button>
     </div>
     <button id="exportSvgBtn" style="width:100%;margin-top:6px">Download SVG (vector)</button>
-    <div class="hint">Kies een A-formaat hierboven én zet Formaat (Source) op A staand/liggend
-      voor exact passend drukwerk. De SVG krijgt dan echte mm-afmetingen mee.
-      Bij video pakt de export het huidige frame.</div>
+    <div class="hint">Zet <b>Formaat</b> (Source) op de bijpassende ratio — A-papier voor print,
+      Desktop/Telefoon voor wallpaper — en kies hier de exportmaat. SVG krijgt bij print
+      echte mm-afmetingen mee. Een waarschuwing verschijnt als de uitsnede niet past.</div>
   </div>
 </div>
 
@@ -412,7 +431,7 @@ const INKS = { c:'#00AEEF', m:'#EC008C', y:'#FFF200', k:'#1A1A1A' };
 const SCREEN_ANGLES = { c:15, m:75, y:0, k:45 };
 // offX/offY = crop-verschuiving (−100..100), buiten DEFAULTS zodat presets ze
 // niet resetten — de uitsnede is beeld-specifiek, geen stijl
-const S = Object.assign({ aspect:'orig', offX:0, offY:0 }, DEFAULTS, {
+const S = Object.assign({ aspect:'orig', offX:0, offY:0, cropZoom:1 }, DEFAULTS, {
   slots: Array.from({length:7}, (_,i)=>{
     const g = Math.round(i/6*210);
     return { shape:'circle', svg:null, color:'#'+g.toString(16).padStart(2,'0').repeat(3) };
@@ -918,22 +937,25 @@ function srcSize(){
   return isVideo ? [media.videoWidth, media.videoHeight]
                  : [media.naturalWidth, media.naturalHeight];
 }
+// doel-verhoudingen (breedte/hoogte) per formaat; null = verhouding van de bron
+const RATIOS = {
+  orig:null, square:1, aport:1/Math.SQRT2, aland:Math.SQRT2,
+  wide:16/9, ultrawide:21/9, tall:9/19.5,
+};
+function ratioFor(sw,sh){ const r=RATIOS[S.aspect]; return r==null ? sw/sh : r; }
 function cropRect(){
   const [sw,sh]=srcSize();
-  let cx=0, cy=0, cw=sw, ch=sh;
-  const target = S.aspect==='square' ? 1
-    : S.aspect==='aport' ? 1/Math.SQRT2     // A-papier staand (1:√2)
-    : S.aspect==='aland' ? Math.SQRT2       // A-papier liggend
-    : null;
-  if (target && sw && sh){
-    const cur=sw/sh;
-    if (cur>target) cw=sh*target;   // te breed → zijkanten croppen
-    else ch=sw/target;              // te hoog → boven/onder croppen
-    // gecentreerd, daarna verschoven binnen de beschikbare speling
-    const slackX=sw-cw, slackY=sh-ch;
-    cx=Math.max(0,Math.min(slackX, slackX/2*(1+(S.offX||0)/100)));
-    cy=Math.max(0,Math.min(slackY, slackY/2*(1+(S.offY||0)/100)));
-  }
+  if(!sw||!sh) return [0,0,sw,sh];
+  const target=ratioFor(sw,sh);
+  let cw=sw, ch=sh;
+  if (sw/sh>target) cw=sh*target;   // te breed → zijkanten croppen
+  else ch=sw/target;                // te hoog → boven/onder croppen
+  const z=Math.max(1,S.cropZoom||1);// zoom = uitsnede verkleinen (inzoomen)
+  cw/=z; ch/=z;
+  // gecentreerd, daarna verschoven binnen de beschikbare speling
+  const slackX=sw-cw, slackY=sh-ch;
+  const cx=Math.max(0,Math.min(slackX, slackX/2*(1+(S.offX||0)/100)));
+  const cy=Math.max(0,Math.min(slackY, slackY/2*(1+(S.offY||0)/100)));
   return [cx,cy,cw,ch];
 }
 
@@ -970,60 +992,67 @@ function renderTo(ctx, targetCanvas, maxDim){
 }
 
 let comparing = false;   // hold mouse on canvas → show source
-let zoom = 1, panX = 0, panY = 0;
 function render(){
   if (media){
-    // higher zoom → render at higher resolution so dots stay crisp
-    const dim = zoom<=1 ? 960 : zoom<=2.5 ? 1600 : 2400;
     if (comparing){
       const [cx,cy,cw,ch]=cropRect();
       if (cw&&ch) octx.drawImage(media, cx,cy,cw,ch, 0,0,out.width,out.height);
     } else {
-      renderTo(octx, out, dim);
+      renderTo(octx, out, 960);
     }
   }
   requestAnimationFrame(render);
 }
 
-/* ---------- zoom / pan / compare gestures ---------- */
+/* ---------- crop zoom / pan / compare gestures (werken op de uitsnede, dus ook in de export) ---------- */
 const zoomBadge=document.getElementById('zoomBadge');
+function pannable(){ const [,,cw,ch]=cropRect(); const [sw,sh]=srcSize(); return (sw-cw)>1 || (sh-ch)>1; }
 function applyView(){
-  out.style.transform = zoom===1 ? '' : `translate(${panX}px,${panY}px) scale(${zoom})`;
-  zoomBadge.style.display = zoom>1 ? 'block' : 'none';
-  zoomBadge.textContent = Math.round(zoom*100)+'% · dubbelklik = reset';
-  out.style.cursor = zoom>1 ? 'grab' : (S.aspect!=='orig' ? 'move' : 'zoom-in');
+  const z=S.cropZoom||1;
+  zoomBadge.style.display = z>1.01 ? 'block' : 'none';
+  zoomBadge.textContent = 'zoom '+z.toFixed(1)+'× · dubbelklik = reset';
+  out.style.cursor = pannable() ? 'grab' : 'default';
 }
-out.title='Scroll = zoom · sleep = pan · ingedrukt houden = origineel · dubbelklik = reset';
+out.title='Scroll = inzoomen · sleep = verschuiven · ingedrukt houden = origineel · dubbelklik = reset';
+function resetView(){ S.cropZoom=1; setOffset(0,0); applyView(); }
 document.getElementById('stage').addEventListener('wheel', e=>{
   if(!media) return;
   e.preventDefault();
+  const [sw,sh]=srcSize(); if(!sw) return;
   const r=out.getBoundingClientRect();
-  const qx=e.clientX-(r.left+r.width/2), qy=e.clientY-(r.top+r.height/2);
-  const z2=Math.min(12,Math.max(1,zoom*Math.exp(-e.deltaY*0.0022)));
-  if (z2===1){ panX=0; panY=0; }
-  else { panX+=qx*(1-z2/zoom); panY+=qy*(1-z2/zoom); }
-  zoom=z2; applyView();
+  const mx=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));   // cursor 0..1 op canvas
+  const my=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+  const [cx,cy,cw,ch]=cropRect();
+  const srcX=cx+mx*cw, srcY=cy+my*ch;                            // bronpunt onder cursor
+  const z2=Math.max(1,Math.min(8,(S.cropZoom||1)*Math.exp(-e.deltaY*0.0016)));
+  S.cropZoom=z2;
+  // bewaar het bronpunt onder de cursor: bereken nieuwe uitsnede en zet offset terug
+  const t=ratioFor(sw,sh); let bw=sw,bh=sh; if(sw/sh>t)bw=sh*t; else bh=sw/t;
+  const cw2=bw/z2, ch2=bh/z2, slX=sw-cw2, slY=sh-ch2;
+  const cxWant=srcX-mx*cw2, cyWant=srcY-my*ch2;
+  setOffset(slX>0?(cxWant/slX*2-1)*100:0, slY>0?(cyWant/slY*2-1)*100:0);
+  applyView();
 },{passive:false});
-let pdown=null, gesture=null;   // gesture: 'pan' | 'crop' | 'compare'
+let pdown=null, gesture=null;   // gesture: 'pan' | 'compare'
 out.addEventListener('pointerdown', e=>{
   e.preventDefault();
   out.setPointerCapture(e.pointerId);
-  pdown={x:e.clientX,y:e.clientY,px:panX,py:panY,ox:S.offX,oy:S.offY,
+  const [,,cw,ch]=cropRect(); const [sw,sh]=srcSize();
+  pdown={x:e.clientX,y:e.clientY,ox:S.offX,oy:S.offY,cw,ch,slX:sw-cw,slY:sh-ch,
+    w:out.getBoundingClientRect().width, h:out.getBoundingClientRect().height,
     t:setTimeout(()=>{ if(gesture===null){ gesture='compare'; comparing=true; } },160)};
 });
 out.addEventListener('pointermove', e=>{
   if(!pdown) return;
   const dx=e.clientX-pdown.x, dy=e.clientY-pdown.y;
-  if (gesture===null && Math.hypot(dx,dy)>5){
-    if (zoom>1){ gesture='pan'; }
-    else if (S.aspect!=='orig'){ gesture='crop'; }    // sleep = uitsnede verschuiven
-    if (gesture){ clearTimeout(pdown.t); out.style.cursor='grabbing'; }
+  if (gesture===null && Math.hypot(dx,dy)>5 && (pdown.slX>1||pdown.slY>1)){
+    gesture='pan'; clearTimeout(pdown.t); out.style.cursor='grabbing';
   }
-  if (gesture==='pan'){ panX=pdown.px+dx; panY=pdown.py+dy; applyView(); }
-  else if (gesture==='crop'){
-    const r=out.getBoundingClientRect();
-    // sleep beeld mee → toon overkant: offset beweegt tegengesteld aan de sleep
-    setOffset(pdown.ox - dx/r.width*200, pdown.oy - dy/r.height*200);
+  if (gesture==='pan'){
+    // sleep het beeld 1:1 mee: uitsnede schuift tegengesteld binnen de speling
+    const ddx = pdown.slX>0 ? (pdown.cw*dx)/(pdown.w*pdown.slX)*200 : 0;
+    const ddy = pdown.slY>0 ? (pdown.ch*dy)/(pdown.h*pdown.slY)*200 : 0;
+    setOffset(pdown.ox - ddx, pdown.oy - ddy);
   }
 });
 function endGesture(){
@@ -1033,12 +1062,12 @@ function endGesture(){
 }
 out.addEventListener('pointerup', endGesture);
 out.addEventListener('pointercancel', endGesture);
-out.addEventListener('dblclick', ()=>{ zoom=1; panX=panY=0; setOffset(0,0); applyView(); });
+out.addEventListener('dblclick', resetView);
 
 /* ---------- media loading ---------- */
 function loadFile(f){
   if(!f) return;
-  setOffset(0,0);   // nieuwe foto → uitsnede gecentreerd
+  setOffset(0,0); S.cropZoom=1;   // nieuwe foto → uitsnede gecentreerd & uitgezoomd
   mediaName = slugify((f.name||'').replace(/\.[^.]+$/,'')) || 'plak-afbeelding';
   const url = URL.createObjectURL(f);
   if (f.type.startsWith('video')){
@@ -1069,31 +1098,41 @@ document.addEventListener('paste', e=>{
 // key komt uit unsplash-key.js (gitignored) of localStorage; anders eenmalige prompt
 const UNS_LS = 'unsplashKey';
 let unsPage = 1, unsLastQ = '';
-function unsKey(){
-  let k = localStorage.getItem(UNS_LS) || window.UNSPLASH_KEY;
-  if (!k){
-    k = prompt('Unsplash Access Key (wordt lokaal opgeslagen):');
-    if (k){ k=k.trim(); localStorage.setItem(UNS_LS, k); }
-  }
-  return k;
+function unsKey(){ return localStorage.getItem(UNS_LS) || window.UNSPLASH_KEY || ''; }
+async function unsValidate(k){
+  try { const r=await fetch('https://api.unsplash.com/photos?per_page=1&client_id='+k); return r.ok; }
+  catch(e){ return false; }
+}
+async function unsAskKey(grid){
+  const k = prompt('Unsplash Access Key (wordt lokaal opgeslagen):');
+  if (!k || !k.trim()) return false;
+  if (await unsValidate(k.trim())){ localStorage.setItem(UNS_LS, k.trim()); return true; }
+  if (grid) grid.innerHTML = '<span class="hint">Die Access Key werkt niet.</span>';
+  return false;
 }
 async function unsSearch(){
   const q = document.getElementById('unsQ').value.trim();
   if (!q) return;
+  const grid = document.getElementById('unsGrid');
+  let key = unsKey();
+  if (!key){ if(!(await unsAskKey(grid))) return; key = unsKey(); }
   unsPage = q===unsLastQ ? unsPage+1 : 1;   // zelfde zoekterm nogmaals = volgende pagina
   unsLastQ = q;
-  const key = unsKey(); if (!key) return;
-  const grid = document.getElementById('unsGrid');
   grid.innerHTML = '<span class="hint">Zoeken…</span>';
   try {
     const res = await fetch('https://api.unsplash.com/search/photos?query='
       +encodeURIComponent(q)+'&page='+unsPage+'&per_page=12&client_id='+key);
-    if (res.status===401 || res.status===403){
-      localStorage.removeItem(UNS_LS);
-      const k = prompt('Unsplash key ongeldig of limiet bereikt. Andere Access Key:');
-      if (k){ localStorage.setItem(UNS_LS, k.trim()); unsLastQ=''; return unsSearch(); }
-      grid.innerHTML=''; return;
+    if (res.status===403 && res.headers.get('X-Ratelimit-Remaining')==='0'){
+      grid.innerHTML = '<span class="hint">Unsplash-limiet bereikt (50/uur). Probeer later opnieuw — je key is in orde.</span>';
+      return;
     }
+    if (res.status===401 || res.status===403){
+      // eigen (opgeslagen) key werkt niet → weggooien en terugvallen op de ingebouwde
+      if (localStorage.getItem(UNS_LS)){ localStorage.removeItem(UNS_LS); unsLastQ=''; return unsSearch(); }
+      if (await unsAskKey(grid)){ unsLastQ=''; return unsSearch(); }
+      return;
+    }
+    if (!res.ok){ grid.innerHTML = '<span class="hint">Unsplash-fout '+res.status+'.</span>'; return; }
     const data = await res.json();
     if (!data.results || !data.results.length){
       grid.innerHTML = '<span class="hint">Geen resultaten.</span>'; return;
@@ -1114,7 +1153,7 @@ function unsLoad(ph){
   const img = new Image();
   img.crossOrigin = 'anonymous';   // CORS-clean → canvas blijft exporteerbaar
   img.onload = ()=>{
-    media = img; isVideo = false; setOffset(0,0);
+    media = img; isVideo = false; setOffset(0,0); S.cropZoom=1;
     mediaName = slugify(ph.alt_description || ph.user.name) || 'unsplash';
     document.getElementById('unsCredit').innerHTML =
       'Foto: <a href="'+ph.user.links.html+'?utm_source=svg_dither_filter&utm_medium=referral" target="_blank">'
@@ -1137,7 +1176,7 @@ function bindSeg(id, key, after){
     after&&after();
   });
 }
-bindSeg('aspect','aspect', ()=>applyView());
+document.getElementById('aspect').addEventListener('change', e=>{ S.aspect=e.target.value; applyView(); });
 /* crop-verschuiving via slepen op het canvas (zie zoom/pan/compare gestures) */
 function setOffset(x,y){
   S.offX=Math.max(-100,Math.min(100,Math.round(x)));
@@ -1235,7 +1274,8 @@ async function applyPreset(cfg){
   await rebuildAll();
 }
 function syncUI(){
-  [['aspect',S.aspect],['mode',S.mode],['gridType',S.gridType],['colorMode',S.colorMode],['rotMode',S.rotMode],['renderMode',S.renderMode]]
+  document.getElementById('aspect').value = S.aspect;
+  [['mode',S.mode],['gridType',S.gridType],['colorMode',S.colorMode],['rotMode',S.rotMode],['renderMode',S.renderMode]]
     .forEach(([id,val])=>{
       [...document.getElementById(id).children].forEach(b=>
         b.classList.toggle('on', b.dataset.v===val));
@@ -1519,33 +1559,56 @@ const PAPER = { a4:[210,297], a3:[297,420], a2:[420,594], a1:[594,841] }; // mm
 function exportTarget(){
   const v = document.getElementById('pngScale').value;
   if (/^\d+$/.test(v)) return { maxDim:+v, label:'' };
+  if (v.startsWith('wp:')){
+    const [,w,h,label] = v.split(':');
+    return { maxDim:Math.max(+w,+h), label, ratio:+w/+h, exactW:+w, exactH:+h };
+  }
   const [f,dpi] = v.split('-');
   return {
     maxDim: Math.round(PAPER[f][1]/25.4*+dpi),
     label: f.toUpperCase()+'-'+dpi+'dpi',
-    paper: PAPER[f],
+    paper: PAPER[f], dpi:+dpi,
   };
 }
-function aRatioOk(){
-  const [,,cw,ch]=cropRect();
-  if(!cw||!ch) return false;
-  const ratio=Math.max(cw,ch)/Math.min(cw,ch);
-  return Math.abs(ratio-Math.SQRT2)<0.01;
+// exacte doelafmetingen in px (wallpaper: vast; print: mm→px op dpi, georiënteerd naar de uitsnede)
+function exactPx(t){
+  if (t.exactW) return [t.exactW, t.exactH];
+  if (t.paper){
+    const [,,cw,ch]=cropRect(), land=cw>=ch;
+    const wmm=land?t.paper[1]:t.paper[0], hmm=land?t.paper[0]:t.paper[1];
+    return [Math.round(wmm/25.4*t.dpi), Math.round(hmm/25.4*t.dpi)];
+  }
+  return null;
+}
+// past de huidige uitsnede bij het export-doel? (A-papier: oriëntatie-vrij; wallpaper: exact)
+function ratioOk(t){
+  const [,,cw,ch]=cropRect(); if(!cw||!ch) return false;
+  if (t.paper) return Math.abs(Math.max(cw,ch)/Math.min(cw,ch) - Math.SQRT2) < 0.02;
+  if (t.ratio) return Math.abs((cw/ch) - t.ratio)/t.ratio < 0.04;
+  return true;
 }
 document.getElementById('exportPngBtn').addEventListener('click', e=>{
   if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
   const t = exportTarget();
-  if (t.paper && !aRatioOk() &&
-      !confirm('Het canvas heeft niet de A-verhouding (1:√2).\nZet "Formaat" bij Source op A staand of A liggend voor exact passend drukwerk.\nToch exporteren?')) return;
+  if ((t.paper||t.ratio) && !ratioOk(t) &&
+      !confirm('De uitsnede past niet exact bij dit exportformaat.\nZet "Formaat" bij Source op de bijpassende ratio.\nToch exporteren?')) return;
   const btn=e.target, old=btn.textContent;
   btn.textContent='Bezig…'; btn.disabled=true;
   setTimeout(()=>{
     const c = document.createElement('canvas');
     renderTo(c.getContext('2d'), c, t.maxDim);
-    c.toBlob(blob=>{
+    // snap naar exacte doelafmetingen (wallpaper/print) zodat de ratio precies klopt
+    const exact = exactPx(t);
+    let outC = c;
+    if (exact && (Math.abs(c.width-exact[0])>1 || Math.abs(c.height-exact[1])>1)){
+      outC = document.createElement('canvas'); outC.width=exact[0]; outC.height=exact[1];
+      const ox=outC.getContext('2d'); ox.imageSmoothingQuality='high';
+      ox.drawImage(c, 0,0, exact[0],exact[1]);
+    }
+    outC.toBlob(blob=>{
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
-      a.download=artFileName()+(t.label?'-'+t.label:'')+'-'+c.width+'x'+c.height+'.png'; a.click();
+      a.download=artFileName()+(t.label?'-'+t.label:'')+'-'+outC.width+'x'+outC.height+'.png'; a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),1000);
       btn.textContent=old; btn.disabled=false;
     },'image/png');
@@ -1660,8 +1723,8 @@ function buildArtSVG(){
 document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
   if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
   const t = exportTarget();
-  if (t.paper && !aRatioOk() &&
-      !confirm('Het canvas heeft niet de A-verhouding (1:√2).\nZet "Formaat" bij Source op A staand of A liggend voor exact passend drukwerk.\nToch exporteren?')) return;
+  if ((t.paper||t.ratio) && !ratioOk(t) &&
+      !confirm('De uitsnede past niet exact bij dit exportformaat.\nZet "Formaat" bij Source op de bijpassende ratio.\nToch exporteren?')) return;
   let svg=buildArtSVG();
   if(!svg){ alert('Kon geen SVG bouwen.'); return; }
   if (t.paper){
