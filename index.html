@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.5</title>
+<title>SVG Dither Filter 2.6</title>
 <style>
   :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff;
           --ctrl:#202026; --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
@@ -83,7 +83,7 @@
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
     <div>
       <h1>SVG DITHER FILTER</h1>
-      <p class="ver">v2.5 · <a href="index-v1.html">open origineel (v1)</a></p>
+      <p class="ver">v2.6 · <a href="index-v1.html">open origineel (v1)</a></p>
     </div>
     <button id="themeBtn" title="Licht / donker thema">🌙</button>
   </div>
@@ -883,6 +883,36 @@ const BUILTIN_PRESETS = {
     grid:52, bg:'#11131a', gap:8, sMin:96, sMax:96, colorMode:'source', sat:120,
     slots: mkSlots('octagon', ramp('#333333','#cccccc')),
   },
+
+  /* — Oosters: Japanse/Chinese/oosterse stromingen, research-based (2.6) — */
+  'Bero-ai (Aizuri-e)': { grid:100, bg:'#efe7d4', invert:true, gamma:88, contrast:12, sMin:0, sMax:132, gap:6, gridType:'hex',
+    slots: mkSlots(['circle','ring','lens','hexagon','circle','droplet','droplet'], ['#9fc1dd','#7aa3c8','#4f7fb0','#2f6299','#1b4f8a','#123f6e','#0c2c52']) },
+  'Suiboku — Sumi Wash': { grid:72, bg:'#f2ebd9', invert:true, gamma:112, contrast:14, bright:4, sMin:8, sMax:128, gap:4, rotMode:'flow', opacity:52, opacityTone:true,
+    slots: mkSlots(['droplet','lens','circle','circle','lens','droplet','circle'], ['#d9d2c3','#b6b3a9','#8f9398','#6b7178','#474f57','#28313b','#11151c']) },
+  'Kōrin Kinpaku': { bg:'#10131c',
+    slots: mkSlots(['diamond','droplet','leaf','leaf','lens','lens','leaf'], ['#1c3a6b','#2c5b9e','#2e7d52','#5f9466','#b8860b','#d4af37','#efe2ac']) },
+  'Hasui Indigo Dusk': { grid:92, bg:'#0e1a30', gamma:112, contrast:4, bright:4, sMin:22, sMax:120, gap:5, dither:'blue', gridType:'hex', opacity:82, opacityTone:true,
+    slots: mkSlots(['circle','circle','lens','circle','droplet','circle','circle'], ['#24467e','#315e9c','#4a78b8','#6f97c9','#9db8d4','#c2d4e6','#eaf1f8']) },
+  'Five Tones of Ink': { grid:96, bg:'#efe7d6', invert:true, gamma:118, contrast:14, bright:6, sMin:18, sMax:128, gap:6, rotMode:'flow', dither:'blue', gridType:'hex', opacity:55, opacityTone:true,
+    slots: mkSlots(['droplet','lens','circle','circle','leaf','droplet','lens'], ['#e7dcc6','#c8bca3','#9a907c','#6e5a3f','#2e4257','#3a3530','#181613']) },
+  'Mohammedaans Blauw': { grid:104, bg:'#f3efe3', invert:true, gamma:92, contrast:8, bright:2, sMin:0, sMax:130, gap:2, rotMode:'flow', gridType:'hex', opacityTone:true,
+    slots: mkSlots(['sparkle','flower','leaf','lens','droplet','circle','circle'], ['#9cbfdd','#5f93c4','#3f78b5','#26619c','#1b3a6b','#16306a','#13234f']) },
+  'Cinnaberlak Tihong': { grid:72, bg:'#160504', gamma:88, contrast:12, bright:4, sMin:30, sMax:122, gap:6, rotMode:'flow', gridType:'hex',
+    slots: mkSlots(['droplet','lens','leaf','rounded','lens','flower','droplet'], ['#3a0d0a','#5c150f','#8a1f15','#b22a1c','#e34234','#f25e3d','#ffb38a']) },
+  'Minhwa Obangsaek': { grid:58, bg:'#26201a', gamma:94, contrast:12, bright:4, sMin:36, sMax:120, gap:7, gridType:'brick', sat:130,
+    slots: mkSlots(['diamond','leaf','hexagon','flower','clover','lens','circle'], ['#3a322a','#274f86','#cf3a28','#6f9e84','#e8b53a','#f1c46a','#f6f0e1']) },
+  'Thangka Goud': { grid:78, bg:'#0c0a14', gamma:112, contrast:12, bright:10, sMin:18, sMax:120, gap:6, rndRot:true, gridType:'hex',
+    slots: mkSlots(['hexagon','diamond','lens','flower','flower','sparkle','star'], ['#22325f','#2a5599','#2e7d52','#d83a2e','#d4af37','#e6b32e','#f3e3a8']) },
+  'Lajvard & Firuzeh': { grid:58, bg:'#0d1228', gamma:112, contrast:12, bright:4, sMin:60, sMax:122, gap:8, rndRot:true, gridType:'hex',
+    slots: mkSlots(['octagon','hexagon','hexagon','diamond','lens','star','sparkle'], ['#1c3a78','#2453a8','#2f74c8','#1fa8a0','#5ec9bf','#d4af37','#f4ecd6']) },
+  'Lapis & Goud': { grid:58, bg:'#0c1d3d', gamma:112, contrast:10, bright:4, sMin:34, sMax:124, gap:6, gridType:'hex',
+    slots: mkSlots(['hexagon','diamond','lens','leaf','flower','star','sparkle'], ['#2a5fae','#3b78c4','#2e8c5a','#cf3b2f','#ee7a3c','#f3c81f','#ecc24e']) },
+  'Ensō': { grid:72, bg:'#f4ecdb', invert:true, gamma:108, contrast:14, bright:-2, sMin:0, sMax:132, gap:8, rotMode:'flow', gridType:'hex', opacity:58, opacityTone:true,
+    slots: mkSlots(['circle','circle','lens','ring','ring','concentric','concentric'], ['#9a9ca0','#85847f','#74716c','#5a564f','#43403a','#2e2a24','#131210']) },
+  'Pichwai Goud': { grid:78, bg:'#0a1526', gamma:104, contrast:18, sMin:18, sMax:124, gap:7, rotMode:'flow', gridType:'brick',
+    slots: mkSlots(['diamond','hexagon','hexagon','lens','flower','flower','sparkle'], ['#2a4f8c','#9e2b2b','#2f7d57','#d8472b','#e8a92e','#efc15a','#f4d98a']) },
+  'Sơn Mài': { bg:'#0d0805', gamma:96, contrast:16, bright:6, sMin:22, sMax:118, gap:8, rndRot:true, gridType:'brick',
+    slots: mkSlots(['diamond','diamond','lens','leaf','droplet','lens','sparkle'], ['#241712','#3a2415','#9e2018','#cf3a26','#a8772e','#d6a93a','#f1e8d3']) },
 };
 const PRESET_CATEGORIES = {
   'Basis': ['V1 — Origineel'],
@@ -893,6 +923,9 @@ const PRESET_CATEGORIES = {
     'Byzantijns Goud','Delfts Blauw','Cyanotype','Art Deco Goud','Mosaic',
     'Bloesem','Art Nouveau','Maanfase'],
   'Vorm & techniek': ['Truchet','Zeshoek mozaïek','Octa-raster','Gravure'],
+  'Oosters': ['Bero-ai (Aizuri-e)','Suiboku — Sumi Wash','Kōrin Kinpaku','Hasui Indigo Dusk',
+    'Five Tones of Ink','Mohammedaans Blauw','Cinnaberlak Tihong','Minhwa Obangsaek',
+    'Thangka Goud','Lajvard & Firuzeh','Lapis & Goud','Ensō','Pichwai Goud','Sơn Mài'],
   'Retro tech': ['Terminal','Retro Game','C64','CGA','ZX Spectrum','LED Matrix',
     'Flip-Disc','CRT Lines','Lite-Brite'],
   'Sfeer': ['Pop Art','Cyber','Candy','Vaporwave','Confetti','Bokeh','LEGO','Borduurwerk'],

@@ -1,4 +1,4 @@
-# SVG Dither Filter 2.5
+# SVG Dither Filter 2.6
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
@@ -68,11 +68,15 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ### Presets (new in 2.0, expanded in 2.1)
 
-- **47 built-in looks in 6 categories** — *Print & druk*, *Kunst* (incl.
-  Bloesem, Art Nouveau, Maanfase), *Vorm & techniek* (Truchet, Zeshoek
-  mozaïek, Octa-raster, Gravure — showcasing the new shapes & the Truchet
-  technique), *Retro tech*, *Sfeer*, and the V1 original. A preset bundles
-  every setting, colour, and shape — including uploaded SVGs.
+- **61 built-in looks in 7 categories** — *Print & druk*, *Kunst*, *Vorm &
+  techniek*, *Retro tech*, *Sfeer*, the V1 original, and **Oosters** — 14
+  research-based Japanese/Chinese/Eastern presets (Bero-ai aizuri-e, Suiboku
+  ink wash, Kōrin gold-leaf, Hasui dusk, Five Tones of Ink shan-shui,
+  Mohammedaans Blauw porcelain, Cinnaberlak lacquer, Minhwa, Thangka Goud,
+  Lajvard & Firuzeh girih, Lapis & Goud Persian miniature, Ensō, Pichwai Goud,
+  Sơn Mài). Each was generated with authentic pigment palettes and
+  adversarially checked for colour-contrast, tonal ordering and legibility.
+  A preset bundles every setting, colour, and shape — including uploaded SVGs.
 - **◀ ▶ navigation** — step through all presets (and shape-sets / palettes)
   with prev/next buttons; each step applies instantly.
 - **Smart filenames** — exports are named after the source and preset, e.g.
@@ -161,7 +165,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html      # the entire 2.5 tool — UI, presets, dither engine, exporters
+├── index.html      # the entire 2.6 tool — UI, presets, dither engine, exporters
 ├── index-v1.html   # the original v1, untouched
 ├── assets/         # demo media (mp4 + gif preview)
 ├── README.md
