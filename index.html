@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.3</title>
+<title>SVG Dither Filter 2.4</title>
 <style>
   :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff;
           --ctrl:#202026; --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
@@ -82,7 +82,7 @@
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
     <div>
       <h1>SVG DITHER FILTER</h1>
-      <p class="ver">v2.3 · <a href="index-v1.html">open origineel (v1)</a></p>
+      <p class="ver">v2.4 · <a href="index-v1.html">open origineel (v1)</a></p>
     </div>
     <button id="themeBtn" title="Licht / donker thema">🌙</button>
   </div>
@@ -91,7 +91,7 @@
     <h2>Presets</h2>
     <div class="row">
       <button id="presetPrev" title="Vorige preset" style="flex:none;padding:6px 10px">◀</button>
-      <select id="presetSel" style="flex:1;min-width:0"><option value="">— kies een preset —</option></select>
+      <select autocomplete="off" id="presetSel" style="flex:1;min-width:0"><option value="">— kies een preset —</option></select>
       <button id="presetNext" title="Volgende preset" style="flex:none;padding:6px 10px">▶</button>
     </div>
     <div class="btnrow">
@@ -141,7 +141,7 @@
     <div class="row" style="margin-top:8px"><label>Invert</label>
       <input type="checkbox" id="invert" /></div>
     <label>Dithering</label>
-    <select id="ditherSel" style="width:100%">
+    <select autocomplete="off" id="ditherSel" style="width:100%">
       <option value="none">Geen (tone buckets)</option>
       <option value="fs">Floyd–Steinberg</option>
       <option value="bayer4">Bayer 4×4 (ordered)</option>
@@ -176,7 +176,7 @@
     </div>
     <div id="cmykWrap" style="display:none">
       <label>Dot shape</label>
-      <select id="cmykShape" style="width:100%"></select>
+      <select autocomplete="off" id="cmykShape" style="width:100%"></select>
       <label>Kanalen (uitvinken = duotone/tritone)</label>
       <div class="row" style="gap:14px;margin-top:4px">
         <label style="flex:none;margin:0"><input type="checkbox" id="chC" checked /> C</label>
@@ -212,7 +212,7 @@
     </div>
     <div id="singleWrap" style="display:none">
       <label>Use shape</label>
-      <select id="singleSel">
+      <select autocomplete="off" id="singleSel">
         <option value="0">1 · Shadow</option><option value="1">2</option>
         <option value="2">3</option><option value="3">4 · Mid</option>
         <option value="4">5</option><option value="5">6</option>
@@ -251,14 +251,14 @@
     <label style="margin-top:0">Shape-set</label>
     <div class="row">
       <button id="shapePrev" title="Vorige shape-set" style="flex:none;padding:6px 10px">◀</button>
-      <select id="shapeSetSel" style="flex:1;min-width:0"></select>
+      <select autocomplete="off" id="shapeSetSel" style="flex:1;min-width:0"></select>
       <button id="shapeNext" title="Volgende shape-set" style="flex:none;padding:6px 10px">▶</button>
       <button id="shapeDel" title="Verwijder eigen shape-set" style="flex:none;padding:6px 9px">✕</button>
     </div>
     <label>Kleurenpalet</label>
     <div class="row">
       <button id="palPrev" title="Vorig palet" style="flex:none;padding:6px 10px">◀</button>
-      <select id="palSel" style="flex:1;min-width:0"></select>
+      <select autocomplete="off" id="palSel" style="flex:1;min-width:0"></select>
       <button id="palNext" title="Volgend palet" style="flex:none;padding:6px 10px">▶</button>
       <button id="palDel" title="Verwijder eigen palet" style="flex:none;padding:6px 9px">✕</button>
     </div>
@@ -274,7 +274,7 @@
   <div class="grp">
     <h2>Artwork export</h2>
     <div class="btnrow" style="margin-top:0">
-      <select id="pngScale">
+      <select autocomplete="off" id="pngScale">
         <option value="1920">Scherm · 1920 px</option>
         <option value="3840">Scherm · 3840 px (4K)</option>
         <option value="a4-300">A4 · 300 dpi · 3508 px</option>
@@ -816,6 +816,39 @@ const BUILTIN_PRESETS = {
     grid:34, bg:'#04060c', colorMode:'source', sat:160, dither:'blue', sJit:55, sMin:35, sMax:135,
     slots: mkSlots('circle', ramp('#222222','#eeeeee')),
   },
+
+  /* — nieuwe vormen & technieken (2.4) — */
+  'Truchet': {
+    grid:64, bg:'#f3ead6', invert:true, rndRot:true, sMin:12, sMax:132,
+    slots: mkSlots('corner', ramp('#15324e','#9fb4c4')),
+  },
+  'Bloesem': {
+    grid:36, bg:'#241019', rndRot:true, sMin:55, sMax:125,
+    slots: mkSlots('flower', ['#5e1730','#923050','#c24a72','#e0789c','#f0a0bd','#f8c8d8','#fff2f6']),
+  },
+  'Art Nouveau': {
+    grid:60, bg:'#161206', rotMode:'flow', bright:12, gamma:115, sMin:35, sMax:120,
+    slots: mkSlots(['leaf','leaf','lens','leaf','lens','sparkle','sparkle'],
+      ['#7a6a2a','#9a8636','#b89c40','#cdae4c','#e0c25e','#eed27a','#fbe9a6']),
+  },
+  'Maanfase': {
+    grid:54, bg:'#0a1430', rndRot:true, sMin:22, sMax:122,
+    slots: mkSlots(['crescent','crescent','halfcircle','crescent','halfcircle','circle','circle'],
+      ramp('#1b2c5a','#eaf0ff')),
+  },
+  'Zeshoek mozaïek': {
+    grid:58, bg:'#0d0f12', gridType:'hex', colorMode:'source', sat:130, gap:6, sMin:97, sMax:97,
+    slots: mkSlots('hexagon', ramp('#333333','#cccccc')),
+  },
+  'Gravure': {
+    grid:104, bg:'#f3ead2', invert:true, gamma:80, contrast:12, sMin:0, sMax:122,
+    slots: mkSlots(['circle','hatch','hatch','crosshatch','crosshatch','vline','square'],
+      ramp('#241a0e','#a89a82')),
+  },
+  'Octa-raster': {
+    grid:52, bg:'#11131a', gap:8, sMin:96, sMax:96, colorMode:'source', sat:120,
+    slots: mkSlots('octagon', ramp('#333333','#cccccc')),
+  },
 };
 const PRESET_CATEGORIES = {
   'Basis': ['V1 — Origineel'],
@@ -823,7 +856,9 @@ const PRESET_CATEGORIES = {
     'Ben-Day Pop','Sunday Comics','Sepia Krant','Manga Screentone','Stippelgravure',
     'Ink Hatch','Blueprint'],
   'Kunst': ['Pointillism','Flow Lines','Kusama Rood','Hirst Spots','Mondriaan',
-    'Byzantijns Goud','Delfts Blauw','Cyanotype','Art Deco Goud','Mosaic'],
+    'Byzantijns Goud','Delfts Blauw','Cyanotype','Art Deco Goud','Mosaic',
+    'Bloesem','Art Nouveau','Maanfase'],
+  'Vorm & techniek': ['Truchet','Zeshoek mozaïek','Octa-raster','Gravure'],
   'Retro tech': ['Terminal','Retro Game','C64','CGA','ZX Spectrum','LED Matrix',
     'Flip-Disc','CRT Lines','Lite-Brite'],
   'Sfeer': ['Pop Art','Cyber','Candy','Vaporwave','Confetti','Bokeh','LEGO','Borduurwerk'],
@@ -1398,9 +1433,10 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
 function shapeArr(s){ return Array.isArray(s) ? s.slice(0,7) : Array.from({length:7},()=>s); }
 const SHAPE_SETS = {
   'Cirkels':'circle', 'Vierkanten':'square', 'Afgerond':'rounded', 'Ruiten':'diamond',
-  'Zeshoeken':'hexagon', 'Driehoeken':'triangle', 'Ringen':'ring', 'Sterren':'star',
-  'Hartjes':'heart', 'Bloemen':'flower', 'Druppels':'droplet', 'Sprankels':'sparkle',
-  'Lijnen ─':'hline', 'Lijnen │':'vline',
+  'Zeshoeken':'hexagon', 'Achthoeken':'octagon', 'Driehoeken':'triangle',
+  'Ringen':'ring', 'Sterren':'star', 'Hartjes':'heart', 'Bloemen':'flower',
+  'Druppels':'droplet', 'Sprankels':'sparkle', 'Lijnen ─':'hline', 'Lijnen │':'vline',
+  'Geometrisch':         ['hexagon','octagon','pentagon','bowtie','diamond','triangle','square'],
   'Arcering':            ['circle','vline','hline','hline','hatch','crosshatch','square'],
   'Sterren & hartjes':   ['heart','heart','star','star','sparkle','star','flower'],
   'Bloementuin':         ['clover','clover','flower','flower','leaf','flower','sparkle'],
