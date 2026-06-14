@@ -28,6 +28,9 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Zoom & pan** — scroll to zoom (up to 12×, rendered at higher resolution so
   dots stay crisp), drag to pan, double-click to reset. Hold still to compare
   with the original.
+- **Reposition the crop** — when a paper/1:1 format is active, drag the image on
+  the canvas (or use the Verschuif X/Y sliders) to choose which part of the
+  photo stays in frame. The offset carries through to every export.
 
 ### Artwork engine (new in 2.1)
 

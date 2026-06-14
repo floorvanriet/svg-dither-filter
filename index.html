@@ -118,8 +118,15 @@
       <button data-v="aport">A staand</button>
       <button data-v="aland">A liggend</button>
     </div>
+    <div id="offWrap">
+      <div class="row" style="margin-top:9px"><label>Verschuif X</label><span class="val" id="offXV">0</span></div>
+      <input type="range" id="offX" min="-100" max="100" value="0" />
+      <div class="row"><label>Verschuif Y</label><span class="val" id="offYV">0</span></div>
+      <input type="range" id="offY" min="-100" max="100" value="0" />
+    </div>
     <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
-      Houd de muis ingedrukt op het canvas om het origineel te zien.</div>
+      Bij een uitsnede: sleep de afbeelding (of gebruik de sliders) om 'm te verschuiven.
+      Houd de muis ingedrukt om het origineel te zien.</div>
     <label>Unsplash</label>
     <div class="row">
       <input type="text" id="unsQ" placeholder="zoek foto's…" style="flex:1;min-width:0;background:var(--ctrl);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
@@ -372,7 +379,9 @@ const DEFAULTS = {
 };
 const INKS = { c:'#00AEEF', m:'#EC008C', y:'#FFF200', k:'#1A1A1A' };
 const SCREEN_ANGLES = { c:15, m:75, y:0, k:45 };
-const S = Object.assign({ aspect:'orig' }, DEFAULTS, {
+// offX/offY = crop-verschuiving (−100..100), buiten DEFAULTS zodat presets ze
+// niet resetten — de uitsnede is beeld-specifiek, geen stijl
+const S = Object.assign({ aspect:'orig', offX:0, offY:0 }, DEFAULTS, {
   slots: Array.from({length:7}, (_,i)=>{
     const g = Math.round(i/6*210);
     return { shape:'circle', svg:null, color:'#'+g.toString(16).padStart(2,'0').repeat(3) };
@@ -852,8 +861,12 @@ function cropRect(){
     : null;
   if (target && sw && sh){
     const cur=sw/sh;
-    if (cur>target){ cw=sh*target; cx=(sw-cw)/2; }   // te breed → zijkanten croppen
-    else { ch=sw/target; cy=(sh-ch)/2; }             // te hoog → boven/onder croppen
+    if (cur>target) cw=sh*target;   // te breed → zijkanten croppen
+    else ch=sw/target;              // te hoog → boven/onder croppen
+    // gecentreerd, daarna verschoven binnen de beschikbare speling
+    const slackX=sw-cw, slackY=sh-ch;
+    cx=Math.max(0,Math.min(slackX, slackX/2*(1+(S.offX||0)/100)));
+    cy=Math.max(0,Math.min(slackY, slackY/2*(1+(S.offY||0)/100)));
   }
   return [cx,cy,cw,ch];
 }
@@ -912,7 +925,7 @@ function applyView(){
   out.style.transform = zoom===1 ? '' : `translate(${panX}px,${panY}px) scale(${zoom})`;
   zoomBadge.style.display = zoom>1 ? 'block' : 'none';
   zoomBadge.textContent = Math.round(zoom*100)+'% · dubbelklik = reset';
-  out.style.cursor = zoom>1 ? 'grab' : 'zoom-in';
+  out.style.cursor = zoom>1 ? 'grab' : (S.aspect!=='orig' ? 'move' : 'zoom-in');
 }
 out.title='Scroll = zoom · sleep = pan · ingedrukt houden = origineel · dubbelklik = reset';
 document.getElementById('stage').addEventListener('wheel', e=>{
@@ -925,20 +938,27 @@ document.getElementById('stage').addEventListener('wheel', e=>{
   else { panX+=qx*(1-z2/zoom); panY+=qy*(1-z2/zoom); }
   zoom=z2; applyView();
 },{passive:false});
-let pdown=null, gesture=null;   // gesture: 'pan' | 'compare'
+let pdown=null, gesture=null;   // gesture: 'pan' | 'crop' | 'compare'
 out.addEventListener('pointerdown', e=>{
   e.preventDefault();
   out.setPointerCapture(e.pointerId);
-  pdown={x:e.clientX,y:e.clientY,px:panX,py:panY,
+  pdown={x:e.clientX,y:e.clientY,px:panX,py:panY,ox:S.offX,oy:S.offY,
     t:setTimeout(()=>{ if(gesture===null){ gesture='compare'; comparing=true; } },160)};
 });
 out.addEventListener('pointermove', e=>{
   if(!pdown) return;
   const dx=e.clientX-pdown.x, dy=e.clientY-pdown.y;
-  if (gesture===null && zoom>1 && Math.hypot(dx,dy)>5){
-    gesture='pan'; clearTimeout(pdown.t); out.style.cursor='grabbing';
+  if (gesture===null && Math.hypot(dx,dy)>5){
+    if (zoom>1){ gesture='pan'; }
+    else if (S.aspect!=='orig'){ gesture='crop'; }    // sleep = uitsnede verschuiven
+    if (gesture){ clearTimeout(pdown.t); out.style.cursor='grabbing'; }
   }
   if (gesture==='pan'){ panX=pdown.px+dx; panY=pdown.py+dy; applyView(); }
+  else if (gesture==='crop'){
+    const r=out.getBoundingClientRect();
+    // sleep beeld mee → toon overkant: offset beweegt tegengesteld aan de sleep
+    setOffset(pdown.ox - dx/r.width*200, pdown.oy - dy/r.height*200);
+  }
 });
 function endGesture(){
   if (pdown) clearTimeout(pdown.t);
@@ -952,6 +972,7 @@ out.addEventListener('dblclick', ()=>{ zoom=1; panX=panY=0; applyView(); });
 /* ---------- media loading ---------- */
 function loadFile(f){
   if(!f) return;
+  setOffset(0,0);   // nieuwe foto → uitsnede gecentreerd
   mediaName = slugify((f.name||'').replace(/\.[^.]+$/,'')) || 'plak-afbeelding';
   const url = URL.createObjectURL(f);
   if (f.type.startsWith('video')){
@@ -1027,7 +1048,7 @@ function unsLoad(ph){
   const img = new Image();
   img.crossOrigin = 'anonymous';   // CORS-clean → canvas blijft exporteerbaar
   img.onload = ()=>{
-    media = img; isVideo = false;
+    media = img; isVideo = false; setOffset(0,0);
     mediaName = slugify(ph.alt_description || ph.user.name) || 'unsplash';
     document.getElementById('unsCredit').innerHTML =
       'Foto: <a href="'+ph.user.links.html+'?utm_source=svg_dither_filter&utm_medium=referral" target="_blank">'
@@ -1050,7 +1071,22 @@ function bindSeg(id, key, after){
     after&&after();
   });
 }
-bindSeg('aspect','aspect');
+bindSeg('aspect','aspect', ()=>{ refreshOffsetLock(); applyView(); });
+/* crop-verschuiving: sliders + slepen op canvas. Offset doet niets bij 'Origineel'. */
+function refreshOffsetLock(){
+  const off = S.aspect==='orig';
+  document.getElementById('offX').disabled = off;
+  document.getElementById('offY').disabled = off;
+  document.getElementById('offWrap').style.opacity = off ? '.4' : '1';
+}
+function setOffset(x,y){
+  S.offX=Math.max(-100,Math.min(100,Math.round(x)));
+  S.offY=Math.max(-100,Math.min(100,Math.round(y)));
+  document.getElementById('offX').value=S.offX;
+  document.getElementById('offY').value=S.offY;
+  document.getElementById('offXV').textContent=(S.offX>0?'+':'')+S.offX;
+  document.getElementById('offYV').textContent=(S.offY>0?'+':'')+S.offY;
+}
 bindSeg('mode','mode', ()=>{ document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none'; });
 bindSeg('gridType','gridType');
 bindSeg('rotMode','rotMode');
@@ -1072,6 +1108,7 @@ const RANGES = [
   ['rot','rot',x=>x+'°'], ['bright','bright',x=>x], ['contrast','contrast',x=>x],
   ['gamma','gamma',x=>(x/100).toFixed(2)], ['gap','gap',x=>x+'%'],
   ['sat','sat',x=>x+'%'], ['sJit','sJit',x=>x+'%'], ['rotJit','rotJit',x=>x+'°'],
+  ['offX','offX',x=>(x>0?'+':'')+x], ['offY','offY',x=>(x>0?'+':'')+x],
 ];
 RANGES.forEach(([id,key,fmt])=>{
   const el=document.getElementById(id), v=document.getElementById(id+'V');
@@ -1172,6 +1209,7 @@ function syncUI(){
   document.getElementById('ditherSel').value = S.dither;
   S.slots.forEach((_,i)=>syncSlotRow(i));
   refreshColorLock();
+  refreshOffsetLock();
 }
 
 /* dim de slot-controls in modi waar ze niets doen, met uitleg waarom */
