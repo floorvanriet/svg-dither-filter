@@ -49,12 +49,18 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Tone curve** — brightness / contrast / gamma before tone mapping.
 - **Grid types** — square, brick (offset), and hexagonal packing, plus a gap
   control and per-cell size/angle jitter.
+- **Opacity / (semi-)transparency** — a shape-opacity slider plus an "opacity
+  follows tone" mode: below 100% overlapping marks layer like ink, watercolour
+  or bokeh. Carries through to PNG and SVG (`fill-opacity`); great for sumi-e /
+  shan-shui ink-wash looks. (Not in CMYK mode, which already multiplies.)
 - **Transparent background** — for PNG/SVG export over your own backdrop.
 - **Drag & drop + paste (⌘V)** — and hold the mouse on the canvas to compare
   with the original.
-- **Unsplash search** — search photos in the Source panel and load one with a
-  click (CORS-clean, so all exports keep working). Shows attribution and fires
-  the download ping per Unsplash guidelines. Same query again = next page.
+- **Unsplash search** — search photos in the Source panel (15 per page, a
+  scrollable grid, **Meer laden** appends more) and load one with a click
+  (CORS-clean, so all exports keep working). Shows attribution and fires the
+  download ping per Unsplash guidelines. Rate-limit and bad-key cases are
+  handled clearly (a broken stored key auto-falls-back to the built-in one).
   Put your Access Key in a local `unsplash-key.js` (gitignored):
   `window.UNSPLASH_KEY = '…'` — or paste it in the one-time prompt.
 - **Shuffle** — one button that rolls a random-but-tasteful combination of

@@ -63,7 +63,8 @@
   .svgrow .up { flex:none; width:26px; text-align:center; padding:4px 0; font-size:11px; }
   .svgrow .up.has { border-color:var(--acc); color:var(--acc); }
   .hint { color:var(--mut); font-size:10px; margin-top:6px; }
-  #unsGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:8px; }
+  #unsGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:8px;
+             max-height:320px; overflow-y:auto; }
   #unsGrid:empty { display:none; }
   #unsGrid img { width:100%; height:56px; object-fit:cover; border-radius:4px; cursor:pointer;
                  border:1px solid var(--line); display:block; }
@@ -134,6 +135,7 @@
       <button id="unsBtn" style="flex:none">Zoek</button>
     </div>
     <div id="unsGrid"></div>
+    <button id="unsMore" style="display:none;width:100%;margin-top:6px">Meer laden ▾</button>
     <div id="unsCredit" class="hint"></div>
   </div>
 
@@ -236,6 +238,12 @@
     <input type="range" id="sMax" min="0" max="200" value="100" />
     <div class="row"><label>Size jitter</label><span class="val" id="sJitV">0%</span></div>
     <input type="range" id="sJit" min="0" max="100" value="0" />
+    <div class="row" style="margin-top:8px"><label>Opacity</label><span class="val" id="opacityV">100%</span></div>
+    <input type="range" id="opacity" min="10" max="100" value="100" />
+    <div class="row" style="margin-top:6px"><label>Opacity volgt toon (inkt/wash)</label>
+      <input type="checkbox" id="opacityTone" /></div>
+    <div class="hint">Onder 100% laten overlappende vormen door elkaar zien — mooi voor inkt-wash,
+      aquarel en bokeh (werkt in PNG &amp; SVG; niet in CMYK-modus).</div>
   </div>
 
   <div class="grp">
@@ -426,6 +434,7 @@ const DEFAULTS = {
   colorMode:'tone', sat:100, sJit:0, rotJit:0, rotMode:'fixed',
   renderMode:'shapes', cmykShape:'circle',
   cmykC:true, cmykM:true, cmykY:true, cmykK:true,
+  opacity:100, opacityTone:false,
 };
 const INKS = { c:'#00AEEF', m:'#EC008C', y:'#FFF200', k:'#1A1A1A' };
 const SCREEN_ANGLES = { c:15, m:75, y:0, k:45 };
@@ -525,6 +534,8 @@ function drawCells(ctx,cell,cols,rows,rowH,cfg,cache,cells,tmp,tctx,RAST){
   if(!cfg.bgT){ ctx.fillStyle=cfg.bg; ctx.fillRect(0,0,W,H); }
   const minS=cfg.sMin/100, maxS=cfg.sMax/100, gapF=1-(cfg.gap||0)/100;
   const offGrid=cfg.gridType==='brick'||cfg.gridType==='hex';
+  const baseA=(cfg.opacity===undefined?100:cfg.opacity)/100;
+  const sNorm=Math.max(0.01,Math.max(minS,maxS));   // voor opacity-volgt-toon
   for(let y=0;y<rows;y++){
     const off=offGrid&&(y&1)?0.5:0;
     const cy=(y*rowH+0.5)*cell;
@@ -533,13 +544,17 @@ function drawCells(ctx,cell,cols,rows,rowH,cfg,cache,cells,tmp,tctx,RAST){
       const idx=cfg.mode==='single'?cfg.single:cells.B[i];
       const shp=cache[idx]; if(!shp)continue;
       const t=cells.T[i];
-      let sc=(minS+(maxS-minS)*t)*cell*gapF;
+      const sizeF=minS+(maxS-minS)*t;
+      let sc=sizeF*cell*gapF;
       if(cfg.sJit)sc*=1+(hash2(x,y,7)-0.5)*2*(cfg.sJit/100);
       if(sc<=0.4)continue;
+      let alpha=baseA;
+      if(cfg.opacityTone)alpha*=0.2+0.8*Math.max(0,Math.min(1,sizeF/sNorm));
       let ang=(cells.A?cells.A[i]:0)+(cfg.rot||0);
       if(cfg.rndRot)ang+=Math.floor(hash2(x,y,3)*4)*90;
       if(cfg.rotJit)ang+=(hash2(x,y,11)-0.5)*2*cfg.rotJit;
       ctx.save();
+      if(alpha<1)ctx.globalAlpha=alpha;
       ctx.translate((x+0.5+off)*cell,cy);
       if(ang)ctx.rotate(ang*Math.PI/180);
       if(cells.C&&shp.mask){
@@ -1097,6 +1112,7 @@ document.addEventListener('paste', e=>{
 /* ---------- Unsplash search ---------- */
 // key komt uit unsplash-key.js (gitignored) of localStorage; anders eenmalige prompt
 const UNS_LS = 'unsplashKey';
+const UNS_PER = 15;
 let unsPage = 1, unsLastQ = '';
 function unsKey(){ return localStorage.getItem(UNS_LS) || window.UNSPLASH_KEY || ''; }
 async function unsValidate(k){
@@ -1110,44 +1126,57 @@ async function unsAskKey(grid){
   if (grid) grid.innerHTML = '<span class="hint">Die Access Key werkt niet.</span>';
   return false;
 }
-async function unsSearch(){
-  const q = document.getElementById('unsQ').value.trim();
-  if (!q) return;
-  const grid = document.getElementById('unsGrid');
-  let key = unsKey();
-  if (!key){ if(!(await unsAskKey(grid))) return; key = unsKey(); }
-  unsPage = q===unsLastQ ? unsPage+1 : 1;   // zelfde zoekterm nogmaals = volgende pagina
-  unsLastQ = q;
-  grid.innerHTML = '<span class="hint">Zoeken…</span>';
-  try {
-    const res = await fetch('https://api.unsplash.com/search/photos?query='
-      +encodeURIComponent(q)+'&page='+unsPage+'&per_page=12&client_id='+key);
-    if (res.status===403 && res.headers.get('X-Ratelimit-Remaining')==='0'){
-      grid.innerHTML = '<span class="hint">Unsplash-limiet bereikt (50/uur). Probeer later opnieuw — je key is in orde.</span>';
-      return;
-    }
-    if (res.status===401 || res.status===403){
-      // eigen (opgeslagen) key werkt niet → weggooien en terugvallen op de ingebouwde
-      if (localStorage.getItem(UNS_LS)){ localStorage.removeItem(UNS_LS); unsLastQ=''; return unsSearch(); }
-      if (await unsAskKey(grid)){ unsLastQ=''; return unsSearch(); }
-      return;
-    }
-    if (!res.ok){ grid.innerHTML = '<span class="hint">Unsplash-fout '+res.status+'.</span>'; return; }
-    const data = await res.json();
-    if (!data.results || !data.results.length){
-      grid.innerHTML = '<span class="hint">Geen resultaten.</span>'; return;
-    }
-    grid.innerHTML = '';
-    data.results.forEach(ph=>{
-      const im = document.createElement('img');
-      im.src = ph.urls.thumb;
-      im.title = (ph.alt_description||'') + ' — ' + ph.user.name;
-      im.addEventListener('click', ()=>unsLoad(ph));
-      grid.appendChild(im);
-    });
-  } catch(err){
-    grid.innerHTML = '<span class="hint">Fout bij zoeken: '+err.message+'</span>';
+function unsThumb(ph, grid){
+  const im=document.createElement('img');
+  im.src=ph.urls.thumb;
+  im.title=(ph.alt_description||'')+' — '+ph.user.name;
+  im.addEventListener('click',()=>unsLoad(ph));
+  grid.appendChild(im);
+}
+function unsShowMore(on){ document.getElementById('unsMore').style.display = on?'block':'none'; }
+// haalt één pagina op; verzorgt key-prompt, rate-limit en fallback. Geeft foto-array of null.
+async function unsFetch(q, page){
+  const grid=document.getElementById('unsGrid');
+  let key=unsKey();
+  if (!key){ if(!(await unsAskKey(grid))) return null; key=unsKey(); }
+  let res;
+  try { res=await fetch('https://api.unsplash.com/search/photos?query='
+    +encodeURIComponent(q)+'&page='+page+'&per_page='+UNS_PER+'&client_id='+key); }
+  catch(err){ grid.innerHTML='<span class="hint">Netwerkfout: '+err.message+'</span>'; return null; }
+  if (res.status===403 && res.headers.get('X-Ratelimit-Remaining')==='0'){
+    grid.innerHTML='<span class="hint">Unsplash-limiet bereikt (50/uur). Probeer later opnieuw — je key is in orde.</span>'; return null;
   }
+  if (res.status===401 || res.status===403){
+    if (localStorage.getItem(UNS_LS)){ localStorage.removeItem(UNS_LS); return unsFetch(q,page); }
+    if (await unsAskKey(grid)) return unsFetch(q,page);
+    return null;
+  }
+  if (!res.ok){ grid.innerHTML='<span class="hint">Unsplash-fout '+res.status+'.</span>'; return null; }
+  const data=await res.json();
+  return data.results||[];
+}
+async function unsSearch(){
+  const q=document.getElementById('unsQ').value.trim(); if(!q) return;
+  const grid=document.getElementById('unsGrid');
+  unsLastQ=q; unsPage=1; unsShowMore(false);
+  grid.innerHTML='<span class="hint">Zoeken…</span>';
+  const photos=await unsFetch(q,1);
+  if(!photos) return;
+  if(!photos.length){ grid.innerHTML='<span class="hint">Geen resultaten.</span>'; return; }
+  grid.innerHTML='';
+  photos.forEach(ph=>unsThumb(ph,grid));
+  unsShowMore(photos.length>=UNS_PER);
+}
+async function unsLoadMore(){
+  if(!unsLastQ) return;
+  const grid=document.getElementById('unsGrid'), btn=document.getElementById('unsMore');
+  const old=btn.textContent; btn.textContent='Laden…'; btn.disabled=true;
+  const photos=await unsFetch(unsLastQ, unsPage+1);
+  btn.textContent=old; btn.disabled=false;
+  if(!photos||!photos.length){ unsShowMore(false); return; }
+  unsPage++;
+  photos.forEach(ph=>unsThumb(ph,grid));
+  unsShowMore(photos.length>=UNS_PER);
 }
 function unsLoad(ph){
   const img = new Image();
@@ -1165,6 +1194,7 @@ function unsLoad(ph){
   fetch(dl + (dl.includes('?')?'&':'?') + 'client_id='+unsKey()).catch(()=>{});
 }
 document.getElementById('unsBtn').addEventListener('click', unsSearch);
+document.getElementById('unsMore').addEventListener('click', unsLoadMore);
 document.getElementById('unsQ').addEventListener('keydown', e=>{ if (e.key==='Enter') unsSearch(); });
 
 /* ---------- controls ---------- */
@@ -1202,6 +1232,7 @@ const RANGES = [
   ['rot','rot',x=>x+'°'], ['bright','bright',x=>x], ['contrast','contrast',x=>x],
   ['gamma','gamma',x=>(x/100).toFixed(2)], ['gap','gap',x=>x+'%'],
   ['sat','sat',x=>x+'%'], ['sJit','sJit',x=>x+'%'], ['rotJit','rotJit',x=>x+'°'],
+  ['opacity','opacity',x=>x+'%'],
 ];
 RANGES.forEach(([id,key,fmt])=>{
   const el=document.getElementById(id), v=document.getElementById(id+'V');
@@ -1213,6 +1244,7 @@ document.getElementById('bg').addEventListener('input',e=>S.bg=e.target.value);
 document.getElementById('invert').addEventListener('change',e=>S.invert=e.target.checked);
 document.getElementById('rndRot').addEventListener('change',e=>S.rndRot=e.target.checked);
 document.getElementById('bgT').addEventListener('change',e=>S.bgT=e.target.checked);
+document.getElementById('opacityTone').addEventListener('change',e=>S.opacityTone=e.target.checked);
 document.getElementById('singleSel').addEventListener('change',e=>S.single=+e.target.value);
 document.getElementById('ditherSel').addEventListener('change',e=>S.dither=e.target.value);
 
@@ -1297,6 +1329,7 @@ function syncUI(){
   document.getElementById('invert').checked = S.invert;
   document.getElementById('rndRot').checked = S.rndRot;
   document.getElementById('bgT').checked = S.bgT;
+  document.getElementById('opacityTone').checked = S.opacityTone;
   document.getElementById('singleSel').value = S.single;
   document.getElementById('ditherSel').value = S.dither;
   S.slots.forEach((_,i)=>syncSlotRow(i));
@@ -1690,6 +1723,8 @@ function buildArtSVG(){
   const used=new Set();
   const minS=S.sMin/100, maxS=S.sMax/100, gapF=1-(S.gap||0)/100;
   const offGrid=S.gridType==='brick'||S.gridType==='hex';
+  const baseA=(S.opacity===undefined?100:S.opacity)/100;
+  const sNorm=Math.max(0.01,Math.max(minS,maxS));
   let body='';
   for(let y=0;y<rows;y++){
     const off=offGrid&&(y&1)?0.5:0;
@@ -1700,15 +1735,19 @@ function buildArtSVG(){
       if(!cache[idx])continue;
       used.add(idx);
       const t=cells.T[i];
-      let sc=(minS+(maxS-minS)*t)*U*gapF;
+      const sizeF=minS+(maxS-minS)*t;
+      let sc=sizeF*U*gapF;
       if(S.sJit)sc*=1+(hash2(x,y,7)-0.5)*2*(S.sJit/100);
       if(sc<=0.4)continue;
+      let alpha=baseA;
+      if(S.opacityTone)alpha*=0.2+0.8*Math.max(0,Math.min(1,sizeF/sNorm));
       let ang=(cells.A?cells.A[i]:0)+(S.rot||0);
       if(S.rndRot)ang+=Math.floor(hash2(x,y,3)*4)*90;
       if(S.rotJit)ang+=(hash2(x,y,11)-0.5)*2*S.rotJit;
       const fill=cells.C?cells.C[i]:S.slots[idx].color;
       const tf=`translate(${r1((x+0.5+off)*U)} ${r1(py)})`+(ang?` rotate(${r1(ang)})`:'');
-      body+=`<use href="#s${idx}" x="${r1(-sc/2)}" y="${r1(-sc/2)}" width="${r1(sc)}" height="${r1(sc)}" fill="${fill}" transform="${tf}"/>\n`;
+      const op=alpha<0.999?` fill-opacity="${r1(alpha)}"`:'';
+      body+=`<use href="#s${idx}" x="${r1(-sc/2)}" y="${r1(-sc/2)}" width="${r1(sc)}" height="${r1(sc)}" fill="${fill}"${op} transform="${tf}"/>\n`;
     }
   }
   let defs='';
