@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.6</title>
+<title>SVG Dither Filter 2.7</title>
 <style>
   :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff;
           --ctrl:#202026; --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
@@ -83,7 +83,7 @@
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
     <div>
       <h1>SVG DITHER FILTER</h1>
-      <p class="ver">v2.6 · <a href="index-v1.html">open origineel (v1)</a></p>
+      <p class="ver">v2.7 · <a href="index-v1.html">open origineel (v1)</a></p>
     </div>
     <button id="themeBtn" title="Licht / donker thema">🌙</button>
   </div>
@@ -147,16 +147,48 @@
     <input type="range" id="contrast" min="-100" max="100" value="0" />
     <div class="row"><label>Gamma</label><span class="val" id="gammaV">1.00</span></div>
     <input type="range" id="gamma" min="20" max="300" value="100" />
+    <div class="row"><label>Highlights comp.</label><span class="val" id="hlV">0</span></div>
+    <input type="range" id="hl" min="0" max="100" value="0" />
+    <div class="row"><label>Pre-blur</label><span class="val" id="blurV">0px</span></div>
+    <input type="range" id="blur" min="0" max="10" value="0" />
+    <div class="row"><label>Posterize</label><span class="val" id="posterizeV">uit</span></div>
+    <input type="range" id="posterize" min="2" max="7" value="7" />
     <div class="row" style="margin-top:8px"><label>Invert</label>
       <input type="checkbox" id="invert" /></div>
+    <div class="row"><label>Woodcut (randen versterken)</label>
+      <input type="checkbox" id="edgeBoost" /></div>
+    <div id="edgeWrap" style="display:none">
+      <div class="row"><label>Woodcut-sterkte</label><span class="val" id="edgeAmtV">60%</span></div>
+      <input type="range" id="edgeAmt" min="0" max="100" value="60" />
+    </div>
     <label>Dithering</label>
     <select autocomplete="off" id="ditherSel" style="width:100%">
       <option value="none">Geen (tone buckets)</option>
-      <option value="fs">Floyd–Steinberg</option>
-      <option value="bayer4">Bayer 4×4 (ordered)</option>
-      <option value="bayer8">Bayer 8×8 (ordered)</option>
-      <option value="blue">Blue noise 32×32</option>
+      <optgroup label="Error-diffusion">
+        <option value="fs">Floyd–Steinberg</option>
+        <option value="falsefs">False Floyd–Steinberg</option>
+        <option value="atkinson">Atkinson</option>
+        <option value="jjn">Jarvis–Judice–Ninke</option>
+        <option value="stucki">Stucki</option>
+        <option value="burkes">Burkes</option>
+        <option value="sierra">Sierra</option>
+        <option value="sierra2">Sierra-2 (two-row)</option>
+        <option value="sierralite">Sierra Lite</option>
+        <option value="stevensonarce">Stevenson–Arce</option>
+      </optgroup>
+      <optgroup label="Ordered / noise">
+        <option value="bayer2">Bayer 2×2</option>
+        <option value="bayer4">Bayer 4×4</option>
+        <option value="bayer8">Bayer 8×8</option>
+        <option value="bayer16">Bayer 16×16</option>
+        <option value="bayer32">Bayer 32×32</option>
+        <option value="blue">Blue noise 32×32</option>
+      </optgroup>
     </select>
+    <div class="row" style="margin-top:6px"><label>Serpentine (error-diffusion)</label>
+      <input type="checkbox" id="serpentine" /></div>
+    <div class="row"><label>Error-sterkte</label><span class="val" id="edStrengthV">100%</span></div>
+    <input type="range" id="edStrength" min="0" max="150" value="100" />
   </div>
 
   <div class="grp">
@@ -202,15 +234,17 @@
   <div class="grp">
     <h2>Color</h2>
     <div class="seg" id="colorMode">
-      <button data-v="tone" class="on">Per-tone kleur</button>
-      <button data-v="source">Bronkleur</button>
+      <button data-v="tone" class="on">Per-tone</button>
+      <button data-v="source">Bron</button>
+      <button data-v="palet">Palet-snap</button>
     </div>
     <div id="satWrap" style="display:none">
       <div class="row" style="margin-top:8px"><label>Saturation</label><span class="val" id="satV">100%</span></div>
       <input type="range" id="sat" min="0" max="250" value="100" />
     </div>
-    <div class="hint">Bronkleur = elke cel pakt de kleur van de afbeelding zelf.
-      Saturation werkt ook in CMYK-modus.</div>
+    <div class="hint">Bron = elke cel pakt de kleur uit de foto. Palet-snap = die kleur
+      wordt naar de dichtstbijzijnde van je 7 slotkleuren gemapt (echte palet-quantisatie).
+      Saturation werkt ook in CMYK.</div>
   </div>
 
   <div class="grp">
@@ -281,6 +315,7 @@
       <button id="saveShapeSet">Shapes opslaan…</button>
       <button id="savePal">Kleuren opslaan…</button>
     </div>
+    <button id="extractPal" style="width:100%;margin-top:6px">🎨 Palet uit foto halen (7 kleuren)</button>
     <div id="svgList" style="margin-top:10px"></div>
     <div class="hint">Shape-set en palet staan los van elkaar — combineer elke vorm met elk palet.
       Of zet per slot een eigen shape (⬆ = eigen SVG) en kleur. Slot 1 = donkerste, slot 7 = lichtste.</div>
@@ -328,6 +363,7 @@ const RASTER = 96;            // px each shape is rasterised at
 const DEFAULT_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/></svg>';
 const TONE_LABELS = ['Shadow','Dark','Low-mid','Mid','High-mid','Light','Highlight'];
 const BAYER = {
+  bayer2: [[0,2],[3,1]],
   bayer4: [[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]],
   bayer8: [[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],
            [60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],
@@ -366,6 +402,20 @@ const BAYER = {
 [520,237,31,356,728,256,488,699,340,1012,803,193,943,51,850,257,436,14,946,524,285,756,451,665,511,822,432,128,1002,470,667,151],
 [708,313,767,871,131,980,7,896,220,85,859,448,677,760,574,365,1015,176,658,234,811,919,369,98,266,950,773,37,537,252,787,969]],
 };
+// finer ordered matrices by recursive doubling: M2n = [[4M, 4M+2],[4M+3, 4M+1]]
+function buildBayer(n){
+  let m=[[0,2],[3,1]];
+  while(m.length<n){
+    const s=m.length, o=Array.from({length:s*2},()=>new Array(s*2));
+    for(let y=0;y<s;y++)for(let x=0;x<s;x++){
+      const v=m[y][x]*4; o[y][x]=v; o[y][x+s]=v+2; o[y+s][x]=v+3; o[y+s][x+s]=v+1;
+    }
+    m=o;
+  }
+  return m;
+}
+BAYER.bayer16=buildBayer(16);
+BAYER.bayer32=buildBayer(32);
 
 /* ---------- built-in shape library ---------- */
 const NS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
@@ -434,7 +484,8 @@ const DEFAULTS = {
   colorMode:'tone', sat:100, sJit:0, rotJit:0, rotMode:'fixed',
   renderMode:'shapes', cmykShape:'circle',
   cmykC:true, cmykM:true, cmykY:true, cmykK:true,
-  opacity:100, opacityTone:false,
+  opacity:100, opacityTone:false, serpentine:false, edStrength:100,
+  hl:0, blur:0, edgeBoost:false, edgeAmt:60, posterize:7,
 };
 const INKS = { c:'#00AEEF', m:'#EC008C', y:'#FFF200', k:'#1A1A1A' };
 const SCREEN_ANGLES = { c:15, m:75, y:0, k:45 };
@@ -456,14 +507,51 @@ function hash2(x,y,s){
 }
 function toneLUT(cfg){
   const b=(cfg.bright||0)/100, c=1+(cfg.contrast||0)/100, g=Math.max(0.05,(cfg.gamma||100)/100);
+  const hl=(cfg.hl||0)/100;
   const lut=new Float32Array(256);
   for(let i=0;i<256;i++){
     let t=i/255 + b;
     t=(t-0.5)*c+0.5;
     t=Math.min(1,Math.max(0,t));
-    lut[i]=Math.pow(t,1/g);
+    t=Math.pow(t,1/g);
+    if(hl) t=t + hl*(1-t)*t;           // highlights compression: soft shoulder toward white
+    lut[i]=Math.min(1,Math.max(0,t));
   }
   return lut;
+}
+// separable box blur on the small RGBA grid buffer (radius r in cells), in place
+function boxBlurRGBA(data,w,h,r){
+  if(r<1) return data;
+  r=Math.round(r);
+  const tmp=new Float32Array(data.length);
+  const span=2*r+1;
+  for(let c=0;c<4;c++){
+    // horizontal
+    for(let y=0;y<h;y++){
+      let sum=0;
+      for(let x=-r;x<=r;x++) sum+=data[(y*w+Math.min(w-1,Math.max(0,x)))*4+c];
+      for(let x=0;x<w;x++){
+        tmp[(y*w+x)*4+c]=sum/span;
+        const add=data[(y*w+Math.min(w-1,x+r+1))*4+c];
+        const sub=data[(y*w+Math.max(0,x-r))*4+c];
+        sum+=add-sub;
+      }
+    }
+  }
+  for(let c=0;c<4;c++){
+    // vertical
+    for(let x=0;x<w;x++){
+      let sum=0;
+      for(let y=-r;y<=r;y++) sum+=tmp[(Math.min(h-1,Math.max(0,y))*w+x)*4+c];
+      for(let y=0;y<h;y++){
+        data[(y*w+x)*4+c]=sum/span;
+        const add=tmp[(Math.min(h-1,y+r+1)*w+x)*4+c];
+        const sub=tmp[(Math.max(0,y-r)*w+x)*4+c];
+        sum+=add-sub;
+      }
+    }
+  }
+  return data;
 }
 function gridFor(cfg,ar){
   const cols=cfg.grid;
@@ -471,11 +559,37 @@ function gridFor(cfg,ar){
   const rows=Math.max(1,Math.round(cols/ar/rowH));
   return {cols,rows,rowH};
 }
+// error-diffusion kernels: [dx, dy, weight], shared divisor. Applied to the 7-level tone bucketing.
+const DIFFUSION = {
+  fs:        { div:16, k:[[1,0,7],[-1,1,3],[0,1,5],[1,1,1]] },
+  atkinson:  { div:8,  k:[[1,0,1],[2,0,1],[-1,1,1],[0,1,1],[1,1,1],[0,2,1]] },
+  jjn:       { div:48, k:[[1,0,7],[2,0,5],[-2,1,3],[-1,1,5],[0,1,7],[1,1,5],[2,1,3],[-2,2,1],[-1,2,3],[0,2,5],[1,2,3],[2,2,1]] },
+  stucki:    { div:42, k:[[1,0,8],[2,0,4],[-2,1,2],[-1,1,4],[0,1,8],[1,1,4],[2,1,2],[-2,2,1],[-1,2,2],[0,2,4],[1,2,2],[2,2,1]] },
+  burkes:    { div:32, k:[[1,0,8],[2,0,4],[-2,1,2],[-1,1,4],[0,1,8],[1,1,4],[2,1,2]] },
+  sierra:    { div:32, k:[[1,0,5],[2,0,3],[-2,1,2],[-1,1,4],[0,1,5],[1,1,4],[2,1,2],[-1,2,2],[0,2,3],[1,2,2]] },
+  sierra2:   { div:16, k:[[1,0,4],[2,0,3],[-2,1,1],[-1,1,2],[0,1,3],[1,1,2],[2,1,1]] },
+  sierralite:{ div:4,  k:[[1,0,2],[-1,1,1],[0,1,1]] },
+  falsefs:   { div:8,  k:[[1,0,3],[0,1,3],[1,1,2]] },
+  stevensonarce:{ div:200, k:[[2,0,32],[-3,1,12],[-1,1,26],[1,1,30],[3,1,30],[5,1,26],[-2,2,12],[0,2,26],[2,2,12],[4,2,26]] },
+};
+function hex2rgb(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+function nearestPal(r,g,b,pal){ // redmean weighted-Euclidean nearest colour
+  let bi=0,bd=1e18;
+  for(let j=0;j<pal.length;j++){
+    const rm=(r+pal[j][0])/2, dr=r-pal[j][0], dg=g-pal[j][1], db=b-pal[j][2];
+    const d=(2+rm/256)*dr*dr + 4*dg*dg + (2+(255-rm)/256)*db*db;
+    if(d<bd){bd=d;bi=j;}
+  }
+  return pal[bi];
+}
 function computeCells(data,cols,rows,cfg,lut,BAYERM){
   const n=cols*rows;
+  if(cfg.blur) boxBlurRGBA(data,cols,rows,cfg.blur);   // pre-dither blur op het kleine raster
   const T=new Float32Array(n);
-  const C=cfg.colorMode==='source'?new Array(n):null;
+  const colMode=cfg.colorMode;
+  const C=(colMode==='source'||colMode==='palet')?new Array(n):null;
   const sat=(cfg.sat===undefined?100:cfg.sat)/100;
+  const pal=colMode==='palet'?cfg.slots.map(s=>hex2rgb(s.color)):null;
   for(let i=0;i<n;i++){
     const p=i*4, a=data[p+3]/255;
     const lum=(0.299*data[p]+0.587*data[p+1]+0.114*data[p+2])/255*a;
@@ -485,22 +599,44 @@ function computeCells(data,cols,rows,cfg,lut,BAYERM){
     if(C){
       const gr=0.299*data[p]+0.587*data[p+1]+0.114*data[p+2];
       const f=v=>Math.max(0,Math.min(255,Math.round(gr+(v-gr)*sat)));
-      C[i]='rgb('+f(data[p])+','+f(data[p+1])+','+f(data[p+2])+')';
+      const r=f(data[p]),g=f(data[p+1]),b=f(data[p+2]);
+      if(pal){ const c=nearestPal(r,g,b,pal); C[i]='rgb('+c[0]+','+c[1]+','+c[2]+')'; }
+      else C[i]='rgb('+r+','+g+','+b+')';
     }
   }
-  const B=new Uint8Array(n);
-  if(cfg.dither==='fs'){
-    const W=Float32Array.from(T);
+  // woodcut: versterk randen in de toon (Sobel) → dikke shape-contouren
+  if(cfg.edgeBoost){
+    const amt=(cfg.edgeAmt===undefined?60:cfg.edgeAmt)/100*0.9;
+    const T0=Float32Array.from(T);
     for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-      const i=y*cols+x;
-      const q=Math.max(0,Math.min(6,Math.round(W[i]*6)));
-      B[i]=q;
-      const err=W[i]-q/6;
-      if(x+1<cols)W[i+1]+=err*7/16;
-      if(y+1<rows){
-        if(x>0)W[i+cols-1]+=err*3/16;
-        W[i+cols]+=err*5/16;
-        if(x+1<cols)W[i+cols+1]+=err*1/16;
+      const xm=Math.max(0,x-1),xp=Math.min(cols-1,x+1),ym=Math.max(0,y-1),yp=Math.min(rows-1,y+1);
+      const gx=(T0[ym*cols+xp]+2*T0[y*cols+xp]+T0[yp*cols+xp])-(T0[ym*cols+xm]+2*T0[y*cols+xm]+T0[yp*cols+xm]);
+      const gy=(T0[yp*cols+xm]+2*T0[yp*cols+x]+T0[yp*cols+xp])-(T0[ym*cols+xm]+2*T0[ym*cols+x]+T0[ym*cols+xp]);
+      const mag=Math.min(1,Math.hypot(gx,gy));
+      T[y*cols+x]=Math.max(0,Math.min(1,T0[y*cols+x]-mag*amt));
+    }
+  }
+  // posterize: snap de toon naar L vlakke stappen
+  const L=cfg.posterize===undefined?7:cfg.posterize;
+  if(L<7) for(let i=0;i<n;i++) T[i]=Math.round(T[i]*(L-1))/(L-1);
+  const B=new Uint8Array(n);
+  if(DIFFUSION[cfg.dither]){
+    const {div,k}=DIFFUSION[cfg.dither];
+    const W=Float32Array.from(T);
+    const serp=!!cfg.serpentine && cfg.dither!=='atkinson';   // Atkinson is non-serpentine by design
+    const str=(cfg.edStrength===undefined?100:cfg.edStrength)/100;
+    for(let y=0;y<rows;y++){
+      const rev=serp&&(y&1);                       // serpentine: even rows L→R, odd rows R→L
+      for(let xx=0;xx<cols;xx++){
+        const x=rev?cols-1-xx:xx;
+        const i=y*cols+x;
+        const q=Math.max(0,Math.min(6,Math.round(W[i]*6)));
+        B[i]=q;
+        const err=(W[i]-q/6)*str;
+        for(const [dx,dy,w] of k){
+          const nx=x+(rev?-dx:dx), ny=y+dy;
+          if(nx>=0&&nx<cols&&ny<rows) W[ny*cols+nx]+=err*w/div;
+        }
       }
     }
   } else if(BAYERM[cfg.dither]){ // any ordered threshold matrix (bayer/blue noise)
@@ -1248,7 +1384,7 @@ function setOffset(x,y){
 bindSeg('mode','mode', ()=>{ document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none'; });
 bindSeg('gridType','gridType');
 bindSeg('rotMode','rotMode');
-bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none'; refreshColorLock(); });
+bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.display = (S.colorMode==='source'||S.colorMode==='palet')?'block':'none'; refreshColorLock(); });
 bindSeg('renderMode','renderMode', ()=>{ document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none'; refreshColorLock(); });
 
 /* CMYK controls */
@@ -1265,7 +1401,9 @@ const RANGES = [
   ['rot','rot',x=>x+'°'], ['bright','bright',x=>x], ['contrast','contrast',x=>x],
   ['gamma','gamma',x=>(x/100).toFixed(2)], ['gap','gap',x=>x+'%'],
   ['sat','sat',x=>x+'%'], ['sJit','sJit',x=>x+'%'], ['rotJit','rotJit',x=>x+'°'],
-  ['opacity','opacity',x=>x+'%'],
+  ['opacity','opacity',x=>x+'%'], ['edStrength','edStrength',x=>x+'%'],
+  ['hl','hl',x=>x], ['blur','blur',x=>x+'px'], ['edgeAmt','edgeAmt',x=>x+'%'],
+  ['posterize','posterize',x=>x==7?'uit':x],
 ];
 RANGES.forEach(([id,key,fmt])=>{
   const el=document.getElementById(id), v=document.getElementById(id+'V');
@@ -1278,6 +1416,9 @@ document.getElementById('invert').addEventListener('change',e=>S.invert=e.target
 document.getElementById('rndRot').addEventListener('change',e=>S.rndRot=e.target.checked);
 document.getElementById('bgT').addEventListener('change',e=>S.bgT=e.target.checked);
 document.getElementById('opacityTone').addEventListener('change',e=>S.opacityTone=e.target.checked);
+document.getElementById('serpentine').addEventListener('change',e=>S.serpentine=e.target.checked);
+document.getElementById('edgeBoost').addEventListener('change',e=>{ S.edgeBoost=e.target.checked;
+  document.getElementById('edgeWrap').style.display=S.edgeBoost?'block':'none'; });
 document.getElementById('singleSel').addEventListener('change',e=>S.single=+e.target.value);
 document.getElementById('ditherSel').addEventListener('change',e=>S.dither=e.target.value);
 
@@ -1363,6 +1504,9 @@ function syncUI(){
   document.getElementById('rndRot').checked = S.rndRot;
   document.getElementById('bgT').checked = S.bgT;
   document.getElementById('opacityTone').checked = S.opacityTone;
+  document.getElementById('serpentine').checked = S.serpentine;
+  document.getElementById('edgeBoost').checked = S.edgeBoost;
+  document.getElementById('edgeWrap').style.display = S.edgeBoost?'block':'none';
   document.getElementById('singleSel').value = S.single;
   document.getElementById('ditherSel').value = S.dither;
   S.slots.forEach((_,i)=>syncSlotRow(i));
@@ -1565,6 +1709,17 @@ const COLOR_PALETTES = {
   'Pop CMYK':       ['#1a1a1a','#00aeef','#0057a8','#ec008c','#ff5e3a','#fff200','#ffffff'],
   'Delfts Blauw':   ramp('#16356b','#eaf2fa'),
   'Goud':           ramp('#2b1d12','#f5e7b8'),
+  /* retro/kunst-paletten (uit ditheringstudio-analyse), als 7-slot ramp */
+  'DawnBringer 16': ['#140C1C','#442434','#854C30','#D04648','#D27D2C','#D2AD99','#DEEED6'],
+  'DawnBringer 32': ['#000000','#45283C','#8F563B','#DF7126','#D9A066','#EEC39A','#FFFFFF'],
+  'PICO-8':         ['#000000','#1D2B53','#7E2553','#AB5236','#FF004D','#FFA300','#FFF1E8'],
+  'NES':            ['#000000','#0000BC','#A80020','#F83800','#FCA044','#3CBCFC','#FCFCFC'],
+  'C64 palet':      ['#000000','#333333','#0000AA','#880000','#DD8855','#AAFFEE','#FFFFFF'],
+  'CGA':            ['#000000','#0000AA','#AA00AA','#AA0000','#FF55FF','#55FFFF','#FFFFFF'],
+  'Solarized':      ['#002B36','#073642','#586E75','#839496','#93A1A1','#EEE8D5','#FDF6E3'],
+  'Synthwave':      ['#2D1A3D','#4B1053','#8A095D','#C81050','#FF0080','#FF6FC7','#2AFCFF'],
+  'Vaporwave':      ['#010E1A','#013D6D','#018FC4','#FF47B3','#FF71CE','#BAE1FF','#FFFFFF'],
+  'Bauhaus':        ['#000000','#0000FF','#0080FF','#FF0000','#FF8000','#FFFF00','#FFFFFF'],
 };
 async function applyShapeSet(set){
   shapeArr(set).forEach((sh,i)=>{
@@ -1577,6 +1732,39 @@ async function applyShapeSet(set){
 async function applyPalette(cols){
   cols.slice(0,7).forEach((c,i)=>{ S.slots[i].color=c; syncSlotRow(i); });
   await rebuildAll();
+}
+// median-cut: haal 7 representatieve kleuren uit de huidige foto-uitsnede
+function extract7FromImage(){
+  if(!media){ alert('Upload eerst een afbeelding.'); return null; }
+  const [cx,cy,cw,ch]=cropRect(); if(!cw||!ch) return null;
+  const W=80, H=Math.max(1,Math.round(W*ch/cw));
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  c.getContext('2d',{willReadFrequently:true}).drawImage(media,cx,cy,cw,ch,0,0,W,H);
+  const d=c.getContext('2d').getImageData(0,0,W,H).data;
+  let px=[]; for(let i=0;i<d.length;i+=4) if(d[i+3]>8) px.push([d[i],d[i+1],d[i+2]]);
+  if(!px.length) return null;
+  let boxes=[px];
+  while(boxes.length<7){
+    // splits de box met het grootste kanaalbereik
+    let bi=0,brange=-1,bch=0;
+    boxes.forEach((bx,k)=>{
+      for(let ch2=0;ch2<3;ch2++){
+        let mn=255,mx=0; for(const p of bx){ if(p[ch2]<mn)mn=p[ch2]; if(p[ch2]>mx)mx=p[ch2]; }
+        if(mx-mn>brange){ brange=mx-mn; bi=k; bch=ch2; }
+      }
+    });
+    if(brange<=0) break;
+    const bx=boxes[bi].slice().sort((a,b)=>a[bch]-b[bch]);
+    const m=bx.length>>1;
+    boxes.splice(bi,1,bx.slice(0,m),bx.slice(m));
+  }
+  const avg=boxes.map(bx=>{
+    let r=0,g=0,b=0; for(const p of bx){r+=p[0];g+=p[1];b+=p[2];}
+    const n=bx.length||1; return [Math.round(r/n),Math.round(g/n),Math.round(b/n)];
+  });
+  while(avg.length<7) avg.push(avg[avg.length-1]);
+  avg.sort((a,b)=>(0.299*a[0]+0.587*a[1]+0.114*a[2])-(0.299*b[0]+0.587*b[1]+0.114*b[2]));
+  return avg.slice(0,7).map(c=>'#'+c.map(v=>v.toString(16).padStart(2,'0')).join(''));
 }
 // gedeelde picker: ingebouwd + eigen, met ◀▶, opslaan en verwijderen
 function makeLibrary(o){
@@ -1619,6 +1807,10 @@ makeLibrary({ selId:'palSel', prevId:'palPrev', nextId:'palNext', delId:'palDel'
   saveId:'savePal', builtins:COLOR_PALETTES, lsKey:'ditherPalettes', label:'— palet —',
   apply:applyPalette, promptMsg:'Naam voor dit kleurenpalet:',
   capture:()=>S.slots.map(s=>s.color) });
+document.getElementById('extractPal').addEventListener('click', ()=>{
+  const pal=extract7FromImage();
+  if(pal){ document.getElementById('palSel').value=''; applyPalette(pal); }
+});
 
 /* ---------- artwork export: PNG ---------- */
 const PAPER = { a4:[210,297], a3:[297,420], a2:[420,594], a1:[594,841] }; // mm

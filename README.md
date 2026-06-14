@@ -1,4 +1,4 @@
-# SVG Dither Filter 2.6
+# SVG Dither Filter 2.7
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
@@ -40,10 +40,23 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Crop zoom & pan** — scroll to zoom into the photo and drag to reposition;
   this is a real *source* crop, so it carries through to every export (compose
   a tight wallpaper or print). Double-click recentres; hold still to compare.
-- **Real dithering algorithms** — Floyd–Steinberg error diffusion and ordered
-  Bayer 4×4 / 8×8, on top of the original tone-bucket mapping.
-- **Source colour mode** — every cell picks its colour from the image itself,
-  with a saturation boost slider. Pointillism & mosaic looks in one click.
+- **17 dithering algorithms (expanded in 2.7)** — error-diffusion: Floyd–
+  Steinberg, False FS, Atkinson, Jarvis–Judice–Ninke, Stucki, Burkes, Sierra,
+  Sierra-2, Sierra Lite, Stevenson–Arce — with a **serpentine** toggle and an
+  **error-strength** slider; ordered/noise: Bayer 2/4/8/16/32 and 32×32 blue
+  noise. (Algorithm set informed by a source-level analysis of
+  ditheringstudio.com.)
+- **Source & palette-snap colour modes** — *Bron* samples each cell's colour
+  from the photo (with a saturation slider); *Palet-snap* maps that colour to
+  the nearest of your 7 slot colours (true palette quantization, redmean
+  distance) — load any palette (PICO-8, NES, DawnBringer, Solarized…) and the
+  image is quantized to it while shape size keeps continuous tone.
+- **Auto palette from photo** — one button runs median-cut on the source to
+  build a 7-colour shadow→highlight palette matched to the image.
+- **Pre-dither tone pipeline (new in 2.7)** — besides brightness/contrast/gamma:
+  **highlights compression**, a **pre-blur** to calm noisy photos, **posterize**
+  (2–7 flat tonal bands), and **Woodcut** edge-boost (Sobel) for bold linocut-
+  style contours made of shapes.
 - **Flow rotation** — shapes align to the image contours (Sobel gradients), so
   strokes follow hair, waves, and brushwork. Try *Flow Lines* on Starry Night.
 - **Tone curve** — brightness / contrast / gamma before tone mapping.
@@ -165,7 +178,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html      # the entire 2.6 tool — UI, presets, dither engine, exporters
+├── index.html      # the entire 2.7 tool — UI, presets, dither engine, exporters
 ├── index-v1.html   # the original v1, untouched
 ├── assets/         # demo media (mp4 + gif preview)
 ├── README.md
