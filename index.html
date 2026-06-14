@@ -118,14 +118,8 @@
       <button data-v="aport">A staand</button>
       <button data-v="aland">A liggend</button>
     </div>
-    <div id="offWrap">
-      <div class="row" style="margin-top:9px"><label>Verschuif X</label><span class="val" id="offXV">0</span></div>
-      <input type="range" id="offX" min="-100" max="100" value="0" />
-      <div class="row"><label>Verschuif Y</label><span class="val" id="offYV">0</span></div>
-      <input type="range" id="offY" min="-100" max="100" value="0" />
-    </div>
     <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
-      Bij een uitsnede: sleep de afbeelding (of gebruik de sliders) om 'm te verschuiven.
+      Bij een uitsnede: sleep de afbeelding op het canvas om 'm te verschuiven (dubbelklik = centreren).
       Houd de muis ingedrukt om het origineel te zien.</div>
     <label>Unsplash</label>
     <div class="row">
@@ -349,19 +343,56 @@ const BAYER = {
 /* ---------- built-in shape library ---------- */
 const NS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
 const SHAPES = {
-  circle:   { label:'● Circle',    svg: NS+'<circle cx="50" cy="50" r="46"/></svg>' },
-  square:   { label:'■ Square',    svg: NS+'<rect x="8" y="8" width="84" height="84"/></svg>' },
-  rounded:  { label:'▢ Rounded',   svg: NS+'<rect x="8" y="8" width="84" height="84" rx="22"/></svg>' },
-  diamond:  { label:'◆ Diamond',   svg: NS+'<polygon points="50,4 96,50 50,96 4,50"/></svg>' },
-  triangle: { label:'▲ Triangle',  svg: NS+'<polygon points="50,8 96,92 4,92"/></svg>' },
-  cross:    { label:'✚ Cross',     svg: NS+'<rect x="38" y="6" width="24" height="88"/><rect x="6" y="38" width="88" height="24"/></svg>' },
-  xmark:    { label:'✕ X',         svg: NS+'<g transform="rotate(45 50 50)"><rect x="40" y="-8" width="20" height="116"/><rect x="-8" y="40" width="116" height="20"/></g></svg>' },
-  star:     { label:'★ Star',      svg: NS+'<polygon points="50,4 61,37 96,37 68,58 78,92 50,72 22,92 32,58 4,37 39,37"/></svg>' },
-  ring:     { label:'◎ Ring',      svg: NS+'<path fill-rule="evenodd" d="M50 4a46 46 0 100 92 46 46 0 100-92zm0 24a22 22 0 110 44 22 22 0 110-44z"/></svg>' },
-  hline:    { label:'━ H line',    svg: NS+'<rect x="2" y="38" width="96" height="24"/></svg>' },
-  vline:    { label:'┃ V line',    svg: NS+'<rect x="38" y="2" width="24" height="96"/></svg>' },
-  heart:    { label:'♥ Heart',     svg: NS+'<path d="M50 90C22 66 5 48 5 30A23 23 0 0150 17 23 23 0 0195 30c0 18-17 36-45 60z"/></svg>' },
+  /* basis */
+  circle:   { label:'● Cirkel',     svg: NS+'<circle cx="50" cy="50" r="46"/></svg>' },
+  square:   { label:'■ Vierkant',   svg: NS+'<rect x="8" y="8" width="84" height="84"/></svg>' },
+  rounded:  { label:'▢ Afgerond',   svg: NS+'<rect x="8" y="8" width="84" height="84" rx="22"/></svg>' },
+  diamond:  { label:'◆ Ruit',       svg: NS+'<polygon points="50,4 96,50 50,96 4,50"/></svg>' },
+  /* geometrisch */
+  triangle: { label:'▲ Driehoek',   svg: NS+'<polygon points="50,8 95,90 5,90"/></svg>' },
+  hexagon:  { label:'⬡ Zeshoek',    svg: NS+'<polygon points="50,3 91,26.5 91,73.5 50,97 9,73.5 9,26.5"/></svg>' },
+  pentagon: { label:'⬠ Vijfhoek',   svg: NS+'<polygon points="50,4 93.7,35.8 77,87.2 23,87.2 6.3,35.8"/></svg>' },
+  octagon:  { label:'⯃ Achthoek',   svg: NS+'<polygon points="32,6 68,6 94,32 94,68 68,94 32,94 6,68 6,32"/></svg>' },
+  bowtie:   { label:'⋈ Strik',      svg: NS+'<path d="M10 12 L90 88 L90 12 L10 88 Z"/></svg>' },
+  /* organisch */
+  heart:    { label:'♥ Hart',       svg: NS+'<path d="M50 90C22 66 5 48 5 30A23 23 0 0150 17 23 23 0 0195 30c0 18-17 36-45 60z"/></svg>' },
+  flower:   { label:'✿ Bloem',      svg: NS+'<g><circle cx="50" cy="28" r="17"/><circle cx="69" cy="39" r="17"/><circle cx="69" cy="61" r="17"/><circle cx="50" cy="72" r="17"/><circle cx="31" cy="61" r="17"/><circle cx="31" cy="39" r="17"/><circle cx="50" cy="50" r="18"/></g></svg>' },
+  clover:   { label:'☘ Klaver',     svg: NS+'<g><circle cx="50" cy="30" r="22"/><circle cx="70" cy="50" r="22"/><circle cx="50" cy="70" r="22"/><circle cx="30" cy="50" r="22"/></g></svg>' },
+  leaf:     { label:'❧ Blad',       svg: NS+'<path d="M50 5 C79 28 79 72 50 95 C21 72 21 28 50 5 Z"/></svg>' },
+  droplet:  { label:'⬮ Druppel',    svg: NS+'<path d="M50 5 C66 34 82 52 82 68 A32 32 0 1 1 18 68 C18 52 34 34 50 5 Z"/></svg>' },
+  lens:     { label:'⬭ Lens',       svg: NS+'<path d="M5 50 C30 25 70 25 95 50 C70 75 30 75 5 50 Z"/></svg>' },
+  crescent: { label:'☾ Maan',       svg: NS+'<path fill-rule="evenodd" d="M4 50a46 46 0 1 0 92 0 46 46 0 1 0-92 0z M30 50a38 38 0 1 0 76 0 38 38 0 1 0-76 0z"/></svg>' },
+  /* ster, ring & boog */
+  star:     { label:'★ Ster',       svg: NS+'<polygon points="50,4 61,37 96,37 68,58 78,92 50,72 22,92 32,58 4,37 39,37"/></svg>' },
+  sparkle:  { label:'✦ Sprankel',   svg: NS+'<path d="M50 4 C54 34 66 46 96 50 C66 54 54 66 50 96 C46 66 34 54 4 50 C34 46 46 34 50 4 Z"/></svg>' },
+  ring:     { label:'◎ Ring',       svg: NS+'<path fill-rule="evenodd" d="M50 4a46 46 0 100 92 46 46 0 100-92zm0 24a22 22 0 110 44 22 22 0 110-44z"/></svg>' },
+  concentric:{label:'⊚ Concentrisch',svg: NS+'<path fill-rule="evenodd" d="M50 4a46 46 0 1 0 .1 0z M50 18a32 32 0 1 0 .1 0z M50 32a18 18 0 1 0 .1 0z M50 42a8 8 0 1 0 .1 0z"/></svg>' },
+  halfcircle:{label:'◐ Halve cirkel',svg: NS+'<path d="M8 66 A42 42 0 0 1 92 66 Z"/></svg>' },
+  corner:   { label:'◜ Hoekboog',   svg: NS+'<path d="M6 6 L94 6 A88 88 0 0 1 6 94 Z"/></svg>' },
+  /* lijnen & raster */
+  hline:    { label:'━ Lijn ─',     svg: NS+'<rect x="2" y="40" width="96" height="20"/></svg>' },
+  vline:    { label:'┃ Lijn │',     svg: NS+'<rect x="40" y="2" width="20" height="96"/></svg>' },
+  cross:    { label:'✚ Plus',       svg: NS+'<rect x="40" y="6" width="20" height="88"/><rect x="6" y="40" width="88" height="20"/></svg>' },
+  xmark:    { label:'✕ Kruis',      svg: NS+'<g transform="rotate(45 50 50)"><rect x="42" y="-6" width="16" height="112"/><rect x="-6" y="42" width="112" height="16"/></g></svg>' },
+  hatch:    { label:'≡ Fijn raster',svg: NS+'<g><rect x="2" y="20" width="96" height="8"/><rect x="2" y="46" width="96" height="8"/><rect x="2" y="72" width="96" height="8"/></g></svg>' },
+  crosshatch:{label:'▦ Kruisraster',svg: NS+'<g><rect x="2" y="28" width="96" height="7"/><rect x="2" y="65" width="96" height="7"/><rect x="28" y="2" width="7" height="96"/><rect x="65" y="2" width="7" height="96"/></g></svg>' },
 };
+const SHAPE_GROUPS = {
+  'Basis':           ['circle','square','rounded','diamond'],
+  'Geometrisch':     ['triangle','hexagon','pentagon','octagon','bowtie'],
+  'Organisch':       ['heart','flower','clover','leaf','droplet','lens','crescent'],
+  'Ster, ring & boog':['star','sparkle','ring','concentric','halfcircle','corner'],
+  'Lijnen & raster': ['hline','vline','cross','xmark','hatch','crosshatch'],
+};
+function shapeOptionsHTML(withCustom){
+  let h='';
+  for (const [g,keys] of Object.entries(SHAPE_GROUPS))
+    h += `<optgroup label="${g}">`
+      + keys.map(k=>`<option value="${k}">${SHAPES[k].label}</option>`).join('')
+      + '</optgroup>';
+  if (withCustom) h += '<option value="custom">⬆ Eigen SVG</option>';
+  return h;
+}
 function svgFor(slot){
   if (slot.shape === 'custom' && slot.svg) return slot.svg;
   return (SHAPES[slot.shape] || SHAPES.circle).svg;
@@ -967,7 +998,7 @@ function endGesture(){
 }
 out.addEventListener('pointerup', endGesture);
 out.addEventListener('pointercancel', endGesture);
-out.addEventListener('dblclick', ()=>{ zoom=1; panX=panY=0; applyView(); });
+out.addEventListener('dblclick', ()=>{ zoom=1; panX=panY=0; setOffset(0,0); applyView(); });
 
 /* ---------- media loading ---------- */
 function loadFile(f){
@@ -1071,21 +1102,11 @@ function bindSeg(id, key, after){
     after&&after();
   });
 }
-bindSeg('aspect','aspect', ()=>{ refreshOffsetLock(); applyView(); });
-/* crop-verschuiving: sliders + slepen op canvas. Offset doet niets bij 'Origineel'. */
-function refreshOffsetLock(){
-  const off = S.aspect==='orig';
-  document.getElementById('offX').disabled = off;
-  document.getElementById('offY').disabled = off;
-  document.getElementById('offWrap').style.opacity = off ? '.4' : '1';
-}
+bindSeg('aspect','aspect', ()=>applyView());
+/* crop-verschuiving via slepen op het canvas (zie zoom/pan/compare gestures) */
 function setOffset(x,y){
   S.offX=Math.max(-100,Math.min(100,Math.round(x)));
   S.offY=Math.max(-100,Math.min(100,Math.round(y)));
-  document.getElementById('offX').value=S.offX;
-  document.getElementById('offY').value=S.offY;
-  document.getElementById('offXV').textContent=(S.offX>0?'+':'')+S.offX;
-  document.getElementById('offYV').textContent=(S.offY>0?'+':'')+S.offY;
 }
 bindSeg('mode','mode', ()=>{ document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none'; });
 bindSeg('gridType','gridType');
@@ -1094,8 +1115,7 @@ bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.
 bindSeg('renderMode','renderMode', ()=>{ document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none'; refreshColorLock(); });
 
 /* CMYK controls */
-document.getElementById('cmykShape').innerHTML = Object.entries(SHAPES)
-  .map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+document.getElementById('cmykShape').innerHTML = shapeOptionsHTML(false);
 document.getElementById('cmykShape').addEventListener('change', async e=>{
   S.cmykShape=e.target.value; await buildInkCache();
 });
@@ -1108,7 +1128,6 @@ const RANGES = [
   ['rot','rot',x=>x+'°'], ['bright','bright',x=>x], ['contrast','contrast',x=>x],
   ['gamma','gamma',x=>(x/100).toFixed(2)], ['gap','gap',x=>x+'%'],
   ['sat','sat',x=>x+'%'], ['sJit','sJit',x=>x+'%'], ['rotJit','rotJit',x=>x+'°'],
-  ['offX','offX',x=>(x>0?'+':'')+x], ['offY','offY',x=>(x>0?'+':'')+x],
 ];
 RANGES.forEach(([id,key,fmt])=>{
   const el=document.getElementById(id), v=document.getElementById(id+'V');
@@ -1125,9 +1144,7 @@ document.getElementById('ditherSel').addEventListener('change',e=>S.dither=e.tar
 
 /* ---------- 7 shape slots ---------- */
 const list=document.getElementById('svgList');
-const shapeOptions = Object.entries(SHAPES)
-  .map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')
-  + '<option value="custom">⬆ Eigen SVG</option>';
+const shapeOptions = shapeOptionsHTML(true);
 S.slots.forEach((slot,i)=>{
   const row=document.createElement('div'); row.className='svgrow';
   row.innerHTML=`<span>${i+1} · ${TONE_LABELS[i]}</span>
@@ -1209,7 +1226,6 @@ function syncUI(){
   document.getElementById('ditherSel').value = S.dither;
   S.slots.forEach((_,i)=>syncSlotRow(i));
   refreshColorLock();
-  refreshOffsetLock();
 }
 
 /* dim de slot-controls in modi waar ze niets doen, met uitleg waarom */
@@ -1382,12 +1398,16 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
 function shapeArr(s){ return Array.isArray(s) ? s.slice(0,7) : Array.from({length:7},()=>s); }
 const SHAPE_SETS = {
   'Cirkels':'circle', 'Vierkanten':'square', 'Afgerond':'rounded', 'Ruiten':'diamond',
-  'Ringen':'ring', 'Driehoeken':'triangle', 'Kruisjes':'xmark', 'Sterren':'star',
-  'Hartjes':'heart', 'Lijnen ─':'hline', 'Lijnen │':'vline',
-  'Arcering':            ['circle','vline','hline','hline','xmark','cross','square'],
-  'Sterren & hartjes':   ['heart','heart','star','star','heart','star','heart'],
-  'Gemengd':             ['circle','square','diamond','triangle','star','cross','ring'],
-  'Natuur':              ['triangle','triangle','circle','triangle','circle','circle','star'],
+  'Zeshoeken':'hexagon', 'Driehoeken':'triangle', 'Ringen':'ring', 'Sterren':'star',
+  'Hartjes':'heart', 'Bloemen':'flower', 'Druppels':'droplet', 'Sprankels':'sparkle',
+  'Lijnen ─':'hline', 'Lijnen │':'vline',
+  'Arcering':            ['circle','vline','hline','hline','hatch','crosshatch','square'],
+  'Sterren & hartjes':   ['heart','heart','star','star','sparkle','star','flower'],
+  'Bloementuin':         ['clover','clover','flower','flower','leaf','flower','sparkle'],
+  'Organisch':           ['droplet','droplet','lens','leaf','lens','crescent','flower'],
+  'Halftoon → boog':     ['circle','circle','halfcircle','corner','corner','ring','concentric'],
+  'Gemengd':             ['hexagon','pentagon','diamond','triangle','star','clover','ring'],
+  'Maanstand':           ['crescent','crescent','circle','halfcircle','circle','ring','concentric'],
 };
 const COLOR_PALETTES = {
   'V1 Grijs':       ramp('#000000','#d2d2d2'),

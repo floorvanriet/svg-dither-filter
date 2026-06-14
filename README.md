@@ -28,9 +28,9 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Zoom & pan** — scroll to zoom (up to 12×, rendered at higher resolution so
   dots stay crisp), drag to pan, double-click to reset. Hold still to compare
   with the original.
-- **Reposition the crop** — when a paper/1:1 format is active, drag the image on
-  the canvas (or use the Verschuif X/Y sliders) to choose which part of the
-  photo stays in frame. The offset carries through to every export.
+- **Reposition the crop** — when a paper/1:1 format is active, drag the image
+  directly on the canvas to choose which part of the photo stays in frame
+  (double-click recentres). The offset carries through to every export.
 
 ### Artwork engine (new in 2.1)
 
@@ -79,11 +79,15 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Save / load your own presets** — stored in `localStorage`, plus
   export/import as a JSON file to share or back up.
 - **Reset to original** — one click back to the exact v1 defaults.
-- **Built-in shape library** — 12 shapes (circle, square, rounded, diamond,
-  triangle, cross, X, star, ring, H/V line, heart) selectable per slot;
-  uploading your own SVG still works per slot.
+- **28 built-in shapes in 5 groups** — Basis (circle, square, rounded,
+  diamond), Geometrisch (triangle, hexagon, pentagon, octagon, bowtie),
+  Organisch (heart, flower, clover, leaf, droplet, lens, crescent), Ster/ring/
+  boog (star, sparkle, ring, concentric, halfcircle, corner), and Lijnen &
+  raster (lines, plus, cross, fine hatch, crosshatch). The corner/quarter-arc
+  with *Random 90°* gives flowing Truchet-style fields. Upload your own SVG per
+  slot too.
 - **Independent shape-sets & palettes (new in 2.3)** — shapes (which mark)
-  and colours (which palette) are two separate axes: pick any of 15 shape-sets
+  and colours (which palette) are two separate axes: pick any of 21 shape-sets
   and combine it with any of 13 palettes, each with its own ◀ ▶ navigation.
   Changing one never touches the other or any other setting. Save your own
   shape-sets and palettes to `localStorage`. (Full "looks" still live in the
