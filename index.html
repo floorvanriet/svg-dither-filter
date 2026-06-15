@@ -179,6 +179,10 @@
   .shapecell svg { width:82%; height:82%; display:block; }
 
   .hint { color:var(--faint); font-size:10px; margin-top:6px; line-height:1.5; }
+  .credit { margin-top:16px; padding-top:12px; border-top:1px solid var(--line-strong);
+            font-size:10px; line-height:1.6; color:var(--faint); }
+  .credit a { color:var(--mut); text-decoration:none; }
+  .credit a:hover { color:var(--acc); }
   #unsGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:8px;
              max-height:280px; overflow-y:auto; }
   #unsGrid:empty { display:none; }
@@ -205,7 +209,7 @@
            color:var(--mut); font-size:13px; text-align:center; max-width:300px; line-height:1.6;
            pointer-events:none; }
   .stage-hint b { color:var(--txt); }
-  #stage.drag::after { content:'Drop afbeelding of video'; position:absolute; inset:12px;
+  #stage.drag::after { content:'Drop image or video'; position:absolute; inset:12px;
            border:2px dashed var(--acc); border-radius:12px; display:flex; align-items:center;
            justify-content:center; font-size:16px; color:var(--acc); background:rgba(var(--overlay),.7); z-index:3; }
   canvas { max-width:100%; max-height:100%;
@@ -216,61 +220,61 @@
 </head>
 <body>
 <header class="appbar">
-  <div class="brand"><h1>Halftone</h1><a class="v1link" href="index-v1.html" title="Open de originele v1">v1</a></div>
-  <button id="beeldBtn" class="barbtn"><span class="gly">▦</span>Beeld</button>
-  <label class="barsel" title="Formaat / uitsnede"><span class="gly">⛶</span>
+  <div class="brand"><h1>Halftone</h1></div>
+  <button id="beeldBtn" class="barbtn"><span class="gly">▦</span>Image</button>
+  <label class="barsel" title="Format / crop"><span class="gly">⛶</span>
     <select autocomplete="off" id="aspect">
-      <option value="orig">Origineel</option>
+      <option value="orig">Original</option>
       <optgroup label="Print">
-        <option value="square">Vierkant 1:1</option>
-        <option value="aport">A-papier · staand</option>
-        <option value="aland">A-papier · liggend</option>
+        <option value="square">Square 1:1</option>
+        <option value="aport">A-paper · portrait</option>
+        <option value="aland">A-paper · landscape</option>
       </optgroup>
       <optgroup label="Wallpaper">
         <option value="wide">Desktop 16:9</option>
         <option value="ultrawide">Ultrawide 21:9</option>
-        <option value="tall">Telefoon 9:19.5</option>
+        <option value="tall">Phone 9:19.5</option>
       </optgroup>
     </select>
   </label>
   <div class="spacer"></div>
-  <button id="resetBtn" class="iconbtn" title="Reset naar origineel">↺</button>
-  <button id="backdropBtn" class="iconbtn" title="Canvas op lichte achtergrond">☀️</button>
+  <button id="resetBtn" class="iconbtn" title="Reset to original">↺</button>
+  <button id="backdropBtn" class="iconbtn" title="Canvas on light background">☀️</button>
   <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
 </header>
 
-<div id="beeldPopover" class="popover" role="dialog" aria-label="Beeld kiezen">
-  <div class="pop-title">Beeld kiezen</div>
+<div id="beeldPopover" class="popover" role="dialog" aria-label="Choose image">
+  <div class="pop-title">Choose image</div>
     <input type="file" id="media" accept="image/*,video/*" />
-    <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
-      Bij een uitsnede: sleep de afbeelding op het canvas om 'm te verschuiven (dubbelklik = centreren).
-      Houd de muis ingedrukt om het origineel te zien.</div>
+    <div class="hint">Drag a file onto the canvas or paste (⌘V) an image.
+      With a crop: drag the image on the canvas to move it (double-click = center).
+      Hold the mouse to see the original.</div>
     <label>Unsplash</label>
     <div class="row">
-      <input type="text" id="unsQ" placeholder="zoek foto's…" style="flex:1;min-width:0" />
-      <button id="unsBtn" style="flex:none">Zoek</button>
+      <input type="text" id="unsQ" placeholder="search photos…" style="flex:1;min-width:0" />
+      <button id="unsBtn" style="flex:none">Search</button>
     </div>
     <div id="unsGrid"></div>
-    <button id="unsMore" style="display:none;width:100%;margin-top:6px">Meer laden ▾</button>
+    <button id="unsMore" style="display:none;width:100%;margin-top:6px">Load more ▾</button>
     <div id="unsCredit" class="hint"></div>
 </div>
-<div id="exportPopover" class="popover" role="dialog" aria-label="Exporteren">
-  <div class="pop-title">Artwork exporteren</div>
+<div id="exportPopover" class="popover" role="dialog" aria-label="Export">
+  <div class="pop-title">Export artwork</div>
     <div class="btnrow" style="margin-top:0">
       <select autocomplete="off" id="pngScale">
-        <optgroup label="Scherm">
-          <option value="1920">Scherm · 1920 px</option>
-          <option value="3840">Scherm · 3840 px (4K)</option>
+        <optgroup label="Screen">
+          <option value="1920">Screen · 1920 px</option>
+          <option value="3840">Screen · 3840 px (4K)</option>
         </optgroup>
-        <optgroup label="Wallpaper (zet Formaat op de juiste ratio)">
+        <optgroup label="Wallpaper (set Format to correct ratio)">
           <option value="wp:1920:1080:Desktop-1080p">Desktop 1080p · 1920×1080</option>
           <option value="wp:2560:1440:Desktop-1440p">Desktop 1440p · 2560×1440</option>
           <option value="wp:3840:2160:Desktop-4K">Desktop 4K · 3840×2160</option>
           <option value="wp:5120:2194:Ultrawide">Ultrawide · 5120×2194</option>
-          <option value="wp:1080:2340:Telefoon">Telefoon · 1080×2340</option>
-          <option value="wp:1284:2778:Telefoon-XL">Telefoon XL · 1284×2778</option>
+          <option value="wp:1080:2340:Telefoon">Phone · 1080×2340</option>
+          <option value="wp:1284:2778:Telefoon-XL">Phone XL · 1284×2778</option>
         </optgroup>
-        <optgroup label="Print (A-formaat)">
+        <optgroup label="Print (A-size)">
           <option value="a4-300">A4 · 300 dpi · 3508 px</option>
           <option value="a3-300">A3 · 300 dpi · 4961 px</option>
           <option value="a2-300" selected>A2 · 300 dpi · 7016 px</option>
@@ -282,12 +286,12 @@
       <button id="exportPngBtn">Download PNG</button>
     </div>
     <button id="exportSvgBtn" style="width:100%;margin-top:6px">Download SVG (vector)</button>
-    <div class="hint">Zet <b>Formaat</b> (Beeld) op de juiste ratio en kies hier de exportmaat. SVG krijgt bij print echte mm-afmetingen.</div>
+    <div class="hint">Set <b>Format</b> (Image) to the correct ratio and choose the export size here. SVG gets real mm dimensions for print.</div>
 </div>
-<div id="shapePopover" class="popover" role="dialog" aria-label="Vorm kiezen">
-  <div class="pop-title">Kies een vorm</div>
+<div id="shapePopover" class="popover" role="dialog" aria-label="Choose a shape">
+  <div class="pop-title">Choose a shape</div>
   <div id="shapeGrid"></div>
-  <button id="shapeUploadBtn" style="width:100%;margin-top:8px">⬆ Eigen SVG uploaden…</button>
+  <button id="shapeUploadBtn" style="width:100%;margin-top:8px">⬆ Upload your own SVG…</button>
 </div>
 
 <div class="workspace">
@@ -295,24 +299,24 @@
   <div class="grp">
     <h2>Presets</h2>
     <div class="row">
-      <button id="presetPrev" title="Vorige preset" class="navbtn">◀</button>
-      <select autocomplete="off" id="presetSel" style="flex:1;min-width:0"><option value="">— kies een preset —</option></select>
-      <button id="presetNext" title="Volgende preset" class="navbtn">▶</button>
+      <button id="presetPrev" title="Previous preset" class="navbtn">◀</button>
+      <select autocomplete="off" id="presetSel" style="flex:1;min-width:0"><option value="">— choose a preset —</option></select>
+      <button id="presetNext" title="Next preset" class="navbtn">▶</button>
     </div>
     <div class="btnrow">
-      <button id="savePresetBtn">Opslaan…</button>
-      <button id="delPresetBtn">Verwijder</button>
+      <button id="savePresetBtn">Save…</button>
+      <button id="delPresetBtn">Delete</button>
     </div>
     <div class="btnrow">
       <button id="exportPresetBtn">Export JSON</button>
       <button id="importPresetBtn">Import JSON</button>
     </div>
     <input type="file" id="presetFile" accept=".json,application/json" style="display:none" />
-    <button id="shuffleBtn" style="width:100%;margin-top:8px">🎲 Shuffle — verras me</button>
-    <div class="hint">Een preset bewaart alle settings, kleuren en shapes — ook geüploade SVGs.</div>
+    <button id="shuffleBtn" style="width:100%;margin-top:8px">🎲 Shuffle — surprise me</button>
+    <div class="hint">A preset saves all settings, colors, and shapes — including uploaded SVGs.</div>
   </div>
   <div class="grp">
-    <h2>Beeldbewerking</h2>
+    <h2>Image</h2>
     <div class="row"><label>Brightness</label><span class="val" id="brightV">0</span></div>
     <input type="range" id="bright" min="-100" max="100" value="0" />
     <div class="row"><label>Contrast</label><span class="val" id="contrastV">0</span></div>
@@ -323,19 +327,19 @@
     <input type="range" id="hl" min="0" max="100" value="0" />
     <div class="row"><label>Pre-blur</label><span class="val" id="blurV">0px</span></div>
     <input type="range" id="blur" min="0" max="10" value="0" />
-    <div class="row"><label>Posterize</label><span class="val" id="posterizeV">uit</span></div>
+    <div class="row"><label>Posterize</label><span class="val" id="posterizeV">off</span></div>
     <input type="range" id="posterize" min="2" max="7" value="7" />
     <div class="row" style="margin-top:8px"><label>Invert</label>
       <input type="checkbox" id="invert" /></div>
-    <div class="row"><label>Woodcut (randen versterken)</label>
+    <div class="row"><label>Woodcut (boost edges)</label>
       <input type="checkbox" id="edgeBoost" /></div>
     <div id="edgeWrap" style="display:none">
-      <div class="row"><label>Woodcut-sterkte</label><span class="val" id="edgeAmtV">60%</span></div>
+      <div class="row"><label>Woodcut strength</label><span class="val" id="edgeAmtV">60%</span></div>
       <input type="range" id="edgeAmt" min="0" max="100" value="60" />
     </div>
     <label>Dithering</label>
     <select autocomplete="off" id="ditherSel" style="width:100%">
-      <option value="none">Geen (tone buckets)</option>
+      <option value="none">None (tone buckets)</option>
       <optgroup label="Error-diffusion">
         <option value="fs">Floyd–Steinberg</option>
         <option value="falsefs">False Floyd–Steinberg</option>
@@ -359,11 +363,11 @@
     </select>
     <div class="row" style="margin-top:6px"><label>Serpentine (error-diffusion)</label>
       <input type="checkbox" id="serpentine" /></div>
-    <div class="row"><label>Error-sterkte</label><span class="val" id="edStrengthV">100%</span></div>
+    <div class="row"><label>Error strength</label><span class="val" id="edStrengthV">100%</span></div>
     <input type="range" id="edStrength" min="0" max="150" value="100" />
   </div>
   <div class="grp">
-    <h2>Raster</h2>
+    <h2>Grid</h2>
     <div class="row"><label>Resolution</label><span class="val" id="gridV">64</span></div>
     <input type="range" id="grid" min="4" max="200" value="64" />
     <label>Grid type</label>
@@ -376,11 +380,11 @@
     <input type="range" id="gap" min="0" max="60" value="0" />
     <div class="row" style="margin-top:10px"><label>Background</label>
       <input type="color" id="bg" value="#ffffff" /></div>
-    <div class="row" style="margin-top:8px"><label>Transparant (PNG/SVG export)</label>
+    <div class="row" style="margin-top:8px"><label>Transparent (PNG/SVG export)</label>
       <input type="checkbox" id="bgT" /></div>
   </div>
   <div class="grp">
-    <h2>Render-modus</h2>
+    <h2>Render mode</h2>
     <div class="seg" id="renderMode">
       <button data-v="shapes" class="on">Shapes</button>
       <button data-v="cmyk">CMYK print</button>
@@ -388,35 +392,35 @@
     <div id="cmykWrap" style="display:none">
       <label>Dot shape</label>
       <button id="cmykShapeBtn" class="shapepick" style="width:100%"><span class="thumb"></span><span class="nm"></span></button>
-      <label>Kanalen (uitvinken = duotone/tritone)</label>
+      <label>Channels (uncheck = duotone/tritone)</label>
       <div class="row" style="gap:14px;margin-top:4px">
         <label style="flex:none;margin:0"><input type="checkbox" id="chC" checked /> C</label>
         <label style="flex:none;margin:0"><input type="checkbox" id="chM" checked /> M</label>
         <label style="flex:none;margin:0"><input type="checkbox" id="chY" checked /> Y</label>
         <label style="flex:none;margin:0"><input type="checkbox" id="chK" checked /> K</label>
       </div>
-      <div class="hint">Vier inktrasters onder klassieke hoeken (C 15° · M 75° · Y 0° · K 45°),
-        multiply-gemengd zoals echt drukwerk. Angle draait alle rasters mee;
-        Max-scale regelt de dotgrootte. Shape-slots worden genegeerd.</div>
+      <div class="hint">Four ink grids at classic angles (C 15° · M 75° · Y 0° · K 45°),
+        multiply-blended like real printing. Angle rotates all grids;
+        Max-scale controls dot size. Shape-slots are ignored.</div>
     </div>
   </div>
   <div class="grp">
-    <h2>Kleur</h2>
+    <h2>Color</h2>
     <div class="seg" id="colorMode">
       <button data-v="tone" class="on">Per-tone</button>
-      <button data-v="source">Bron</button>
-      <button data-v="palet">Palet-snap</button>
+      <button data-v="source">Source</button>
+      <button data-v="palet">Palette-snap</button>
     </div>
     <div id="satWrap" style="display:none">
       <div class="row" style="margin-top:8px"><label>Saturation</label><span class="val" id="satV">100%</span></div>
       <input type="range" id="sat" min="0" max="250" value="100" />
     </div>
-    <div class="hint">Bron = elke cel pakt de kleur uit de foto. Palet-snap = die kleur
-      wordt naar de dichtstbijzijnde van je 7 slotkleuren gemapt (echte palet-quantisatie).
-      Saturation werkt ook in CMYK.</div>
+    <div class="hint">Source = each cell picks color from the photo. Palette-snap = that color
+      maps to the nearest of your 7 slot colors (true palette quantization).
+      Saturation also works in CMYK.</div>
   </div>
   <div class="grp">
-    <h2>Vorm-modus</h2>
+    <h2>Shape mode</h2>
     <div class="seg" id="mode">
       <button data-v="tone" class="on">Per-tone (7)</button>
       <button data-v="single">Single</button>
@@ -432,7 +436,7 @@
     </div>
   </div>
   <div class="grp">
-    <h2>Vormgrootte</h2>
+    <h2>Shape size</h2>
     <div class="row"><label>Min</label><span class="val" id="sMinV">10%</span></div>
     <input type="range" id="sMin" min="0" max="150" value="10" />
     <div class="row"><label>Max</label><span class="val" id="sMaxV">100%</span></div>
@@ -441,13 +445,13 @@
     <input type="range" id="sJit" min="0" max="100" value="0" />
     <div class="row" style="margin-top:8px"><label>Opacity</label><span class="val" id="opacityV">100%</span></div>
     <input type="range" id="opacity" min="10" max="100" value="100" />
-    <div class="row" style="margin-top:6px"><label>Opacity volgt toon (inkt/wash)</label>
+    <div class="row" style="margin-top:6px"><label>Opacity follows tone (ink/wash)</label>
       <input type="checkbox" id="opacityTone" /></div>
-    <div class="hint">Onder 100% laten overlappende vormen door elkaar zien — mooi voor inkt-wash,
-      aquarel en bokeh (werkt in PNG &amp; SVG; niet in CMYK-modus).</div>
+    <div class="hint">Below 100% lets overlapping shapes show through — nice for ink-wash,
+      watercolor, and bokeh (works in PNG &amp; SVG; not in CMYK mode).</div>
   </div>
   <div class="grp">
-    <h2>Rotatie</h2>
+    <h2>Rotation</h2>
     <div class="seg" id="rotMode">
       <button data-v="fixed" class="on">Fixed</button>
       <button data-v="flow">Flow (contour)</button>
@@ -460,40 +464,41 @@
       <input type="checkbox" id="rndRot" /></div>
   </div>
   <div class="grp">
-    <h2>Vormen</h2>
+    <h2>Shapes</h2>
     <label style="margin-top:0">Shape-set</label>
     <div class="row">
-      <button id="shapePrev" title="Vorige shape-set" class="navbtn">◀</button>
+      <button id="shapePrev" title="Previous shape-set" class="navbtn">◀</button>
       <select autocomplete="off" id="shapeSetSel" style="flex:1;min-width:0"></select>
-      <button id="shapeNext" title="Volgende shape-set" class="navbtn">▶</button>
-      <button id="shapeDel" title="Verwijder eigen shape-set" class="navbtn">✕</button>
+      <button id="shapeNext" title="Next shape-set" class="navbtn">▶</button>
+      <button id="shapeDel" title="Delete custom shape-set" class="navbtn">✕</button>
     </div>
-    <button id="saveShapeSet" style="width:100%;margin-top:6px">Shape-set opslaan…</button>
+    <button id="saveShapeSet" style="width:100%;margin-top:6px">Save shape-set…</button>
     <div id="shapeList" style="margin-top:10px"></div>
-    <div class="hint">Klik een slot om een vorm te kiezen of een eigen SVG te uploaden.
-      Slot 1 = donkerste toon, slot 7 = lichtste.</div>
+    <div class="hint">Click a slot to choose a shape or upload your own SVG.
+      Slot 1 = darkest tone, slot 7 = lightest.</div>
   </div>
   <div class="grp">
-    <h2>Kleuren</h2>
+    <h2>Colors</h2>
     <div id="colorLock" class="lock" style="display:none"></div>
-    <label style="margin-top:0">Palet</label>
+    <label style="margin-top:0">Palette</label>
     <div class="row">
-      <button id="palPrev" title="Vorig palet" class="navbtn">◀</button>
+      <button id="palPrev" title="Previous palette" class="navbtn">◀</button>
       <select autocomplete="off" id="palSel" style="flex:1;min-width:0"></select>
-      <button id="palNext" title="Volgend palet" class="navbtn">▶</button>
-      <button id="palDel" title="Verwijder eigen palet" class="navbtn">✕</button>
+      <button id="palNext" title="Next palette" class="navbtn">▶</button>
+      <button id="palDel" title="Delete custom palette" class="navbtn">✕</button>
     </div>
     <div class="btnrow">
-      <button id="savePal">Palet opslaan…</button>
+      <button id="savePal">Save palette…</button>
       <button id="extractPal">🎨 Uit foto</button>
     </div>
     <div id="colorList" style="margin-top:10px"></div>
-    <div class="hint">Per slot een kleur, of kies een heel palet. Shape-set en palet staan los —
-      combineer elke vorm met elk palet.</div>
+    <div class="hint">One color per slot, or choose a whole palette. Shape-set and palette are independent —
+      combine any shape with any palette.</div>
   </div>
+  <div class="credit">Halftone — a fork of <a href="https://github.com/mgmaik/svg-dither-filter" target="_blank" rel="noopener">svg-dither-filter</a> by MG Productions · idea by <a href="https://www.instagram.com/antoncreations/" target="_blank" rel="noopener">antoncreations</a> · MIT</div>
 </div>
 
-<div id="stage"><canvas id="out"></canvas><div id="zoomBadge"></div><div id="emptyHint" class="stage-hint">Klik op <b>Beeld</b> in de balk om te beginnen — of sleep een afbeelding hierheen.</div></div>
+<div id="stage"><canvas id="out"></canvas><div id="zoomBadge"></div><div id="emptyHint" class="stage-hint">Click <b>Image</b> in the bar to start — or drag an image here.</div></div>
 </div>
 
 <script src="unsplash-key.js"></script>
@@ -560,45 +565,45 @@ BAYER.bayer32=buildBayer(32);
 const NS = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">';
 const SHAPES = {
   /* basis */
-  circle:   { label:'● Cirkel',     svg: NS+'<circle cx="50" cy="50" r="46"/></svg>' },
-  square:   { label:'■ Vierkant',   svg: NS+'<rect x="8" y="8" width="84" height="84"/></svg>' },
-  rounded:  { label:'▢ Afgerond',   svg: NS+'<rect x="8" y="8" width="84" height="84" rx="22"/></svg>' },
-  diamond:  { label:'◆ Ruit',       svg: NS+'<polygon points="50,4 96,50 50,96 4,50"/></svg>' },
+  circle:   { label:'● Circle',     svg: NS+'<circle cx="50" cy="50" r="46"/></svg>' },
+  square:   { label:'■ Square',   svg: NS+'<rect x="8" y="8" width="84" height="84"/></svg>' },
+  rounded:  { label:'▢ Rounded',   svg: NS+'<rect x="8" y="8" width="84" height="84" rx="22"/></svg>' },
+  diamond:  { label:'◆ Diamond',       svg: NS+'<polygon points="50,4 96,50 50,96 4,50"/></svg>' },
   /* geometrisch */
-  triangle: { label:'▲ Driehoek',   svg: NS+'<polygon points="50,8 95,90 5,90"/></svg>' },
-  hexagon:  { label:'⬡ Zeshoek',    svg: NS+'<polygon points="50,3 91,26.5 91,73.5 50,97 9,73.5 9,26.5"/></svg>' },
-  pentagon: { label:'⬠ Vijfhoek',   svg: NS+'<polygon points="50,4 93.7,35.8 77,87.2 23,87.2 6.3,35.8"/></svg>' },
-  octagon:  { label:'⯃ Achthoek',   svg: NS+'<polygon points="32,6 68,6 94,32 94,68 68,94 32,94 6,68 6,32"/></svg>' },
-  bowtie:   { label:'⋈ Strik',      svg: NS+'<path d="M10 12 L90 88 L90 12 L10 88 Z"/></svg>' },
+  triangle: { label:'▲ Triangle',   svg: NS+'<polygon points="50,8 95,90 5,90"/></svg>' },
+  hexagon:  { label:'⬡ Hexagon',    svg: NS+'<polygon points="50,3 91,26.5 91,73.5 50,97 9,73.5 9,26.5"/></svg>' },
+  pentagon: { label:'⬠ Pentagon',   svg: NS+'<polygon points="50,4 93.7,35.8 77,87.2 23,87.2 6.3,35.8"/></svg>' },
+  octagon:  { label:'⯃ Octagon',   svg: NS+'<polygon points="32,6 68,6 94,32 94,68 68,94 32,94 6,68 6,32"/></svg>' },
+  bowtie:   { label:'⋈ Bowtie',      svg: NS+'<path d="M10 12 L90 88 L90 12 L10 88 Z"/></svg>' },
   /* organisch */
-  heart:    { label:'♥ Hart',       svg: NS+'<path d="M50 90C22 66 5 48 5 30A23 23 0 0150 17 23 23 0 0195 30c0 18-17 36-45 60z"/></svg>' },
-  flower:   { label:'✿ Bloem',      svg: NS+'<g><circle cx="50" cy="28" r="17"/><circle cx="69" cy="39" r="17"/><circle cx="69" cy="61" r="17"/><circle cx="50" cy="72" r="17"/><circle cx="31" cy="61" r="17"/><circle cx="31" cy="39" r="17"/><circle cx="50" cy="50" r="18"/></g></svg>' },
-  clover:   { label:'☘ Klaver',     svg: NS+'<g><circle cx="50" cy="30" r="22"/><circle cx="70" cy="50" r="22"/><circle cx="50" cy="70" r="22"/><circle cx="30" cy="50" r="22"/></g></svg>' },
-  leaf:     { label:'❧ Blad',       svg: NS+'<path d="M50 5 C79 28 79 72 50 95 C21 72 21 28 50 5 Z"/></svg>' },
-  droplet:  { label:'⬮ Druppel',    svg: NS+'<path d="M50 5 C66 34 82 52 82 68 A32 32 0 1 1 18 68 C18 52 34 34 50 5 Z"/></svg>' },
+  heart:    { label:'♥ Heart',       svg: NS+'<path d="M50 90C22 66 5 48 5 30A23 23 0 0150 17 23 23 0 0195 30c0 18-17 36-45 60z"/></svg>' },
+  flower:   { label:'✿ Flower',      svg: NS+'<g><circle cx="50" cy="28" r="17"/><circle cx="69" cy="39" r="17"/><circle cx="69" cy="61" r="17"/><circle cx="50" cy="72" r="17"/><circle cx="31" cy="61" r="17"/><circle cx="31" cy="39" r="17"/><circle cx="50" cy="50" r="18"/></g></svg>' },
+  clover:   { label:'☘ Clover',     svg: NS+'<g><circle cx="50" cy="30" r="22"/><circle cx="70" cy="50" r="22"/><circle cx="50" cy="70" r="22"/><circle cx="30" cy="50" r="22"/></g></svg>' },
+  leaf:     { label:'❧ Leaf',       svg: NS+'<path d="M50 5 C79 28 79 72 50 95 C21 72 21 28 50 5 Z"/></svg>' },
+  droplet:  { label:'⬮ Droplet',    svg: NS+'<path d="M50 5 C66 34 82 52 82 68 A32 32 0 1 1 18 68 C18 52 34 34 50 5 Z"/></svg>' },
   lens:     { label:'⬭ Lens',       svg: NS+'<path d="M5 50 C30 25 70 25 95 50 C70 75 30 75 5 50 Z"/></svg>' },
-  crescent: { label:'☾ Maan',       svg: NS+'<path fill-rule="evenodd" d="M4 50a46 46 0 1 0 92 0 46 46 0 1 0-92 0z M30 50a38 38 0 1 0 76 0 38 38 0 1 0-76 0z"/></svg>' },
+  crescent: { label:'☾ Moon',       svg: NS+'<path fill-rule="evenodd" d="M4 50a46 46 0 1 0 92 0 46 46 0 1 0-92 0z M30 50a38 38 0 1 0 76 0 38 38 0 1 0-76 0z"/></svg>' },
   /* ster, ring & boog */
-  star:     { label:'★ Ster',       svg: NS+'<polygon points="50,4 61,37 96,37 68,58 78,92 50,72 22,92 32,58 4,37 39,37"/></svg>' },
-  sparkle:  { label:'✦ Sprankel',   svg: NS+'<path d="M50 4 C54 34 66 46 96 50 C66 54 54 66 50 96 C46 66 34 54 4 50 C34 46 46 34 50 4 Z"/></svg>' },
+  star:     { label:'★ Star',       svg: NS+'<polygon points="50,4 61,37 96,37 68,58 78,92 50,72 22,92 32,58 4,37 39,37"/></svg>' },
+  sparkle:  { label:'✦ Sparkle',   svg: NS+'<path d="M50 4 C54 34 66 46 96 50 C66 54 54 66 50 96 C46 66 34 54 4 50 C34 46 46 34 50 4 Z"/></svg>' },
   ring:     { label:'◎ Ring',       svg: NS+'<path fill-rule="evenodd" d="M50 4a46 46 0 100 92 46 46 0 100-92zm0 24a22 22 0 110 44 22 22 0 110-44z"/></svg>' },
-  concentric:{label:'⊚ Concentrisch',svg: NS+'<path fill-rule="evenodd" d="M50 4a46 46 0 1 0 .1 0z M50 18a32 32 0 1 0 .1 0z M50 32a18 18 0 1 0 .1 0z M50 42a8 8 0 1 0 .1 0z"/></svg>' },
-  halfcircle:{label:'◐ Halve cirkel',svg: NS+'<path d="M8 66 A42 42 0 0 1 92 66 Z"/></svg>' },
-  corner:   { label:'◜ Hoekboog',   svg: NS+'<path d="M6 6 L94 6 A88 88 0 0 1 6 94 Z"/></svg>' },
+  concentric:{label:'⊚ Concentric',svg: NS+'<path fill-rule="evenodd" d="M50 4a46 46 0 1 0 .1 0z M50 18a32 32 0 1 0 .1 0z M50 32a18 18 0 1 0 .1 0z M50 42a8 8 0 1 0 .1 0z"/></svg>' },
+  halfcircle:{label:'◐ Half circle',svg: NS+'<path d="M8 66 A42 42 0 0 1 92 66 Z"/></svg>' },
+  corner:   { label:'◜ Corner arc',   svg: NS+'<path d="M6 6 L94 6 A88 88 0 0 1 6 94 Z"/></svg>' },
   /* lijnen & raster */
-  hline:    { label:'━ Lijn ─',     svg: NS+'<rect x="2" y="40" width="96" height="20"/></svg>' },
-  vline:    { label:'┃ Lijn │',     svg: NS+'<rect x="40" y="2" width="20" height="96"/></svg>' },
+  hline:    { label:'━ Line ─',     svg: NS+'<rect x="2" y="40" width="96" height="20"/></svg>' },
+  vline:    { label:'┃ Line │',     svg: NS+'<rect x="40" y="2" width="20" height="96"/></svg>' },
   cross:    { label:'✚ Plus',       svg: NS+'<rect x="40" y="6" width="20" height="88"/><rect x="6" y="40" width="88" height="20"/></svg>' },
-  xmark:    { label:'✕ Kruis',      svg: NS+'<g transform="rotate(45 50 50)"><rect x="42" y="-6" width="16" height="112"/><rect x="-6" y="42" width="112" height="16"/></g></svg>' },
-  hatch:    { label:'≡ Fijn raster',svg: NS+'<g><rect x="2" y="20" width="96" height="8"/><rect x="2" y="46" width="96" height="8"/><rect x="2" y="72" width="96" height="8"/></g></svg>' },
-  crosshatch:{label:'▦ Kruisraster',svg: NS+'<g><rect x="2" y="28" width="96" height="7"/><rect x="2" y="65" width="96" height="7"/><rect x="28" y="2" width="7" height="96"/><rect x="65" y="2" width="7" height="96"/></g></svg>' },
+  xmark:    { label:'✕ Cross',      svg: NS+'<g transform="rotate(45 50 50)"><rect x="42" y="-6" width="16" height="112"/><rect x="-6" y="42" width="112" height="16"/></g></svg>' },
+  hatch:    { label:'≡ Fine hatch',svg: NS+'<g><rect x="2" y="20" width="96" height="8"/><rect x="2" y="46" width="96" height="8"/><rect x="2" y="72" width="96" height="8"/></g></svg>' },
+  crosshatch:{label:'▦ Crosshatch',svg: NS+'<g><rect x="2" y="28" width="96" height="7"/><rect x="2" y="65" width="96" height="7"/><rect x="28" y="2" width="7" height="96"/><rect x="65" y="2" width="7" height="96"/></g></svg>' },
 };
 const SHAPE_GROUPS = {
-  'Basis':           ['circle','square','rounded','diamond'],
-  'Geometrisch':     ['triangle','hexagon','pentagon','octagon','bowtie'],
-  'Organisch':       ['heart','flower','clover','leaf','droplet','lens','crescent'],
-  'Ster, ring & boog':['star','sparkle','ring','concentric','halfcircle','corner'],
-  'Lijnen & raster': ['hline','vline','cross','xmark','hatch','crosshatch'],
+  'Basic':           ['circle','square','rounded','diamond'],
+  'Geometric':     ['triangle','hexagon','pentagon','octagon','bowtie'],
+  'Organic':       ['heart','flower','clover','leaf','droplet','lens','crescent'],
+  'Star, ring & arc':['star','sparkle','ring','concentric','halfcircle','corner'],
+  'Lines & hatch': ['hline','vline','cross','xmark','hatch','crosshatch'],
 };
 function shapeOptionsHTML(withCustom){
   let h='';
@@ -606,7 +611,7 @@ function shapeOptionsHTML(withCustom){
     h += `<optgroup label="${g}">`
       + keys.map(k=>`<option value="${k}">${SHAPES[k].label}</option>`).join('')
       + '</optgroup>';
-  if (withCustom) h += '<option value="custom">⬆ Eigen SVG</option>';
+  if (withCustom) h += '<option value="custom">⬆ Custom SVG</option>';
   return h;
 }
 function svgFor(slot){
@@ -953,7 +958,7 @@ function mkSlots(shapes, colors){
     shape: Array.isArray(shapes)?shapes[i]:shapes, svg:null, color:colors[i] }));
 }
 const BUILTIN_PRESETS = {
-  'V1 — Origineel': {
+  'V1 — Original': {
     slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
   },
   'Pointillism': {
@@ -1040,7 +1045,7 @@ const BUILTIN_PRESETS = {
     renderMode:'cmyk', grid:44, bg:'#f3e8cf', sMax:105, sat:135, contrast:10,
     slots: mkSlots('circle', ramp('#000000','#d2d2d2')),
   },
-  'Sepia Krant': {
+  'Sepia Newspaper': {
     grid:92, bg:'#efe3cd', gridType:'hex', invert:true, gamma:90, sMin:0, sMax:128,
     slots: mkSlots('circle', Array(7).fill('#4a3526')),
   },
@@ -1048,13 +1053,13 @@ const BUILTIN_PRESETS = {
     grid:130, bg:'#ffffff', invert:true, dither:'bayer8', contrast:25, sMin:0, sMax:105,
     slots: mkSlots('circle', Array(7).fill('#111111')),
   },
-  'Stippelgravure': {
+  'Stipple Engraving': {
     grid:140, bg:'#f8f4ea', invert:true, dither:'blue', gamma:85, sMin:8, sMax:95, sJit:25,
     slots: mkSlots('circle', Array(7).fill('#1b1812')),
   },
 
   /* — kunst (2.3) — */
-  'Kusama Rood': {
+  'Kusama Red': {
     grid:44, bg:'#d8232a', sMin:12, sMax:115, sJit:18,
     slots: mkSlots('circle', ramp('#7e0f14','#ffffff')),
   },
@@ -1063,15 +1068,15 @@ const BUILTIN_PRESETS = {
     slots: mkSlots('circle', ['#e63946','#f4a261','#2a9d8f','#264653','#e9c46a','#9b5de5','#00b4d8']),
   },
   // primairen in de middentonen zodat het onderwerp kleur krijgt; schaduw zwart, licht wit
-  'Mondriaan': {
+  'Mondrian': {
     grid:36, bg:'#f4f1ea', gap:12, contrast:10, sMin:94, sMax:94,
     slots: mkSlots('square', ['#16161d','#16161d','#1c3f94','#c8102e','#f7d038','#f4f1ea','#ffffff']),
   },
-  'Byzantijns Goud': {
+  'Byzantine Gold': {
     grid:72, bg:'#1f1812', gridType:'brick', gap:9, sMin:93, sMax:93,
     slots: mkSlots('square', ['#2b1d12','#5b3a1e','#8a5a2a','#b8860b','#d4af37','#e8c96a','#f5e7b8']),
   },
-  'Delfts Blauw': {
+  'Delft Blue': {
     grid:96, bg:'#f4f6f3', gridType:'hex', invert:true, gamma:95, sMin:0, sMax:126,
     slots: mkSlots('circle', ramp('#7da7d9','#16356b')),
   },
@@ -1079,7 +1084,7 @@ const BUILTIN_PRESETS = {
     grid:90, bg:'#123a63', gamma:105, sMin:6, sMax:112,
     slots: mkSlots('circle', ramp('#1d4f7c','#eaf2fa')),
   },
-  'Art Deco Goud': {
+  'Art Deco Gold': {
     grid:64, bg:'#10131c', gap:8, sMin:10, sMax:105,
     slots: mkSlots('diamond', ramp('#5c4716','#f3d27a')),
   },
@@ -1119,7 +1124,7 @@ const BUILTIN_PRESETS = {
     grid:52, bg:'#181818', colorMode:'source', sat:140, gap:7, sMin:95, sMax:95,
     slots: mkSlots('rounded', ramp('#333333','#cccccc')),
   },
-  'Borduurwerk': {
+  'Embroidery': {
     grid:84, bg:'#e8dcc4', colorMode:'source', sat:120, rotJit:7, sMin:88, sMax:88,
     slots: mkSlots('xmark', ramp('#444444','#aaaaaa')),
   },
@@ -1143,7 +1148,7 @@ const BUILTIN_PRESETS = {
     grid:64, bg:'#f3ead6', invert:true, rndRot:true, sMin:12, sMax:132,
     slots: mkSlots('corner', ramp('#15324e','#9fb4c4')),
   },
-  'Bloesem': {
+  'Blossom': {
     grid:36, bg:'#241019', rndRot:true, sMin:55, sMax:125,
     slots: mkSlots('flower', ['#5e1730','#923050','#c24a72','#e0789c','#f0a0bd','#f8c8d8','#fff2f6']),
   },
@@ -1152,16 +1157,16 @@ const BUILTIN_PRESETS = {
     slots: mkSlots(['leaf','leaf','lens','leaf','lens','sparkle','sparkle'],
       ['#7a6a2a','#9a8636','#b89c40','#cdae4c','#e0c25e','#eed27a','#fbe9a6']),
   },
-  'Maanfase': {
+  'Moon Phase': {
     grid:54, bg:'#0a1430', rndRot:true, sMin:22, sMax:122,
     slots: mkSlots(['crescent','crescent','halfcircle','crescent','halfcircle','circle','circle'],
       ramp('#1b2c5a','#eaf0ff')),
   },
-  'Zeshoek mozaïek': {
+  'Hexagon Mosaic': {
     grid:58, bg:'#0d0f12', gridType:'hex', colorMode:'source', sat:130, gap:6, sMin:97, sMax:97,
     slots: mkSlots('hexagon', ramp('#333333','#cccccc')),
   },
-  'Gravure': {
+  'Engraving': {
     grid:104, bg:'#f3ead2', invert:true, gamma:80, contrast:12, sMin:0, sMax:122,
     slots: mkSlots(['circle','hatch','hatch','crosshatch','crosshatch','vline','square'],
       ramp('#241a0e','#a89a82')),
@@ -1182,21 +1187,21 @@ const BUILTIN_PRESETS = {
     slots: mkSlots(['circle','circle','lens','circle','droplet','circle','circle'], ['#24467e','#315e9c','#4a78b8','#6f97c9','#9db8d4','#c2d4e6','#eaf1f8']) },
   'Five Tones of Ink': { grid:96, bg:'#efe7d6', invert:true, gamma:118, contrast:14, bright:6, sMin:18, sMax:128, gap:6, rotMode:'flow', dither:'blue', gridType:'hex', opacity:55, opacityTone:true,
     slots: mkSlots(['droplet','lens','circle','circle','leaf','droplet','lens'], ['#e7dcc6','#c8bca3','#9a907c','#6e5a3f','#2e4257','#3a3530','#181613']) },
-  'Mohammedaans Blauw': { grid:104, bg:'#f3efe3', invert:true, gamma:92, contrast:8, bright:2, sMin:0, sMax:130, gap:2, rotMode:'flow', gridType:'hex', opacityTone:true,
+  'Mohammedan Blue': { grid:104, bg:'#f3efe3', invert:true, gamma:92, contrast:8, bright:2, sMin:0, sMax:130, gap:2, rotMode:'flow', gridType:'hex', opacityTone:true,
     slots: mkSlots(['sparkle','flower','leaf','lens','droplet','circle','circle'], ['#9cbfdd','#5f93c4','#3f78b5','#26619c','#1b3a6b','#16306a','#13234f']) },
   'Cinnaberlak Tihong': { grid:72, bg:'#160504', gamma:88, contrast:12, bright:4, sMin:30, sMax:122, gap:6, rotMode:'flow', gridType:'hex',
     slots: mkSlots(['droplet','lens','leaf','rounded','lens','flower','droplet'], ['#3a0d0a','#5c150f','#8a1f15','#b22a1c','#e34234','#f25e3d','#ffb38a']) },
   'Minhwa Obangsaek': { grid:58, bg:'#26201a', gamma:94, contrast:12, bright:4, sMin:36, sMax:120, gap:7, gridType:'brick', sat:130,
     slots: mkSlots(['diamond','leaf','hexagon','flower','clover','lens','circle'], ['#3a322a','#274f86','#cf3a28','#6f9e84','#e8b53a','#f1c46a','#f6f0e1']) },
-  'Thangka Goud': { grid:78, bg:'#0c0a14', gamma:112, contrast:12, bright:10, sMin:18, sMax:120, gap:6, rndRot:true, gridType:'hex',
+  'Thangka Gold': { grid:78, bg:'#0c0a14', gamma:112, contrast:12, bright:10, sMin:18, sMax:120, gap:6, rndRot:true, gridType:'hex',
     slots: mkSlots(['hexagon','diamond','lens','flower','flower','sparkle','star'], ['#22325f','#2a5599','#2e7d52','#d83a2e','#d4af37','#e6b32e','#f3e3a8']) },
   'Lajvard & Firuzeh': { grid:58, bg:'#0d1228', gamma:112, contrast:12, bright:4, sMin:60, sMax:122, gap:8, rndRot:true, gridType:'hex',
     slots: mkSlots(['octagon','hexagon','hexagon','diamond','lens','star','sparkle'], ['#1c3a78','#2453a8','#2f74c8','#1fa8a0','#5ec9bf','#d4af37','#f4ecd6']) },
-  'Lapis & Goud': { grid:58, bg:'#0c1d3d', gamma:112, contrast:10, bright:4, sMin:34, sMax:124, gap:6, gridType:'hex',
+  'Lapis & Gold': { grid:58, bg:'#0c1d3d', gamma:112, contrast:10, bright:4, sMin:34, sMax:124, gap:6, gridType:'hex',
     slots: mkSlots(['hexagon','diamond','lens','leaf','flower','star','sparkle'], ['#2a5fae','#3b78c4','#2e8c5a','#cf3b2f','#ee7a3c','#f3c81f','#ecc24e']) },
   'Ensō': { grid:72, bg:'#f4ecdb', invert:true, gamma:108, contrast:14, bright:-2, sMin:0, sMax:132, gap:8, rotMode:'flow', gridType:'hex', opacity:58, opacityTone:true,
     slots: mkSlots(['circle','circle','lens','ring','ring','concentric','concentric'], ['#9a9ca0','#85847f','#74716c','#5a564f','#43403a','#2e2a24','#131210']) },
-  'Pichwai Goud': { grid:78, bg:'#0a1526', gamma:104, contrast:18, sMin:18, sMax:124, gap:7, rotMode:'flow', gridType:'brick',
+  'Pichwai Gold': { grid:78, bg:'#0a1526', gamma:104, contrast:18, sMin:18, sMax:124, gap:7, rotMode:'flow', gridType:'brick',
     slots: mkSlots(['diamond','hexagon','hexagon','lens','flower','flower','sparkle'], ['#2a4f8c','#9e2b2b','#2f7d57','#d8472b','#e8a92e','#efc15a','#f4d98a']) },
   'Sơn Mài': { bg:'#0d0805', gamma:96, contrast:16, bright:6, sMin:22, sMax:118, gap:8, rndRot:true, gridType:'brick',
     slots: mkSlots(['diamond','diamond','lens','leaf','droplet','lens','sparkle'], ['#241712','#3a2415','#9e2018','#cf3a26','#a8772e','#d6a93a','#f1e8d3']) },
@@ -1224,22 +1229,22 @@ const BUILTIN_PRESETS = {
     slots: mkSlots('circle', ramp('#222222','#eeeeee')) },
 };
 const PRESET_CATEGORIES = {
-  'Basis': ['V1 — Origineel'],
-  'Print & druk': ['Halftone','Newsprint','Riso Print','CMYK Poster','Duotone Punch',
-    'Ben-Day Pop','Sunday Comics','Sepia Krant','Manga Screentone','Stippelgravure',
+  'Basic': ['V1 — Original'],
+  'Print': ['Halftone','Newsprint','Riso Print','CMYK Poster','Duotone Punch',
+    'Ben-Day Pop','Sunday Comics','Sepia Newspaper','Manga Screentone','Stipple Engraving',
     'Ink Hatch','Blueprint'],
-  'Kunst': ['Pointillism','Flow Lines','Kusama Rood','Hirst Spots','Mondriaan',
-    'Byzantijns Goud','Delfts Blauw','Cyanotype','Art Deco Goud','Mosaic',
-    'Bloesem','Art Nouveau','Maanfase'],
-  'Vorm & techniek': ['Truchet','Zeshoek mozaïek','Octa-raster','Gravure'],
+  'Art': ['Pointillism','Flow Lines','Kusama Red','Hirst Spots','Mondrian',
+    'Byzantine Gold','Delft Blue','Cyanotype','Art Deco Gold','Mosaic',
+    'Blossom','Art Nouveau','Moon Phase'],
+  'Shape & technique': ['Truchet','Hexagon Mosaic','Octa-raster','Engraving'],
   'Dither-lab': ['Atkinson','Stucki Fijn','Jarvis Zacht','Stevenson Speckle','Sierra Riso',
     'PICO-8 Quantize','NES Quantize','Posterposter','Linosnede','Dromerig'],
-  'Oosters': ['Bero-ai (Aizuri-e)','Suiboku — Sumi Wash','Kōrin Kinpaku','Hasui Indigo Dusk',
-    'Five Tones of Ink','Mohammedaans Blauw','Cinnaberlak Tihong','Minhwa Obangsaek',
-    'Thangka Goud','Lajvard & Firuzeh','Lapis & Goud','Ensō','Pichwai Goud','Sơn Mài'],
+  'Eastern': ['Bero-ai (Aizuri-e)','Suiboku — Sumi Wash','Kōrin Kinpaku','Hasui Indigo Dusk',
+    'Five Tones of Ink','Mohammedan Blue','Cinnaberlak Tihong','Minhwa Obangsaek',
+    'Thangka Gold','Lajvard & Firuzeh','Lapis & Gold','Ensō','Pichwai Gold','Sơn Mài'],
   'Retro tech': ['Terminal','Retro Game','C64','CGA','ZX Spectrum','LED Matrix',
     'Flip-Disc','CRT Lines','Lite-Brite'],
-  'Sfeer': ['Pop Art','Cyber','Candy','Vaporwave','Confetti','Bokeh','LEGO','Borduurwerk'],
+  'Mood': ['Pop Art','Cyber','Candy','Vaporwave','Confetti','Bokeh','LEGO','Embroidery'],
 };
 
 const LS_KEY = 'ditherPresets2';
@@ -1261,8 +1266,8 @@ function slugify(s){
     .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48);
 }
 function artFileName(){
-  const preset = presetSel.value ? presetSel.value.slice(2) : 'eigen-stijl';
-  return (slugify(mediaName)||'artwork')+'-'+(slugify(preset)||'eigen-stijl');
+  const preset = presetSel.value ? presetSel.value.slice(2) : 'custom-style';
+  return (slugify(mediaName)||'artwork')+'-'+(slugify(preset)||'custom-style');
 }
 
 /* ---------- shape cache (coloured canvas + white mask) ---------- */
@@ -1374,11 +1379,11 @@ function pannable(){ const [,,cw,ch]=cropRect(); const [sw,sh]=srcSize(); return
 function applyView(){
   const z=S.cropZoom||1;
   zoomBadge.style.display = z>1.01 ? 'block' : 'none';
-  zoomBadge.textContent = 'zoom '+z.toFixed(1)+'× · dubbelklik = reset';
+  zoomBadge.textContent = 'zoom '+z.toFixed(1)+'× · double-click = reset';
   out.style.cursor = pannable() ? 'grab' : 'default';
   requestRender();
 }
-out.title='Scroll = inzoomen · sleep = verschuiven · ingedrukt houden = origineel · dubbelklik = reset';
+out.title='Scroll = zoom · drag = pan · hold = original · double-click = reset';
 function resetView(){ S.cropZoom=1; setOffset(0,0); applyView(); }
 document.getElementById('stage').addEventListener('wheel', e=>{
   if(!media) return;
@@ -1434,7 +1439,7 @@ out.addEventListener('dblclick', resetView);
 function loadFile(f){
   if(!f) return;
   setOffset(0,0); S.cropZoom=1;   // nieuwe foto → uitsnede gecentreerd & uitgezoomd
-  mediaName = slugify((f.name||'').replace(/\.[^.]+$/,'')) || 'plak-afbeelding';
+  mediaName = slugify((f.name||'').replace(/\.[^.]+$/,'')) || 'pasted-image';
   const url = URL.createObjectURL(f);
   if (f.type.startsWith('video')){
     const v=document.createElement('video');
@@ -1471,10 +1476,10 @@ async function unsValidate(k){
   catch(e){ return false; }
 }
 async function unsAskKey(grid){
-  const k = prompt('Unsplash Access Key (wordt lokaal opgeslagen):');
+  const k = prompt('Unsplash Access Key (stored locally):');
   if (!k || !k.trim()) return false;
   if (await unsValidate(k.trim())){ localStorage.setItem(UNS_LS, k.trim()); return true; }
-  if (grid) grid.innerHTML = '<span class="hint">Die Access Key werkt niet.</span>';
+  if (grid) grid.innerHTML = '<span class="hint">That Access Key doesn\'t work.</span>';
   return false;
 }
 function unsThumb(ph, grid){
@@ -1493,16 +1498,16 @@ async function unsFetch(q, page){
   let res;
   try { res=await fetch('https://api.unsplash.com/search/photos?query='
     +encodeURIComponent(q)+'&page='+page+'&per_page='+UNS_PER+'&client_id='+key); }
-  catch(err){ grid.innerHTML='<span class="hint">Netwerkfout: '+err.message+'</span>'; return null; }
+  catch(err){ grid.innerHTML='<span class="hint">Network error: '+err.message+'</span>'; return null; }
   if (res.status===403 && res.headers.get('X-Ratelimit-Remaining')==='0'){
-    grid.innerHTML='<span class="hint">Unsplash-limiet bereikt (50/uur). Probeer later opnieuw — je key is in orde.</span>'; return null;
+    grid.innerHTML='<span class="hint">Unsplash rate limit reached (50/hour). Try again later — your key is fine.</span>'; return null;
   }
   if (res.status===401 || res.status===403){
     if (localStorage.getItem(UNS_LS)){ localStorage.removeItem(UNS_LS); return unsFetch(q,page); }
     if (await unsAskKey(grid)) return unsFetch(q,page);
     return null;
   }
-  if (!res.ok){ grid.innerHTML='<span class="hint">Unsplash-fout '+res.status+'.</span>'; return null; }
+  if (!res.ok){ grid.innerHTML='<span class="hint">Unsplash error '+res.status+'.</span>'; return null; }
   const data=await res.json();
   return data.results||[];
 }
@@ -1510,10 +1515,10 @@ async function unsSearch(){
   const q=document.getElementById('unsQ').value.trim(); if(!q) return;
   const grid=document.getElementById('unsGrid');
   unsLastQ=q; unsPage=1; unsShowMore(false);
-  grid.innerHTML='<span class="hint">Zoeken…</span>';
+  grid.innerHTML='<span class="hint">Searching…</span>';
   const photos=await unsFetch(q,1);
   if(!photos) return;
-  if(!photos.length){ grid.innerHTML='<span class="hint">Geen resultaten.</span>'; return; }
+  if(!photos.length){ grid.innerHTML='<span class="hint">No results.</span>'; return; }
   grid.innerHTML='';
   photos.forEach(ph=>unsThumb(ph,grid));
   unsShowMore(photos.length>=UNS_PER);
@@ -1521,7 +1526,7 @@ async function unsSearch(){
 async function unsLoadMore(){
   if(!unsLastQ) return;
   const grid=document.getElementById('unsGrid'), btn=document.getElementById('unsMore');
-  const old=btn.textContent; btn.textContent='Laden…'; btn.disabled=true;
+  const old=btn.textContent; btn.textContent='Loading…'; btn.disabled=true;
   const photos=await unsFetch(unsLastQ, unsPage+1);
   btn.textContent=old; btn.disabled=false;
   if(!photos||!photos.length){ unsShowMore(false); return; }
@@ -1583,7 +1588,7 @@ const RANGES = [
   ['sat','sat',x=>x+'%'], ['sJit','sJit',x=>x+'%'], ['rotJit','rotJit',x=>x+'°'],
   ['opacity','opacity',x=>x+'%'], ['edStrength','edStrength',x=>x+'%'],
   ['hl','hl',x=>x], ['blur','blur',x=>x+'px'], ['edgeAmt','edgeAmt',x=>x+'%'],
-  ['posterize','posterize',x=>x==7?'uit':x],
+  ['posterize','posterize',x=>x==7?'off':x],
 ];
 RANGES.forEach(([id,key,fmt])=>{
   const el=document.getElementById(id), v=document.getElementById(id+'V');
@@ -1676,7 +1681,7 @@ function syncSlotRow(i){
   const sp=shapeListEl.children[i].querySelector('.shapepick');
   const thumb=sp.querySelector('.thumb'), nm=sp.querySelector('.nm');
   if(slot.shape==='custom'){
-    thumb.innerHTML = slot.svg || '⬆'; nm.textContent='Eigen SVG'; sp.classList.add('custom');
+    thumb.innerHTML = slot.svg || '⬆'; nm.textContent='Custom SVG'; sp.classList.add('custom');
   } else {
     thumb.innerHTML = shapeSVGMarkup(slot.shape);
     nm.textContent = (SHAPES[slot.shape] && SHAPES[slot.shape].label || '').replace(/^\S+\s/,'');
@@ -1757,9 +1762,9 @@ function refreshColorLock(){
   const shapesOff = cmyk;             // CMYK heeft z'n eigen dot-shape
   const lock = document.getElementById('colorLock');
   lock.textContent = cmyk
-    ? '⚠ CMYK-modus tekent met vaste proceskleuren (C·M·Y·K) en z\'n eigen dot-shape — de slots hieronder tellen niet mee. Kies daar de dot-shape; zet Render mode op “Shapes” voor losse kleuren.'
+    ? '⚠ CMYK mode draws with fixed process colors (C·M·Y·K) and its own dot-shape — the slots below don\'t apply. Choose the dot-shape there; set Render mode to “Shapes” for loose colors.'
     : source
-    ? '⚠ Kleuren komen uit de bron-afbeelding. Zet Color op “Per-tone kleur” om hier eigen slotkleuren te kiezen.'
+    ? '⚠ Colors come from the source image. Set Color to “Per-tone color” to choose custom slot colors here.'
     : '';
   lock.style.display = colorsOff ? 'block' : 'none';
   // kleur-controls
@@ -1777,15 +1782,15 @@ function refreshPresetList(keep){
   const custom = customPresets();
   const inCat = new Set(Object.values(PRESET_CATEGORIES).flat());
   const rest = Object.keys(BUILTIN_PRESETS).filter(n=>!inCat.has(n));
-  let html = '<option value="">— kies een preset —</option>';
+  let html = '<option value="">— choose a preset —</option>';
   for (const [cat,names] of Object.entries(PRESET_CATEGORIES)){
     const have = names.filter(n=>BUILTIN_PRESETS[n]);
     if (have.length) html += `<optgroup label="${cat}">`
       + have.map(n=>`<option value="b:${n}">${n}</option>`).join('') + '</optgroup>';
   }
-  if (rest.length) html += '<optgroup label="Overig">'
+  if (rest.length) html += '<optgroup label="Other">'
     + rest.map(n=>`<option value="b:${n}">${n}</option>`).join('') + '</optgroup>';
-  if (Object.keys(custom).length) html += '<optgroup label="Eigen presets">'
+  if (Object.keys(custom).length) html += '<optgroup label="Your presets">'
     + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('') + '</optgroup>';
   presetSel.innerHTML = html;
   presetSel.value = keep || '';
@@ -1800,7 +1805,7 @@ presetSel.addEventListener('change', ()=>{
 function markShuffle(){
   let o = presetSel.querySelector('option[value="__shuffle"]');
   if(!o){ o=document.createElement('option'); o.value='__shuffle'; o.hidden=true;
-          o.textContent='🎲 Verrassing (niet opgeslagen)'; presetSel.appendChild(o); }
+          o.textContent='🎲 Surprise (not saved)'; presetSel.appendChild(o); }
   presetSel.value='__shuffle';
 }
 
@@ -1819,7 +1824,7 @@ document.getElementById('presetPrev').addEventListener('click', ()=>stepSelect(p
 document.getElementById('presetNext').addEventListener('click', ()=>stepSelect(presetSel, 1,firePreset));
 
 document.getElementById('savePresetBtn').addEventListener('click', ()=>{
-  const name = prompt('Naam voor deze preset:'); if(!name) return;
+  const name = prompt('Name for this preset:'); if(!name) return;
   const p = customPresets();
   p[name.trim()] = currentPresetCfg();
   saveCustomPresets(p);
@@ -1827,9 +1832,9 @@ document.getElementById('savePresetBtn').addEventListener('click', ()=>{
 });
 document.getElementById('delPresetBtn').addEventListener('click', ()=>{
   const v = presetSel.value;
-  if (!v || v[0]!=='c'){ alert('Selecteer eerst een eigen preset (ingebouwde kun je niet verwijderen).'); return; }
+  if (!v || v[0]!=='c'){ alert('Select a custom preset first (built-ins cannot be deleted).'); return; }
   const name = v.slice(2);
-  if (!confirm(`Preset "${name}" verwijderen?`)) return;
+  if (!confirm(`Delete preset "${name}"?`)) return;
   const p = customPresets(); delete p[name]; saveCustomPresets(p);
   refreshPresetList();
 });
@@ -1852,12 +1857,12 @@ document.getElementById('presetFile').addEventListener('change', async e=>{
     const p = customPresets(); p[name] = cfg; saveCustomPresets(p);
     refreshPresetList('c:'+name);
     await applyPreset(cfg);
-  } catch(err){ alert('Kon preset niet lezen: '+err.message); }
+  } catch(err){ alert('Could not read preset: '+err.message); }
   e.target.value = '';
 });
 document.getElementById('resetBtn').addEventListener('click', ()=>{
-  applyPreset(BUILTIN_PRESETS['V1 — Origineel']);
-  refreshPresetList('b:V1 — Origineel');
+  applyPreset(BUILTIN_PRESETS['V1 — Original']);
+  refreshPresetList('b:V1 — Original');
 });
 refreshPresetList();
 
@@ -1925,39 +1930,39 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
    de hoofd-presets bovenaan. */
 function shapeArr(s){ return Array.isArray(s) ? s.slice(0,7) : Array.from({length:7},()=>s); }
 const SHAPE_SETS = {
-  'Cirkels':'circle', 'Vierkanten':'square', 'Afgerond':'rounded', 'Ruiten':'diamond',
-  'Zeshoeken':'hexagon', 'Achthoeken':'octagon', 'Driehoeken':'triangle',
-  'Ringen':'ring', 'Sterren':'star', 'Hartjes':'heart', 'Bloemen':'flower',
-  'Druppels':'droplet', 'Sprankels':'sparkle', 'Lijnen ─':'hline', 'Lijnen │':'vline',
-  'Geometrisch':         ['hexagon','octagon','pentagon','bowtie','diamond','triangle','square'],
-  'Arcering':            ['circle','vline','hline','hline','hatch','crosshatch','square'],
-  'Sterren & hartjes':   ['heart','heart','star','star','sparkle','star','flower'],
-  'Bloementuin':         ['clover','clover','flower','flower','leaf','flower','sparkle'],
-  'Organisch':           ['droplet','droplet','lens','leaf','lens','crescent','flower'],
-  'Halftoon → boog':     ['circle','circle','halfcircle','corner','corner','ring','concentric'],
-  'Gemengd':             ['hexagon','pentagon','diamond','triangle','star','clover','ring'],
-  'Maanstand':           ['crescent','crescent','circle','halfcircle','circle','ring','concentric'],
+  'Circles':'circle', 'Squares':'square', 'Rounded':'rounded', 'Diamonds':'diamond',
+  'Hexagons':'hexagon', 'Octagons':'octagon', 'Triangles':'triangle',
+  'Rings':'ring', 'Stars':'star', 'Hearts':'heart', 'Flowers':'flower',
+  'Droplets':'droplet', 'Sparkles':'sparkle', 'Lines ─':'hline', 'Lines │':'vline',
+  'Geometric':         ['hexagon','octagon','pentagon','bowtie','diamond','triangle','square'],
+  'Hatching':            ['circle','vline','hline','hline','hatch','crosshatch','square'],
+  'Stars & hearts':   ['heart','heart','star','star','sparkle','star','flower'],
+  'Flower garden':         ['clover','clover','flower','flower','leaf','flower','sparkle'],
+  'Organic':           ['droplet','droplet','lens','leaf','lens','crescent','flower'],
+  'Halftone → arc':     ['circle','circle','halfcircle','corner','corner','ring','concentric'],
+  'Mixed':             ['hexagon','pentagon','diamond','triangle','star','clover','ring'],
+  'Moon phases':           ['crescent','crescent','circle','halfcircle','circle','ring','concentric'],
 };
 const COLOR_PALETTES = {
-  'V1 Grijs':       ramp('#000000','#d2d2d2'),
-  'Mono inkt':      Array(7).fill('#1d1a16'),
+  'V1 Gray':       ramp('#000000','#d2d2d2'),
+  'Mono ink':      Array(7).fill('#1d1a16'),
   'Sepia':          ramp('#efe3cd','#4a3526'),
-  'Inkt op papier': ramp('#8a8378','#14110c'),
+  'Ink on paper': ramp('#8a8378','#14110c'),
   'Game Boy':       ramp('#0f380f','#9bbc0f'),
   'Neon':           ['#2a0a4a','#5b1e8f','#8c2bd9','#c13ad9','#ff3df0','#5bd9ff','#9ffcff'],
   'Candy':          ['#b83b6e','#e0529c','#f47ab8','#f9a8d4','#a78bfa','#7dd3fc','#fde68a'],
-  'Zonsondergang':  ['#1a0a2e','#4a1942','#83274f','#c43e4b','#ee6c45','#f9a03f','#ffd45e'],
-  'Oceaan':         ['#03045e','#0b3d91','#0077b6','#0096c7','#00b4d8','#48cae4','#ade8f4'],
-  'Bos':            ['#0b2818','#14452a','#1e6b3a','#2e8b4a','#5cab6d','#94c98f','#d8e8b0'],
+  'Sunset':  ['#1a0a2e','#4a1942','#83274f','#c43e4b','#ee6c45','#f9a03f','#ffd45e'],
+  'Ocean':         ['#03045e','#0b3d91','#0077b6','#0096c7','#00b4d8','#48cae4','#ade8f4'],
+  'Forest':            ['#0b2818','#14452a','#1e6b3a','#2e8b4a','#5cab6d','#94c98f','#d8e8b0'],
   'Pop CMYK':       ['#1a1a1a','#00aeef','#0057a8','#ec008c','#ff5e3a','#fff200','#ffffff'],
-  'Delfts Blauw':   ramp('#16356b','#eaf2fa'),
-  'Goud':           ramp('#2b1d12','#f5e7b8'),
+  'Delft Blue':   ramp('#16356b','#eaf2fa'),
+  'Gold':           ramp('#2b1d12','#f5e7b8'),
   /* retro/kunst-paletten (uit ditheringstudio-analyse), als 7-slot ramp */
   'DawnBringer 16': ['#140C1C','#442434','#854C30','#D04648','#D27D2C','#D2AD99','#DEEED6'],
   'DawnBringer 32': ['#000000','#45283C','#8F563B','#DF7126','#D9A066','#EEC39A','#FFFFFF'],
   'PICO-8':         ['#000000','#1D2B53','#7E2553','#AB5236','#FF004D','#FFA300','#FFF1E8'],
   'NES':            ['#000000','#0000BC','#A80020','#F83800','#FCA044','#3CBCFC','#FCFCFC'],
-  'C64 palet':      ['#000000','#333333','#0000AA','#880000','#DD8855','#AAFFEE','#FFFFFF'],
+  'C64 palette':      ['#000000','#333333','#0000AA','#880000','#DD8855','#AAFFEE','#FFFFFF'],
   'CGA':            ['#000000','#0000AA','#AA00AA','#AA0000','#FF55FF','#55FFFF','#FFFFFF'],
   'Solarized':      ['#002B36','#073642','#586E75','#839496','#93A1A1','#EEE8D5','#FDF6E3'],
   'Synthwave':      ['#2D1A3D','#4B1053','#8A095D','#C81050','#FF0080','#FF6FC7','#2AFCFF'],
@@ -1980,7 +1985,7 @@ async function applyPalette(cols){
 }
 // median-cut: haal 7 representatieve kleuren uit de huidige foto-uitsnede
 function extract7FromImage(){
-  if(!media){ alert('Upload eerst een afbeelding.'); return null; }
+  if(!media){ alert('Upload an image first.'); return null; }
   const [cx,cy,cw,ch]=cropRect(); if(!cw||!ch) return null;
   const W=80, H=Math.max(1,Math.round(W*ch/cw));
   const c=document.createElement('canvas'); c.width=W; c.height=H;
@@ -2019,9 +2024,9 @@ function makeLibrary(o){
   function refresh(keep){
     const custom = getCustom();
     sel.innerHTML = `<option value="">${o.label}</option>`
-      + '<optgroup label="Ingebouwd">'
+      + '<optgroup label="Built-in">'
       + Object.keys(o.builtins).map(n=>`<option value="b:${n}">${n}</option>`).join('') + '</optgroup>'
-      + (Object.keys(custom).length ? '<optgroup label="Eigen">'
+      + (Object.keys(custom).length ? '<optgroup label="Custom">'
         + Object.keys(custom).map(n=>`<option value="c:${n}">${n}</option>`).join('') + '</optgroup>' : '');
     sel.value = keep || '';
   }
@@ -2037,20 +2042,20 @@ function makeLibrary(o){
   });
   document.getElementById(o.delId).addEventListener('click', ()=>{
     const v = sel.value;
-    if (!v || v[0]!=='c'){ alert('Selecteer eerst een eigen item (ingebouwde kun je niet verwijderen).'); return; }
+    if (!v || v[0]!=='c'){ alert('Select a custom item first (built-ins cannot be deleted).'); return; }
     const name = v.slice(2);
-    if (!confirm(`"${name}" verwijderen?`)) return;
+    if (!confirm(`Delete "${name}"?`)) return;
     const c=getCustom(); delete c[name]; setCustom(c); refresh();
   });
   refresh('');
 }
 makeLibrary({ selId:'shapeSetSel', prevId:'shapePrev', nextId:'shapeNext', delId:'shapeDel',
   saveId:'saveShapeSet', builtins:SHAPE_SETS, lsKey:'ditherShapeSets', label:'— shape-set —',
-  apply:applyShapeSet, promptMsg:'Naam voor deze shape-set:',
+  apply:applyShapeSet, promptMsg:'Name for this shape-set:',
   capture:()=>S.slots.map(s=>s.shape==='custom'?{custom:s.svg}:s.shape) });
 makeLibrary({ selId:'palSel', prevId:'palPrev', nextId:'palNext', delId:'palDel',
   saveId:'savePal', builtins:COLOR_PALETTES, lsKey:'ditherPalettes', label:'— palet —',
-  apply:applyPalette, promptMsg:'Naam voor dit kleurenpalet:',
+  apply:applyPalette, promptMsg:'Name for this color palette:',
   capture:()=>S.slots.map(s=>s.color) });
 document.getElementById('extractPal').addEventListener('click', ()=>{
   const pal=extract7FromImage();
@@ -2091,10 +2096,10 @@ function ratioOk(t){
   return true;
 }
 document.getElementById('exportPngBtn').addEventListener('click', e=>{
-  if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
+  if(!media){ alert('Upload an image or video first.'); return; }
   const t = exportTarget();
   if ((t.paper||t.ratio) && !ratioOk(t) &&
-      !confirm('De uitsnede past niet exact bij dit exportformaat.\nZet "Formaat" bij Source op de bijpassende ratio.\nToch exporteren?')) return;
+      !confirm('The crop does not fit exactly with this export format.\nSet "Format" in Source to the matching ratio.\nExport anyway?')) return;
   const btn=e.target, old=btn.textContent;
   btn.textContent='Bezig…'; btn.disabled=true;
   setTimeout(()=>{
@@ -2233,12 +2238,12 @@ function buildArtSVG(){
     + body + '</svg>';
 }
 document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
-  if(!media){ alert('Upload eerst een afbeelding of video.'); return; }
+  if(!media){ alert('Upload an image or video first.'); return; }
   const t = exportTarget();
   if ((t.paper||t.ratio) && !ratioOk(t) &&
-      !confirm('De uitsnede past niet exact bij dit exportformaat.\nZet "Formaat" bij Source op de bijpassende ratio.\nToch exporteren?')) return;
+      !confirm('The crop does not fit exactly with this export format.\nSet "Format" in Source to the matching ratio.\nExport anyway?')) return;
   let svg=buildArtSVG();
-  if(!svg){ alert('Kon geen SVG bouwen.'); return; }
+  if(!svg){ alert('Could not build SVG.'); return; }
   if (t.paper){
     // geef de SVG echte papierafmetingen in mm, georiënteerd naar het canvas
     const [,,cw,ch]=cropRect();
@@ -2258,7 +2263,7 @@ const backdropBtn = document.getElementById('backdropBtn');
 function applyStage(s){
   document.documentElement.setAttribute('data-stage', s);
   backdropBtn.textContent = s==='light' ? '🌙' : '☀️';
-  backdropBtn.title = s==='light' ? 'Canvas op donkere achtergrond' : 'Canvas op lichte achtergrond';
+  backdropBtn.title = s==='light' ? 'Canvas on dark background' : 'Canvas on light background';
   localStorage.setItem('ditherStage', s);
 }
 backdropBtn.addEventListener('click', ()=>
