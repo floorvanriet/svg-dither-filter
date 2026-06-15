@@ -3,114 +3,223 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.7</title>
+<title>SVG Dither Filter 2.8</title>
 <style>
-  :root { --bg:#0d0d0f; --panel:#161619; --line:#2a2a30; --txt:#e7e7ea; --mut:#8a8a93; --acc:#5b8cff;
-          --ctrl:#202026; --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
+  :root { --bg:#0c0c0e; --panel:#141417; --panel-2:#101013; --raised:#1b1b20; --raised-hover:#212128;
+          --ctrl:#1b1b20; --line:#26262c; --line-strong:#33333b; --txt:#e9e9ec; --mut:#85858f; --faint:#5c5c66;
+          --acc:#5b8cff; --acc-press:#4a78e6; --acc-soft:rgba(91,140,255,.14);
+          --warn:#d99a3d; --warn-line:#6b4a1f;
+          --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
   :root[data-theme="light"] {
-          --bg:#f3f3f5; --panel:#ffffff; --line:#d9d9df; --txt:#1c1c22; --mut:#6c6c75; --acc:#3b6fe0;
-          --ctrl:#ececed; --stage:#d6d6da; --mat:#ffffff; --matline:#c2c2cb; --overlay:255,255,255; }
+          --bg:#eeeef1; --panel:#ffffff; --panel-2:#f7f7f9; --raised:#ededf0; --raised-hover:#e4e4e9;
+          --ctrl:#ededf0; --line:#dcdce2; --line-strong:#cdcdd5; --txt:#1b1b22; --mut:#5f5f69; --faint:#9a9aa4;
+          --acc:#3b6fe0; --acc-press:#2f5cc4; --acc-soft:rgba(59,111,224,.12);
+          --warn:#b06a12; --warn-line:#c8a25f;
+          --stage:#d6d6da; --mat:#ffffff; --matline:#c2c2cb; --overlay:255,255,255; }
   * { box-sizing:border-box; }
-  body { margin:0; font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-         background:var(--bg); color:var(--txt); display:flex; height:100vh; overflow:hidden; }
-  #panel { width:330px; flex:none; background:var(--panel); border-right:1px solid var(--line);
-           overflow-y:auto; padding:16px; }
-  #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:32px;
-           background:var(--stage); position:relative; overflow:hidden;
-           transition:background .2s; }
-  #zoomBadge { position:absolute; top:10px; right:12px; z-index:2; display:none;
-           background:rgba(var(--overlay),.85); border:1px solid var(--line); border-radius:5px;
-           padding:3px 8px; font-size:11px; color:var(--mut); pointer-events:none; }
-  #stage.drag::after { content:'Drop afbeelding of video'; position:absolute; inset:12px;
-           border:2px dashed var(--acc); border-radius:12px; display:flex; align-items:center;
-           justify-content:center; font-size:16px; color:var(--acc); background:rgba(var(--overlay),.7); }
-  /* subtiele lijst met passe-partout: mat-rand + dunne lijst + slagschaduw */
-  canvas { max-width:100%; max-height:100%;
-           box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline),
-                      0 12px 38px rgba(0,0,0,.45); }
-  :root[data-theme="light"] canvas { box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline),
-                      0 12px 34px rgba(0,0,0,.20); }
-  h1 { font-size:14px; margin:0 0 2px; letter-spacing:.04em; }
-  .ver { font-size:10px; color:var(--mut); margin:0 0 14px; }
-  .ver a { color:var(--acc); text-decoration:none; }
-  .grp { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
-  .grp h2 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--mut);
-            margin:0 0 10px; }
-  label { display:block; margin:9px 0 3px; color:var(--mut); font-size:11px; }
+  body { margin:0; font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         background:var(--bg); color:var(--txt); display:flex; flex-direction:column;
+         height:100vh; overflow:hidden; }
+
+  /* ---- top app bar: global actions ---- */
+  .appbar { flex:none; display:flex; align-items:center; gap:10px; height:52px; padding:0 12px;
+            background:var(--panel-2); border-bottom:1px solid var(--line-strong); z-index:10; }
+  .appbar .brand { display:flex; align-items:baseline; gap:8px; margin-right:4px; }
+  .appbar .brand h1 { margin:0; }
+  .appbar .brand .ver { font-size:10px; color:var(--faint);
+                        font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  .appbar .brand .ver a { color:var(--acc); text-decoration:none; }
+  .appbar .spacer { flex:1; }
+  .barbtn { display:inline-flex; align-items:center; gap:7px; height:30px; padding:0 13px;
+            background:var(--raised); color:var(--txt); border:1px solid var(--line); border-radius:7px;
+            font-size:12px; cursor:pointer; }
+  .barbtn:hover { border-color:var(--acc); }
+  .barbtn.active { border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-soft); }
+  .barbtn .gly { color:var(--mut); font-size:13px; line-height:1; }
+  .barbtn.active .gly { color:var(--acc); }
+  .barbtn.primary { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
+  .barbtn.primary:hover { background:var(--acc-press); border-color:var(--acc-press); }
+  .barbtn.primary .gly { color:rgba(255,255,255,.85); }
+  .iconbtn { background:transparent; border:1px solid transparent; color:var(--mut);
+             width:30px; height:30px; padding:0; border-radius:7px; font-size:14px; line-height:1;
+             display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .iconbtn:hover { border-color:var(--line); color:var(--txt); background:var(--raised-hover); }
+  #resetBtn.iconbtn:hover { color:var(--warn); border-color:var(--warn-line); }
+
+  /* ---- workspace: rail + stage ---- */
+  .workspace { flex:1; display:flex; min-height:0; }
+  #panel { width:340px; flex:none; background:var(--panel); border-right:1px solid var(--line);
+           overflow-y:auto; padding:0 16px 22px; }
+
+  /* ---- popovers under the app bar ---- */
+  .popover { position:fixed; z-index:30; display:none; width:330px; max-height:78vh; overflow-y:auto;
+             background:var(--panel); border:1px solid var(--line-strong); border-radius:11px;
+             padding:14px; box-shadow:0 18px 50px rgba(0,0,0,.5); }
+  :root[data-theme="light"] .popover { box-shadow:0 18px 44px rgba(0,0,0,.22); }
+  .popover.open { display:block; }
+  #exportPopover { width:288px; }
+  #exportPopover .btnrow { flex-direction:column; gap:6px; }
+  #exportPopover .btnrow select, #exportPopover .btnrow button { width:100%; }
+  .pop-title { font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--faint);
+               font-weight:600; margin:0 0 11px; }
+
+  /* ---- flat sections: everything always visible, hairline dividers ---- */
+  #panel > .grp { border:0; border-radius:0; padding:0; margin:0; }
+  #panel > .grp + .grp { margin-top:20px; }
+  .grp h2 { position:sticky; top:0; z-index:3; background:var(--panel);
+            font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--mut);
+            margin:0; padding:13px 0 11px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .grp h2::before { content:''; width:3px; height:11px; flex:none; border-radius:1px;
+                    background:var(--acc); opacity:.55; }
+  #panel > .grp:first-child h2::before { opacity:1; }
+
+  h1 { font-size:13px; margin:0; letter-spacing:.14em; font-weight:650; }
+
+  label { display:block; margin:9px 0 4px; color:var(--mut); font-size:11px; }
   .row { display:flex; align-items:center; gap:8px; }
   .row label { margin:0; flex:1; }
-  input[type=range] { width:100%; accent-color:var(--acc); }
+
+  input[type=range] { width:100%; -webkit-appearance:none; appearance:none; background:transparent;
+                      height:18px; cursor:pointer; accent-color:var(--acc); }
+  input[type=range]::-webkit-slider-runnable-track { height:3px; background:var(--line); border-radius:2px; }
+  input[type=range]::-moz-range-track { height:3px; background:var(--line); border-radius:2px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:13px; height:13px;
+        margin-top:-5px; border-radius:50%; background:var(--raised); border:1px solid var(--line);
+        transition:border-color .12s, background .12s, box-shadow .12s; }
+  input[type=range]:hover::-webkit-slider-thumb { border-color:var(--mut); }
+  input[type=range]:active::-webkit-slider-thumb,
+  input[type=range]:focus-visible::-webkit-slider-thumb {
+        background:var(--acc); border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-soft); }
+  input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:var(--raised);
+        border:1px solid var(--line); }
+  input[type=range]:active::-moz-range-thumb { background:var(--acc); border-color:var(--acc); }
+  input[type=range]:focus-visible { outline:none; }
+
   input[type=file] { width:100%; font-size:11px; color:var(--mut); }
-  input[type=color] { width:34px; height:26px; padding:0; border:1px solid var(--line);
-                       background:none; border-radius:4px; }
-  select, button { background:var(--ctrl); color:var(--txt); border:1px solid var(--line);
-                    border-radius:5px; padding:6px 8px; font:inherit; }
-  #themeBtn { flex:none; padding:5px 9px; font-size:14px; line-height:1; }
-  button { cursor:pointer; }
+  input[type=file]::file-selector-button,
+  input[type=file]::-webkit-file-upload-button {
+        background:var(--raised); color:var(--txt); border:1px solid var(--line); border-radius:6px;
+        padding:5px 10px; margin-right:9px; font:inherit; font-size:11px; cursor:pointer; }
+  input[type=file]:hover::file-selector-button { border-color:var(--acc); }
+  input[type=color] { width:30px; height:26px; padding:0; border:1px solid var(--line);
+                       background:var(--raised); border-radius:6px; cursor:pointer; }
+  input[type=color]:hover { border-color:var(--acc); }
+  input[type=checkbox] { -webkit-appearance:none; appearance:none; width:16px; height:16px; flex:none;
+        margin:0; border:1px solid var(--line); border-radius:4px; background:var(--raised); cursor:pointer;
+        position:relative; vertical-align:middle; transition:background .12s, border-color .12s; }
+  input[type=checkbox]:hover { border-color:var(--mut); }
+  input[type=checkbox]:checked { background:var(--acc); border-color:var(--acc); }
+  input[type=checkbox]:checked::after { content:''; position:absolute; left:5px; top:1.5px;
+        width:3.5px; height:8px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  input[type=checkbox]:focus-visible { outline:none; box-shadow:0 0 0 3px var(--acc-soft); border-color:var(--acc); }
+
+  /* unified control system — one height (28px), one type size (12px), one radius (Figma-tight) */
+  select, button, input[type=text] {
+        height:28px; font-size:12px; line-height:1; padding:0 10px;
+        background:var(--raised); color:var(--txt); border:1px solid var(--line); border-radius:6px; }
+  button { display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; }
+  select { -webkit-appearance:none; appearance:none; padding:0 26px 0 10px;
+           background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a93' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+           background-repeat:no-repeat; background-position:right 8px center; }
+  select:hover { border-color:var(--line-strong); }
+  select optgroup { color:var(--faint); }
+  input[type=text] { background:var(--ctrl); }
   button:hover { border-color:var(--acc); }
+  button:active { transform:translateY(1px); }
+  .navbtn { flex:none; width:28px; height:28px; padding:0; font-size:12px; }
+  select:focus-visible, button:focus-visible, input:focus-visible {
+        outline:none; box-shadow:0 0 0 3px var(--acc-soft); border-color:var(--acc); }
   select:disabled, button:disabled, input:disabled { opacity:.38; cursor:not-allowed; }
-  .lock { color:#d99a3d; font-size:10px; margin:2px 0 8px; }
-  :root[data-theme="light"] .lock { color:#b06a12; }
-  .seg { display:flex; gap:0; }
-  .seg button { flex:1; border-radius:0; padding:6px 4px; }
-  .seg button:first-child{border-radius:5px 0 0 5px;}
-  .seg button:last-child{border-radius:0 5px 5px 0;}
-  .seg button.on { background:var(--acc); border-color:var(--acc); color:#fff; }
-  .val { color:var(--txt); font-variant-numeric:tabular-nums; min-width:38px; text-align:right; }
-  .svgrow { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
-  .svgrow span { width:54px; font-size:10px; color:var(--mut); flex:none; }
-  .svgrow select { flex:1; min-width:0; font-size:11px; padding:4px 4px; }
-  .svgrow .up { flex:none; width:26px; text-align:center; padding:4px 0; font-size:11px; }
-  .svgrow .up.has { border-color:var(--acc); color:var(--acc); }
-  .hint { color:var(--mut); font-size:10px; margin-top:6px; }
+
+  .lock { color:var(--warn); font-size:10px; margin:2px 0 8px; }
+
+  .seg { display:flex; height:28px; gap:0; padding:2px; background:var(--bg); border:1px solid var(--line);
+         border-radius:7px; }
+  .seg button { flex:1; height:auto; padding:0 6px; font-size:12px;
+                border:1px solid transparent; border-radius:5px; background:transparent; color:var(--mut); }
+  .seg button:hover { color:var(--txt); background:var(--raised-hover); border-color:transparent; }
+  .seg button:active { transform:none; }
+  .seg button.on { background:var(--acc); border-color:var(--acc); color:#fff;
+                   box-shadow:0 0 0 1px var(--acc), 0 2px 7px var(--acc-soft); }
+
+  .val { color:var(--txt); font-family:ui-monospace,"SF Mono",Menlo,monospace;
+         font-variant-numeric:tabular-nums; min-width:44px; text-align:right; font-size:11px;
+         border-radius:3px; transition:background .15s, color .15s; }
+  .val.bumped { background:var(--acc-soft); color:var(--acc); }
+
+  /* per-slot shape & colour pickers (shadow → highlight) */
+  .shaperow, .colorrow { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+  .shaperow > span, .colorrow > span { width:58px; font-size:10px; color:var(--mut); flex:none; line-height:1.2; }
+  .shapepick { flex:1; min-width:0; height:28px; display:inline-flex; align-items:center; gap:8px;
+               justify-content:flex-start; padding:0 8px; background:var(--raised);
+               border:1px solid var(--line); border-radius:6px; cursor:pointer; }
+  .shapepick:hover { border-color:var(--acc); }
+  .shapepick .thumb { width:17px; height:17px; flex:none; color:var(--txt); display:flex; }
+  .shapepick .thumb svg { width:100%; height:100%; display:block; }
+  .shapepick .nm { font-size:12px; color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .shapepick.custom .nm { color:var(--acc); }
+  .colorrow input[type=color] { flex:1; min-width:0; width:auto; height:28px; }
+  #colorList { position:relative; padding-left:13px; }
+  #colorList:not(:empty)::before { content:''; position:absolute; left:0; top:1px; bottom:6px; width:3px;
+        border-radius:2px; background:linear-gradient(180deg,#0a0a0a 0%,#3a3a3a 22%,#7d7d7d 50%,#c4c4c4 78%,#f4f4f4 100%);
+        box-shadow:0 0 0 1px var(--line); }
+  /* shape chooser popover grid */
+  #shapePopover { width:290px; }
+  #shapeGrid { display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+  .shapecell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; color:var(--txt);
+               background:var(--raised); border:1px solid var(--line); border-radius:6px; cursor:pointer; }
+  .shapecell:hover { border-color:var(--acc); background:var(--raised-hover); }
+  .shapecell.on { border-color:var(--acc); box-shadow:0 0 0 1px var(--acc); }
+  .shapecell svg { width:68%; height:68%; display:block; }
+
+  .hint { color:var(--faint); font-size:10px; margin-top:6px; line-height:1.5; }
   #unsGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:8px;
-             max-height:320px; overflow-y:auto; }
+             max-height:280px; overflow-y:auto; }
   #unsGrid:empty { display:none; }
-  #unsGrid img { width:100%; height:56px; object-fit:cover; border-radius:4px; cursor:pointer;
+  #unsGrid img { width:100%; height:56px; object-fit:cover; border-radius:5px; cursor:pointer;
                  border:1px solid var(--line); display:block; }
   #unsGrid img:hover { border-color:var(--acc); }
   #unsCredit a { color:var(--acc); text-decoration:none; }
+
   .btnrow { display:flex; gap:6px; margin-top:8px; }
-  .btnrow button { flex:1; font-size:11px; padding:6px 4px; }
-  .btnrow select { font-size:11px; }
+  .btnrow button { flex:1; }
   #presetSel { width:100%; }
-  #resetBtn { width:100%; margin-top:8px; border-color:#6b4a1f; }
-  #resetBtn:hover { border-color:#d99a3d; }
+  #exportPngBtn { background:var(--acc); color:#fff; border-color:var(--acc); font-weight:600; }
+  #exportPngBtn:hover { background:var(--acc-press); border-color:var(--acc-press); }
+  #exportSvgBtn { background:transparent; border-color:var(--line); color:var(--txt); }
+  #exportSvgBtn:hover { border-color:var(--acc); }
+
+  /* ---- stage / canvas (passe-partout, unchanged) ---- */
+  #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:32px;
+           background:var(--stage); position:relative; overflow:hidden; transition:background .2s; }
+  #zoomBadge { position:absolute; top:10px; right:12px; z-index:2; display:none;
+           background:rgba(var(--overlay),.85); border:1px solid var(--line); border-radius:5px;
+           padding:3px 8px; font-size:11px; color:var(--mut); pointer-events:none; }
+  .stage-hint { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:1;
+           color:var(--mut); font-size:13px; text-align:center; max-width:300px; line-height:1.6;
+           pointer-events:none; }
+  .stage-hint b { color:var(--txt); }
+  #stage.drag::after { content:'Drop afbeelding of video'; position:absolute; inset:12px;
+           border:2px dashed var(--acc); border-radius:12px; display:flex; align-items:center;
+           justify-content:center; font-size:16px; color:var(--acc); background:rgba(var(--overlay),.7); z-index:3; }
+  canvas { max-width:100%; max-height:100%;
+           box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline), 0 12px 38px rgba(0,0,0,.45); }
+  :root[data-theme="light"] canvas { box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline),
+                      0 12px 34px rgba(0,0,0,.20); }
 </style>
 </head>
 <body>
-<div id="panel">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-    <div>
-      <h1>SVG DITHER FILTER</h1>
-      <p class="ver">v2.7 · <a href="index-v1.html">open origineel (v1)</a></p>
-    </div>
-    <button id="themeBtn" title="Licht / donker thema">🌙</button>
-  </div>
+<header class="appbar">
+  <div class="brand"><h1>SVG DITHER FILTER</h1><span class="ver">v2.8 · <a href="index-v1.html">v1</a></span></div>
+  <button id="beeldBtn" class="barbtn"><span class="gly">▦</span>Beeld</button>
+  <div class="spacer"></div>
+  <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
+  <button id="resetBtn" class="iconbtn" title="Reset naar origineel">↺</button>
+  <button id="themeBtn" class="iconbtn" title="Licht / donker thema">🌙</button>
+</header>
 
-  <div class="grp">
-    <h2>Presets</h2>
-    <div class="row">
-      <button id="presetPrev" title="Vorige preset" style="flex:none;padding:6px 10px">◀</button>
-      <select autocomplete="off" id="presetSel" style="flex:1;min-width:0"><option value="">— kies een preset —</option></select>
-      <button id="presetNext" title="Volgende preset" style="flex:none;padding:6px 10px">▶</button>
-    </div>
-    <div class="btnrow">
-      <button id="savePresetBtn">Opslaan…</button>
-      <button id="delPresetBtn">Verwijder</button>
-    </div>
-    <div class="btnrow">
-      <button id="exportPresetBtn">Export JSON</button>
-      <button id="importPresetBtn">Import JSON</button>
-    </div>
-    <input type="file" id="presetFile" accept=".json,application/json" style="display:none" />
-    <button id="shuffleBtn" style="width:100%;margin-top:8px">🎲 Shuffle — verras me</button>
-    <button id="resetBtn">↺ Reset naar origineel</button>
-    <div class="hint">Een preset bewaart alle settings, kleuren en shapes — ook geüploade SVGs.</div>
-  </div>
-
-  <div class="grp">
-    <h2>Source</h2>
+<div id="beeldPopover" class="popover" role="dialog" aria-label="Beeld kiezen">
+  <div class="pop-title">Beeld kiezen</div>
     <input type="file" id="media" accept="image/*,video/*" />
     <label>Formaat (foto wordt passend gecropt)</label>
     <select autocomplete="off" id="aspect" style="width:100%">
@@ -131,16 +240,72 @@
       Houd de muis ingedrukt om het origineel te zien.</div>
     <label>Unsplash</label>
     <div class="row">
-      <input type="text" id="unsQ" placeholder="zoek foto's…" style="flex:1;min-width:0;background:var(--ctrl);color:var(--txt);border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:inherit" />
+      <input type="text" id="unsQ" placeholder="zoek foto's…" style="flex:1;min-width:0" />
       <button id="unsBtn" style="flex:none">Zoek</button>
     </div>
     <div id="unsGrid"></div>
     <button id="unsMore" style="display:none;width:100%;margin-top:6px">Meer laden ▾</button>
     <div id="unsCredit" class="hint"></div>
-  </div>
+</div>
+<div id="exportPopover" class="popover" role="dialog" aria-label="Exporteren">
+  <div class="pop-title">Artwork exporteren</div>
+    <div class="btnrow" style="margin-top:0">
+      <select autocomplete="off" id="pngScale">
+        <optgroup label="Scherm">
+          <option value="1920">Scherm · 1920 px</option>
+          <option value="3840">Scherm · 3840 px (4K)</option>
+        </optgroup>
+        <optgroup label="Wallpaper (zet Formaat op de juiste ratio)">
+          <option value="wp:1920:1080:Desktop-1080p">Desktop 1080p · 1920×1080</option>
+          <option value="wp:2560:1440:Desktop-1440p">Desktop 1440p · 2560×1440</option>
+          <option value="wp:3840:2160:Desktop-4K">Desktop 4K · 3840×2160</option>
+          <option value="wp:5120:2194:Ultrawide">Ultrawide · 5120×2194</option>
+          <option value="wp:1080:2340:Telefoon">Telefoon · 1080×2340</option>
+          <option value="wp:1284:2778:Telefoon-XL">Telefoon XL · 1284×2778</option>
+        </optgroup>
+        <optgroup label="Print (A-formaat)">
+          <option value="a4-300">A4 · 300 dpi · 3508 px</option>
+          <option value="a3-300">A3 · 300 dpi · 4961 px</option>
+          <option value="a2-300" selected>A2 · 300 dpi · 7016 px</option>
+          <option value="a2-150">A2 · 150 dpi · 3508 px</option>
+          <option value="a1-300">A1 · 300 dpi · 9933 px</option>
+          <option value="a1-150">A1 · 150 dpi · 4967 px</option>
+        </optgroup>
+      </select>
+      <button id="exportPngBtn">Download PNG</button>
+    </div>
+    <button id="exportSvgBtn" style="width:100%;margin-top:6px">Download SVG (vector)</button>
+    <div class="hint">Zet <b>Formaat</b> (Beeld) op de juiste ratio en kies hier de exportmaat. SVG krijgt bij print echte mm-afmetingen.</div>
+</div>
+<div id="shapePopover" class="popover" role="dialog" aria-label="Vorm kiezen">
+  <div class="pop-title">Kies een vorm</div>
+  <div id="shapeGrid"></div>
+  <button id="shapeUploadBtn" style="width:100%;margin-top:8px">⬆ Eigen SVG uploaden…</button>
+</div>
 
+<div class="workspace">
+<div id="panel">
   <div class="grp">
-    <h2>Tone</h2>
+    <h2>Presets</h2>
+    <div class="row">
+      <button id="presetPrev" title="Vorige preset" class="navbtn">◀</button>
+      <select autocomplete="off" id="presetSel" style="flex:1;min-width:0"><option value="">— kies een preset —</option></select>
+      <button id="presetNext" title="Volgende preset" class="navbtn">▶</button>
+    </div>
+    <div class="btnrow">
+      <button id="savePresetBtn">Opslaan…</button>
+      <button id="delPresetBtn">Verwijder</button>
+    </div>
+    <div class="btnrow">
+      <button id="exportPresetBtn">Export JSON</button>
+      <button id="importPresetBtn">Import JSON</button>
+    </div>
+    <input type="file" id="presetFile" accept=".json,application/json" style="display:none" />
+    <button id="shuffleBtn" style="width:100%;margin-top:8px">🎲 Shuffle — verras me</button>
+    <div class="hint">Een preset bewaart alle settings, kleuren en shapes — ook geüploade SVGs.</div>
+  </div>
+  <div class="grp">
+    <h2>Beeldbewerking</h2>
     <div class="row"><label>Brightness</label><span class="val" id="brightV">0</span></div>
     <input type="range" id="bright" min="-100" max="100" value="0" />
     <div class="row"><label>Contrast</label><span class="val" id="contrastV">0</span></div>
@@ -190,9 +355,8 @@
     <div class="row"><label>Error-sterkte</label><span class="val" id="edStrengthV">100%</span></div>
     <input type="range" id="edStrength" min="0" max="150" value="100" />
   </div>
-
   <div class="grp">
-    <h2>Grid</h2>
+    <h2>Raster</h2>
     <div class="row"><label>Resolution</label><span class="val" id="gridV">64</span></div>
     <input type="range" id="grid" min="4" max="200" value="64" />
     <label>Grid type</label>
@@ -208,9 +372,8 @@
     <div class="row" style="margin-top:8px"><label>Transparant (PNG/SVG export)</label>
       <input type="checkbox" id="bgT" /></div>
   </div>
-
   <div class="grp">
-    <h2>Render mode</h2>
+    <h2>Render-modus</h2>
     <div class="seg" id="renderMode">
       <button data-v="shapes" class="on">Shapes</button>
       <button data-v="cmyk">CMYK print</button>
@@ -230,9 +393,8 @@
         Max-scale regelt de dotgrootte. Shape-slots worden genegeerd.</div>
     </div>
   </div>
-
   <div class="grp">
-    <h2>Color</h2>
+    <h2>Kleur</h2>
     <div class="seg" id="colorMode">
       <button data-v="tone" class="on">Per-tone</button>
       <button data-v="source">Bron</button>
@@ -246,9 +408,8 @@
       wordt naar de dichtstbijzijnde van je 7 slotkleuren gemapt (echte palet-quantisatie).
       Saturation werkt ook in CMYK.</div>
   </div>
-
   <div class="grp">
-    <h2>Shape mode</h2>
+    <h2>Vorm-modus</h2>
     <div class="seg" id="mode">
       <button data-v="tone" class="on">Per-tone (7)</button>
       <button data-v="single">Single</button>
@@ -263,9 +424,8 @@
       </select>
     </div>
   </div>
-
   <div class="grp">
-    <h2>Shape scale (midtone min → max)</h2>
+    <h2>Vormgrootte</h2>
     <div class="row"><label>Min</label><span class="val" id="sMinV">10%</span></div>
     <input type="range" id="sMin" min="0" max="150" value="10" />
     <div class="row"><label>Max</label><span class="val" id="sMaxV">100%</span></div>
@@ -279,9 +439,8 @@
     <div class="hint">Onder 100% laten overlappende vormen door elkaar zien — mooi voor inkt-wash,
       aquarel en bokeh (werkt in PNG &amp; SVG; niet in CMYK-modus).</div>
   </div>
-
   <div class="grp">
-    <h2>Rotation</h2>
+    <h2>Rotatie</h2>
     <div class="seg" id="rotMode">
       <button data-v="fixed" class="on">Fixed</button>
       <button data-v="flow">Flow (contour)</button>
@@ -293,69 +452,42 @@
     <div class="row" style="margin-top:8px"><label>Random 90° per cell</label>
       <input type="checkbox" id="rndRot" /></div>
   </div>
-
   <div class="grp">
-    <h2>Shapes &amp; kleuren — shadow → highlight</h2>
-    <div id="colorLock" class="lock" style="display:none"></div>
+    <h2>Vormen</h2>
     <label style="margin-top:0">Shape-set</label>
     <div class="row">
-      <button id="shapePrev" title="Vorige shape-set" style="flex:none;padding:6px 10px">◀</button>
+      <button id="shapePrev" title="Vorige shape-set" class="navbtn">◀</button>
       <select autocomplete="off" id="shapeSetSel" style="flex:1;min-width:0"></select>
-      <button id="shapeNext" title="Volgende shape-set" style="flex:none;padding:6px 10px">▶</button>
-      <button id="shapeDel" title="Verwijder eigen shape-set" style="flex:none;padding:6px 9px">✕</button>
+      <button id="shapeNext" title="Volgende shape-set" class="navbtn">▶</button>
+      <button id="shapeDel" title="Verwijder eigen shape-set" class="navbtn">✕</button>
     </div>
-    <label>Kleurenpalet</label>
+    <button id="saveShapeSet" style="width:100%;margin-top:6px">Shape-set opslaan…</button>
+    <div id="shapeList" style="margin-top:10px"></div>
+    <div class="hint">Klik een slot om een vorm te kiezen of een eigen SVG te uploaden.
+      Slot 1 = donkerste toon, slot 7 = lichtste.</div>
+  </div>
+  <div class="grp">
+    <h2>Kleuren</h2>
+    <div id="colorLock" class="lock" style="display:none"></div>
+    <label style="margin-top:0">Palet</label>
     <div class="row">
-      <button id="palPrev" title="Vorig palet" style="flex:none;padding:6px 10px">◀</button>
+      <button id="palPrev" title="Vorig palet" class="navbtn">◀</button>
       <select autocomplete="off" id="palSel" style="flex:1;min-width:0"></select>
-      <button id="palNext" title="Volgend palet" style="flex:none;padding:6px 10px">▶</button>
-      <button id="palDel" title="Verwijder eigen palet" style="flex:none;padding:6px 9px">✕</button>
+      <button id="palNext" title="Volgend palet" class="navbtn">▶</button>
+      <button id="palDel" title="Verwijder eigen palet" class="navbtn">✕</button>
     </div>
     <div class="btnrow">
-      <button id="saveShapeSet">Shapes opslaan…</button>
-      <button id="savePal">Kleuren opslaan…</button>
+      <button id="savePal">Palet opslaan…</button>
+      <button id="extractPal">🎨 Uit foto</button>
     </div>
-    <button id="extractPal" style="width:100%;margin-top:6px">🎨 Palet uit foto halen (7 kleuren)</button>
-    <div id="svgList" style="margin-top:10px"></div>
-    <div class="hint">Shape-set en palet staan los van elkaar — combineer elke vorm met elk palet.
-      Of zet per slot een eigen shape (⬆ = eigen SVG) en kleur. Slot 1 = donkerste, slot 7 = lichtste.</div>
-  </div>
-
-  <div class="grp">
-    <h2>Artwork export</h2>
-    <div class="btnrow" style="margin-top:0">
-      <select autocomplete="off" id="pngScale">
-        <optgroup label="Scherm">
-          <option value="1920">Scherm · 1920 px</option>
-          <option value="3840">Scherm · 3840 px (4K)</option>
-        </optgroup>
-        <optgroup label="Wallpaper (zet Formaat op de juiste ratio)">
-          <option value="wp:1920:1080:Desktop-1080p">Desktop 1080p · 1920×1080</option>
-          <option value="wp:2560:1440:Desktop-1440p">Desktop 1440p · 2560×1440</option>
-          <option value="wp:3840:2160:Desktop-4K">Desktop 4K · 3840×2160</option>
-          <option value="wp:5120:2194:Ultrawide">Ultrawide · 5120×2194</option>
-          <option value="wp:1080:2340:Telefoon">Telefoon · 1080×2340</option>
-          <option value="wp:1284:2778:Telefoon-XL">Telefoon XL · 1284×2778</option>
-        </optgroup>
-        <optgroup label="Print (A-formaat)">
-          <option value="a4-300">A4 · 300 dpi · 3508 px</option>
-          <option value="a3-300">A3 · 300 dpi · 4961 px</option>
-          <option value="a2-300" selected>A2 · 300 dpi · 7016 px</option>
-          <option value="a2-150">A2 · 150 dpi · 3508 px</option>
-          <option value="a1-300">A1 · 300 dpi · 9933 px</option>
-          <option value="a1-150">A1 · 150 dpi · 4967 px</option>
-        </optgroup>
-      </select>
-      <button id="exportPngBtn">Download PNG</button>
-    </div>
-    <button id="exportSvgBtn" style="width:100%;margin-top:6px">Download SVG (vector)</button>
-    <div class="hint">Zet <b>Formaat</b> (Source) op de bijpassende ratio — A-papier voor print,
-      Desktop/Telefoon voor wallpaper — en kies hier de exportmaat. SVG krijgt bij print
-      echte mm-afmetingen mee. Een waarschuwing verschijnt als de uitsnede niet past.</div>
+    <div id="colorList" style="margin-top:10px"></div>
+    <div class="hint">Per slot een kleur, of kies een heel palet. Shape-set en palet staan los —
+      combineer elke vorm met elk palet.</div>
   </div>
 </div>
 
-<div id="stage"><canvas id="out"></canvas><div id="zoomBadge"></div></div>
+<div id="stage"><canvas id="out"></canvas><div id="zoomBadge"></div><div id="emptyHint" class="stage-hint">Klik op <b>Beeld</b> in de balk om te beginnen — of sleep een afbeelding hierheen.</div></div>
+</div>
 
 <script src="unsplash-key.js"></script>
 <script>
@@ -505,7 +637,12 @@ function hash2(x,y,s){
   h=Math.imul(h^(h>>>13),0x5bd1e995)>>>0;
   return ((h^(h>>>15))>>>0)/4294967295;
 }
+let _lutCache=null, _lutKey='';
 function toneLUT(cfg){
+  // tone curve only depends on bright/contrast/gamma/hl — cache across renders so dragging
+  // unrelated sliders (grid, gap, rotation…) doesn't rebuild a 256-entry LUT every frame
+  const key=(cfg.bright||0)+'|'+(cfg.contrast||0)+'|'+(cfg.gamma||100)+'|'+(cfg.hl||0);
+  if(_lutKey===key && _lutCache) return _lutCache;
   const b=(cfg.bright||0)/100, c=1+(cfg.contrast||0)/100, g=Math.max(0.05,(cfg.gamma||100)/100);
   const hl=(cfg.hl||0)/100;
   const lut=new Float32Array(256);
@@ -517,6 +654,7 @@ function toneLUT(cfg){
     if(hl) t=t + hl*(1-t)*t;           // highlights compression: soft shoulder toward white
     lut[i]=Math.min(1,Math.max(0,t));
   }
+  _lutKey=key; _lutCache=lut;
   return lut;
 }
 // separable box blur on the small RGBA grid buffer (radius r in cells), in place
@@ -689,9 +827,15 @@ function drawCells(ctx,cell,cols,rows,rowH,cfg,cache,cells,tmp,tctx,RAST){
       let ang=(cells.A?cells.A[i]:0)+(cfg.rot||0);
       if(cfg.rndRot)ang+=Math.floor(hash2(x,y,3)*4)*90;
       if(cfg.rotJit)ang+=(hash2(x,y,11)-0.5)*2*cfg.rotJit;
+      const px=(x+0.5+off)*cell;
+      // fast path: no rotation, full opacity, per-tone colour → skip save/translate/restore
+      if(ang===0 && alpha===1 && !(cells.C&&shp.mask)){
+        ctx.drawImage(shp.canvas, px-sc/2, cy-sc/2, sc, sc);
+        continue;
+      }
       ctx.save();
       if(alpha<1)ctx.globalAlpha=alpha;
-      ctx.translate((x+0.5+off)*cell,cy);
+      ctx.translate(px,cy);
       if(ang)ctx.rotate(ang*Math.PI/180);
       if(cells.C&&shp.mask){
         tctx.globalCompositeOperation='source-over';
@@ -1200,14 +1344,19 @@ function renderTo(ctx, targetCanvas, maxDim){
 }
 
 let comparing = false;   // hold mouse on canvas → show source
+let dirty = true;        // render-on-demand: only repaint when something actually changed
+function requestRender(){ dirty = true; }
 function render(){
-  if (media){
+  // video and the compare-hold gesture need a live frame each tick; otherwise repaint
+  // only when a control/preset/view/media change marked the canvas dirty.
+  if (media && (dirty || isVideo || comparing)){
     if (comparing){
       const [cx,cy,cw,ch]=cropRect();
       if (cw&&ch) octx.drawImage(media, cx,cy,cw,ch, 0,0,out.width,out.height);
     } else {
       renderTo(octx, out, 960);
     }
+    if (!isVideo && !comparing) dirty = false;
   }
   requestAnimationFrame(render);
 }
@@ -1220,6 +1369,7 @@ function applyView(){
   zoomBadge.style.display = z>1.01 ? 'block' : 'none';
   zoomBadge.textContent = 'zoom '+z.toFixed(1)+'× · dubbelklik = reset';
   out.style.cursor = pannable() ? 'grab' : 'default';
+  requestRender();
 }
 out.title='Scroll = inzoomen · sleep = verschuiven · ingedrukt houden = origineel · dubbelklik = reset';
 function resetView(){ S.cropZoom=1; setOffset(0,0); applyView(); }
@@ -1261,6 +1411,7 @@ out.addEventListener('pointermove', e=>{
     const ddx = pdown.slX>0 ? (pdown.cw*dx)/(pdown.w*pdown.slX)*200 : 0;
     const ddy = pdown.slY>0 ? (pdown.ch*dy)/(pdown.h*pdown.slY)*200 : 0;
     setOffset(pdown.ox - ddx, pdown.oy - ddy);
+    requestRender();
   }
 });
 function endGesture(){
@@ -1281,10 +1432,10 @@ function loadFile(f){
   if (f.type.startsWith('video')){
     const v=document.createElement('video');
     v.src=url; v.loop=true; v.muted=true; v.playsInline=true;
-    v.onloadeddata=()=>{ media=v; isVideo=true; v.play(); };
+    v.onloadeddata=()=>{ media=v; isVideo=true; v.play(); requestRender(); };
   } else {
     const img=new Image();
-    img.onload=()=>{ media=img; isVideo=false; };
+    img.onload=()=>{ media=img; isVideo=false; requestRender(); };
     img.src=url;
   }
 }
@@ -1375,7 +1526,7 @@ function unsLoad(ph){
   const img = new Image();
   img.crossOrigin = 'anonymous';   // CORS-clean → canvas blijft exporteerbaar
   img.onload = ()=>{
-    media = img; isVideo = false; setOffset(0,0); S.cropZoom=1;
+    media = img; isVideo = false; setOffset(0,0); S.cropZoom=1; requestRender();
     mediaName = slugify(ph.alt_description || ph.user.name) || 'unsplash';
     document.getElementById('unsCredit').innerHTML =
       'Foto: <a href="'+ph.user.links.html+'?utm_source=svg_dither_filter&utm_medium=referral" target="_blank">'
@@ -1397,6 +1548,7 @@ function bindSeg(id, key, after){
     [...e.currentTarget.children].forEach(c=>c.classList.remove('on'));
     b.classList.add('on'); S[key]=b.dataset.v;
     after&&after();
+    requestRender();
   });
 }
 document.getElementById('aspect').addEventListener('change', e=>{ S.aspect=e.target.value; applyView(); });
@@ -1414,10 +1566,10 @@ bindSeg('renderMode','renderMode', ()=>{ document.getElementById('cmykWrap').sty
 /* CMYK controls */
 document.getElementById('cmykShape').innerHTML = shapeOptionsHTML(false);
 document.getElementById('cmykShape').addEventListener('change', async e=>{
-  S.cmykShape=e.target.value; await buildInkCache();
+  S.cmykShape=e.target.value; await buildInkCache(); requestRender();
 });
 [['chC','cmykC'],['chM','cmykM'],['chY','cmykY'],['chK','cmykK']].forEach(([id,key])=>{
-  document.getElementById(id).addEventListener('change', e=>S[key]=e.target.checked);
+  document.getElementById(id).addEventListener('change', e=>{S[key]=e.target.checked; requestRender();});
 });
 
 const RANGES = [
@@ -1431,55 +1583,99 @@ const RANGES = [
 ];
 RANGES.forEach(([id,key,fmt])=>{
   const el=document.getElementById(id), v=document.getElementById(id+'V');
-  const upd=()=>{ S[key]=+el.value; if(v)v.textContent=fmt(el.value); };
+  const upd=()=>{ S[key]=+el.value; if(v)v.textContent=fmt(el.value); requestRender(); };
   el.addEventListener('input',upd); upd();
 });
 
-document.getElementById('bg').addEventListener('input',e=>S.bg=e.target.value);
-document.getElementById('invert').addEventListener('change',e=>S.invert=e.target.checked);
-document.getElementById('rndRot').addEventListener('change',e=>S.rndRot=e.target.checked);
-document.getElementById('bgT').addEventListener('change',e=>S.bgT=e.target.checked);
-document.getElementById('opacityTone').addEventListener('change',e=>S.opacityTone=e.target.checked);
-document.getElementById('serpentine').addEventListener('change',e=>S.serpentine=e.target.checked);
+document.getElementById('bg').addEventListener('input',e=>{S.bg=e.target.value; requestRender();});
+document.getElementById('invert').addEventListener('change',e=>{S.invert=e.target.checked; requestRender();});
+document.getElementById('rndRot').addEventListener('change',e=>{S.rndRot=e.target.checked; requestRender();});
+document.getElementById('bgT').addEventListener('change',e=>{S.bgT=e.target.checked; requestRender();});
+document.getElementById('opacityTone').addEventListener('change',e=>{S.opacityTone=e.target.checked; requestRender();});
+document.getElementById('serpentine').addEventListener('change',e=>{S.serpentine=e.target.checked; requestRender();});
 document.getElementById('edgeBoost').addEventListener('change',e=>{ S.edgeBoost=e.target.checked;
-  document.getElementById('edgeWrap').style.display=S.edgeBoost?'block':'none'; });
-document.getElementById('singleSel').addEventListener('change',e=>S.single=+e.target.value);
-document.getElementById('ditherSel').addEventListener('change',e=>S.dither=e.target.value);
+  document.getElementById('edgeWrap').style.display=S.edgeBoost?'block':'none'; requestRender(); });
+document.getElementById('singleSel').addEventListener('change',e=>{S.single=+e.target.value; requestRender();});
+document.getElementById('ditherSel').addEventListener('change',e=>{S.dither=e.target.value; requestRender();});
 
-/* ---------- 7 shape slots ---------- */
-const list=document.getElementById('svgList');
-const shapeOptions = shapeOptionsHTML(true);
+/* ---------- 7 slots: visual shape picker + colour swatch ---------- */
+const NS_FILL = NS.replace('<svg ', '<svg fill="currentColor" ');
+function shapeSVGMarkup(key){
+  const s=SHAPES[key]; if(!s) return '';
+  return NS_FILL + s.svg.slice(NS.length);   // real vector, tinted to currentColor
+}
+const shapeListEl = document.getElementById('shapeList');
+const colorListEl = document.getElementById('colorList');
 S.slots.forEach((slot,i)=>{
-  const row=document.createElement('div'); row.className='svgrow';
-  row.innerHTML=`<span>${i+1} · ${TONE_LABELS[i]}</span>
-    <select data-i="${i}" class="shapeSel">${shapeOptions}</select>
-    <button class="up" data-i="${i}" title="Upload eigen SVG">⬆</button>
-    <input type="file" accept=".svg,image/svg+xml" data-i="${i}" style="display:none" />
+  const srow=document.createElement('div'); srow.className='shaperow';
+  srow.innerHTML=`<span>${i+1} · ${TONE_LABELS[i]}</span>
+    <button class="shapepick" data-i="${i}"><span class="thumb"></span><span class="nm"></span></button>
+    <input type="file" accept=".svg,image/svg+xml" data-i="${i}" style="display:none" />`;
+  shapeListEl.appendChild(srow);
+  const crow=document.createElement('div'); crow.className='colorrow';
+  crow.innerHTML=`<span>${i+1} · ${TONE_LABELS[i]}</span>
     <input type="color" value="${slot.color}" data-i="${i}" />`;
-  list.appendChild(row);
+  colorListEl.appendChild(crow);
 });
-list.addEventListener('click', e=>{
-  const b=e.target.closest('button.up'); if(!b) return;
-  b.parentElement.querySelector('input[type=file]').click();
+
+/* shared shape-chooser popover (a real-thumbnail grid, no more ASCII) */
+const shapePop = document.getElementById('shapePopover');
+const shapeGrid = document.getElementById('shapeGrid');
+shapeGrid.innerHTML = Object.values(SHAPE_GROUPS).flat().map(k=>
+  `<button class="shapecell" data-k="${k}" title="${SHAPES[k].label.replace(/^\S+\s/,'')}">${shapeSVGMarkup(k)}</button>`).join('');
+let activeShapeSlot = -1;
+function openShapePopover(btn, idx){
+  document.querySelectorAll('.popover.open').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.barbtn.active').forEach(b=>b.classList.remove('active'));
+  activeShapeSlot = idx;
+  const cur = S.slots[idx] && S.slots[idx].shape;
+  shapeGrid.querySelectorAll('.shapecell').forEach(c=>c.classList.toggle('on', c.dataset.k===cur));
+  const r=btn.getBoundingClientRect();
+  shapePop.style.left = Math.min(r.right+6, window.innerWidth-300) + 'px';
+  shapePop.style.top  = Math.max(56, Math.min(r.top, window.innerHeight-330)) + 'px';
+  shapePop.classList.add('open');
+}
+shapeListEl.addEventListener('click', e=>{
+  const b=e.target.closest('.shapepick'); if(!b || b.disabled) return;
+  e.stopPropagation(); openShapePopover(b, +b.dataset.i);
 });
-list.addEventListener('change', async e=>{
-  const i=+e.target.dataset.i;
-  if (e.target.type==='file'){
-    const f=e.target.files[0]; if(!f) return;
-    S.slots[i].svg = await f.text();
-    S.slots[i].shape = 'custom';
-    syncSlotRow(i);
-  } else if (e.target.classList.contains('shapeSel')){
-    S.slots[i].shape = e.target.value;
-    syncSlotRow(i);
-  } else { S.slots[i].color = e.target.value; }
-  await buildCache(i);
+shapePop.addEventListener('click', e=>e.stopPropagation());
+shapeGrid.addEventListener('click', async e=>{
+  const c=e.target.closest('.shapecell'); if(!c) return;
+  if(activeShapeSlot>=0){
+    S.slots[activeShapeSlot].shape=c.dataset.k; S.slots[activeShapeSlot].svg=null;
+    syncSlotRow(activeShapeSlot); await buildCache(activeShapeSlot);
+  }
+  shapePop.classList.remove('open'); requestRender();
+});
+document.getElementById('shapeUploadBtn').addEventListener('click', e=>{
+  e.stopPropagation();
+  if(activeShapeSlot>=0) shapeListEl.querySelector(`input[type=file][data-i="${activeShapeSlot}"]`).click();
+  shapePop.classList.remove('open');
+});
+shapeListEl.addEventListener('change', async e=>{
+  if(e.target.type!=='file') return;
+  const i=+e.target.dataset.i; const f=e.target.files[0]; if(!f) return;
+  S.slots[i].svg = await f.text(); S.slots[i].shape='custom';
+  syncSlotRow(i); await buildCache(i); requestRender();
+});
+colorListEl.addEventListener('change', async e=>{
+  if(e.target.type!=='color') return;
+  const i=+e.target.dataset.i; S.slots[i].color=e.target.value;
+  await buildCache(i); requestRender();
 });
 function syncSlotRow(i){
-  const row = list.children[i], slot = S.slots[i];
-  row.querySelector('.shapeSel').value = slot.shape;
-  row.querySelector('input[type=color]').value = slot.color;
-  row.querySelector('.up').classList.toggle('has', slot.shape==='custom' && !!slot.svg);
+  const slot=S.slots[i];
+  const sp=shapeListEl.children[i].querySelector('.shapepick');
+  const thumb=sp.querySelector('.thumb'), nm=sp.querySelector('.nm');
+  if(slot.shape==='custom'){
+    thumb.innerHTML = slot.svg || '⬆'; nm.textContent='Eigen SVG'; sp.classList.add('custom');
+  } else {
+    thumb.innerHTML = shapeSVGMarkup(slot.shape);
+    nm.textContent = (SHAPES[slot.shape] && SHAPES[slot.shape].label || '').replace(/^\S+\s/,'');
+    sp.classList.remove('custom');
+  }
+  colorListEl.children[i].querySelector('input[type=color]').value = slot.color;
 }
 
 /* ---------- presets ---------- */
@@ -1502,6 +1698,7 @@ async function applyPreset(cfg){
   });
   syncUI();
   await rebuildAll();
+  requestRender();
 }
 function syncUI(){
   document.getElementById('aspect').value = S.aspect;
@@ -1551,11 +1748,11 @@ function refreshColorLock(){
     : '';
   lock.style.display = colorsOff ? 'block' : 'none';
   // kleur-controls
-  list.querySelectorAll('input[type=color]').forEach(c=>c.disabled=colorsOff);
-  ['palSel','palPrev','palNext','palDel','savePal'].forEach(id=>{
+  colorListEl.querySelectorAll('input[type=color]').forEach(c=>c.disabled=colorsOff);
+  ['palSel','palPrev','palNext','palDel','savePal','extractPal'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.disabled=colorsOff; });
   // shape-controls (alleen uit in CMYK)
-  list.querySelectorAll('.shapeSel,.up').forEach(el=>el.disabled=shapesOff);
+  shapeListEl.querySelectorAll('.shapepick').forEach(el=>el.disabled=shapesOff);
   ['shapeSetSel','shapePrev','shapeNext','shapeDel','saveShapeSet'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.disabled=shapesOff; });
 }
@@ -1579,15 +1776,22 @@ function refreshPresetList(keep){
   presetSel.value = keep || '';
 }
 presetSel.addEventListener('change', ()=>{
-  const v = presetSel.value; if(!v) return;
+  const v = presetSel.value; if(!v || v==='__shuffle') return;
   const name = v.slice(2);
   const cfg = v[0]==='b' ? BUILTIN_PRESETS[name] : customPresets()[name];
   if (cfg) applyPreset(cfg);
 });
+// Shuffle bouwt een nieuwe, niet-opgeslagen look — toon dat in de dropdown i.p.v. 'm leeg te laten
+function markShuffle(){
+  let o = presetSel.querySelector('option[value="__shuffle"]');
+  if(!o){ o=document.createElement('option'); o.value='__shuffle'; o.hidden=true;
+          o.textContent='🎲 Verrassing (niet opgeslagen)'; presetSel.appendChild(o); }
+  presetSel.value='__shuffle';
+}
 
 /* ◀ ▶ — stap door alle presets heen, direct toegepast */
 function stepSelect(sel, dir, fire){
-  const opts=[...sel.querySelectorAll('option')].map(o=>o.value).filter(v=>v);
+  const opts=[...sel.querySelectorAll('option')].map(o=>o.value).filter(v=>v && v!=='__shuffle');
   if (!opts.length) return;
   let i = opts.indexOf(sel.value);
   if (i===-1) i = dir>0 ? -1 : 0;
@@ -1678,7 +1882,7 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
       cmykY:Math.random()<0.7, cmykK:true,
       slots:mkSlots(shapes,colors),
     });
-    presetSel.value='';
+    markShuffle();
     return;
   }
   applyPreset({
@@ -1697,7 +1901,7 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
     contrast:Math.round(rnd(-10,25)),
     slots:mkSlots(shapes,colors),
   });
-  presetSel.value='';
+  markShuffle();
 });
 
 /* ---------- shape-sets & kleurpaletten — twee losse assen ----------
@@ -1752,10 +1956,12 @@ async function applyShapeSet(set){
     syncSlotRow(i);
   });
   await rebuildAll();
+  requestRender();
 }
 async function applyPalette(cols){
   cols.slice(0,7).forEach((c,i)=>{ S.slots[i].color=c; syncSlotRow(i); });
   await rebuildAll();
+  requestRender();
 }
 // median-cut: haal 7 representatieve kleuren uit de huidige foto-uitsnede
 function extract7FromImage(){
@@ -2044,6 +2250,51 @@ applyTheme(localStorage.getItem('ditherTheme') || 'dark');
 /* ---------- go ---------- */
 syncUI();
 rebuildAll().then(()=>requestAnimationFrame(render));
+
+/* ---- UI v2.8: top-bar popovers, value-bump, empty-stage hint ---- */
+(function(){
+  // value-bump (val id = range id + 'V')
+  document.querySelectorAll('input[type=range]').forEach(r=>{
+    const v = document.getElementById(r.id+'V'); if(!v) return; let t;
+    r.addEventListener('input', ()=>{ v.classList.add('bumped'); clearTimeout(t);
+      t = setTimeout(()=>v.classList.remove('bumped'), 400); });
+  });
+
+  // ---- top-bar popovers (Beeld / Export) ----
+  function closeAll(){
+    document.querySelectorAll('.popover.open').forEach(p=>p.classList.remove('open'));
+    document.querySelectorAll('.barbtn.active').forEach(b=>b.classList.remove('active'));
+  }
+  function popover(btn, pop, align){
+    function place(){
+      const r = btn.getBoundingClientRect();
+      pop.style.top = (r.bottom + 7) + 'px';
+      if(align==='right'){ pop.style.right = (window.innerWidth - r.right) + 'px'; pop.style.left='auto'; }
+      else { pop.style.left = Math.max(8, r.left) + 'px'; pop.style.right='auto'; }
+    }
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const willOpen = !pop.classList.contains('open');
+      closeAll();
+      if(willOpen){ place(); pop.classList.add('open'); btn.classList.add('active'); }
+    });
+    pop.addEventListener('click', e=> e.stopPropagation());
+  }
+  popover(document.getElementById('beeldBtn'),  document.getElementById('beeldPopover'),  'left');
+  popover(document.getElementById('exportBtn'), document.getElementById('exportPopover'), 'right');
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeAll(); });
+
+  // ---- empty-stage hint: hide as soon as an image arrives by any route ----
+  const eh = document.getElementById('emptyHint');
+  function gotImage(){ if(eh) eh.style.display='none'; closeAll(); }
+  document.getElementById('media').addEventListener('change', gotImage);
+  document.getElementById('stage').addEventListener('drop', gotImage);
+  document.addEventListener('paste', gotImage);
+  const ug = document.getElementById('unsGrid');
+  if(ug) ug.addEventListener('click', e=>{ if(e.target.tagName==='IMG') gotImage(); });
+})();
+
 </script>
 </body>
 </html>
