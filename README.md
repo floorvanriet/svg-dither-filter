@@ -232,8 +232,12 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ## Credits
 
-Original idea by [antoncreations](https://www.instagram.com/antoncreations/).
+This is a **fork of [mgmaik/svg-dither-filter](https://github.com/mgmaik/svg-dither-filter)**
+by MG Productions — the original SVG dither tool. All credit for the core idea and
+engine goes to them; this fork adds the v2.8 interface (app bar, edit rail, visual
+shape picker) and the render-on-demand performance work. Original idea by
+[antoncreations](https://www.instagram.com/antoncreations/).
 
 ## License
 
-[MIT](LICENSE) © MG Productions
+[MIT](LICENSE) © MG Productions (original) — fork retains the MIT license.
