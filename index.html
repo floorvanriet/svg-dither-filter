@@ -30,7 +30,7 @@
                         font-family:ui-monospace,"SF Mono",Menlo,monospace; }
   .appbar .brand .ver a { color:var(--acc); text-decoration:none; }
   .appbar .spacer { flex:1; }
-  .barbtn { display:inline-flex; align-items:center; gap:7px; height:30px; padding:0 13px;
+  .barbtn { display:inline-flex; align-items:center; gap:7px; height:28px; padding:0 12px;
             background:var(--raised); color:var(--txt); border:1px solid var(--line); border-radius:7px;
             font-size:12px; cursor:pointer; }
   .barbtn:hover { border-color:var(--acc); }
@@ -40,16 +40,26 @@
   .barbtn.primary { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:600; }
   .barbtn.primary:hover { background:var(--acc-press); border-color:var(--acc-press); }
   .barbtn.primary .gly { color:rgba(255,255,255,.85); }
+  /* format/crop picker living in the app bar — shows the chosen option in the control */
+  .barsel { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 4px 0 10px;
+            background:var(--raised); border:1px solid var(--line); border-radius:7px; }
+  .barsel:hover { border-color:var(--acc); }
+  .barsel:focus-within { border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-soft); }
+  .barsel .gly { color:var(--mut); font-size:12px; line-height:1; flex:none; }
+  .barsel select { height:24px; border:0; background-color:transparent; border-radius:0;
+                   padding:0 22px 0 0; max-width:200px; font-size:12px; color:var(--txt); }
+  .barsel select:hover { border-color:transparent; }
+  .barsel select:focus-visible { box-shadow:none; }
   .iconbtn { background:transparent; border:1px solid transparent; color:var(--mut);
-             width:30px; height:30px; padding:0; border-radius:7px; font-size:14px; line-height:1;
+             width:28px; height:28px; padding:0; border-radius:7px; font-size:14px; line-height:1;
              display:flex; align-items:center; justify-content:center; cursor:pointer; }
   .iconbtn:hover { border-color:var(--line); color:var(--txt); background:var(--raised-hover); }
   #resetBtn.iconbtn:hover { color:var(--warn); border-color:var(--warn-line); }
 
   /* ---- workspace: rail + stage ---- */
   .workspace { flex:1; display:flex; min-height:0; }
-  #panel { width:340px; flex:none; background:var(--panel); border-right:1px solid var(--line);
-           overflow-y:auto; padding:0 16px 22px; }
+  #panel { width:300px; flex:none; background:var(--panel); border-right:1px solid var(--line);
+           overflow-y:auto; padding:0 13px 18px; }
 
   /* ---- popovers under the app bar ---- */
   .popover { position:fixed; z-index:30; display:none; width:330px; max-height:78vh; overflow-y:auto;
@@ -64,23 +74,21 @@
                font-weight:600; margin:0 0 11px; }
 
   /* ---- flat sections: everything always visible, hairline dividers ---- */
-  #panel > .grp { border:0; border-radius:0; padding:0; margin:0; }
-  #panel > .grp + .grp { margin-top:20px; }
+  #panel > .grp { border:0; border-radius:0; padding:0 0 12px; margin:0 0 12px;
+                  border-bottom:1px solid var(--line); }
+  #panel > .grp:last-child { border-bottom:0; margin-bottom:0; }
   .grp h2 { position:sticky; top:0; z-index:3; background:var(--panel);
-            font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--mut);
-            margin:0; padding:13px 0 11px; font-weight:600; display:flex; align-items:center; gap:8px; }
-  .grp h2::before { content:''; width:3px; height:11px; flex:none; border-radius:1px;
-                    background:var(--acc); opacity:.55; }
-  #panel > .grp:first-child h2::before { opacity:1; }
+            font-size:12px; font-weight:650; letter-spacing:0; text-transform:none; color:var(--txt);
+            margin:0 0 2px; padding:10px 0 8px; }
 
   h1 { font-size:13px; margin:0; letter-spacing:.14em; font-weight:650; }
 
-  label { display:block; margin:9px 0 4px; color:var(--mut); font-size:11px; }
+  label { display:block; margin:7px 0 3px; color:var(--mut); font-size:11px; }
   .row { display:flex; align-items:center; gap:8px; }
   .row label { margin:0; flex:1; }
 
   input[type=range] { width:100%; -webkit-appearance:none; appearance:none; background:transparent;
-                      height:18px; cursor:pointer; accent-color:var(--acc); }
+                      height:16px; cursor:pointer; accent-color:var(--acc); }
   input[type=range]::-webkit-slider-runnable-track { height:3px; background:var(--line); border-radius:2px; }
   input[type=range]::-moz-range-track { height:3px; background:var(--line); border-radius:2px; }
   input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:13px; height:13px;
@@ -115,7 +123,7 @@
 
   /* unified control system — one height (28px), one type size (12px), one radius (Figma-tight) */
   select, button, input[type=text] {
-        height:28px; font-size:12px; line-height:1; padding:0 10px;
+        height:26px; font-size:12px; line-height:1; padding:0 9px;
         background:var(--raised); color:var(--txt); border:1px solid var(--line); border-radius:6px; }
   button { display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; }
   select { -webkit-appearance:none; appearance:none; padding:0 26px 0 10px;
@@ -126,14 +134,14 @@
   input[type=text] { background:var(--ctrl); }
   button:hover { border-color:var(--acc); }
   button:active { transform:translateY(1px); }
-  .navbtn { flex:none; width:28px; height:28px; padding:0; font-size:12px; }
+  .navbtn { flex:none; width:26px; height:26px; padding:0; font-size:12px; }
   select:focus-visible, button:focus-visible, input:focus-visible {
         outline:none; box-shadow:0 0 0 3px var(--acc-soft); border-color:var(--acc); }
   select:disabled, button:disabled, input:disabled { opacity:.38; cursor:not-allowed; }
 
   .lock { color:var(--warn); font-size:10px; margin:2px 0 8px; }
 
-  .seg { display:flex; height:28px; gap:0; padding:2px; background:var(--bg); border:1px solid var(--line);
+  .seg { display:flex; height:26px; gap:0; padding:2px; background:var(--bg); border:1px solid var(--line);
          border-radius:7px; }
   .seg button { flex:1; height:auto; padding:0 6px; font-size:12px;
                 border:1px solid transparent; border-radius:5px; background:transparent; color:var(--mut); }
@@ -148,29 +156,29 @@
   .val.bumped { background:var(--acc-soft); color:var(--acc); }
 
   /* per-slot shape & colour pickers (shadow → highlight) */
-  .shaperow, .colorrow { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
-  .shaperow > span, .colorrow > span { width:58px; font-size:10px; color:var(--mut); flex:none; line-height:1.2; }
-  .shapepick { flex:1; min-width:0; height:28px; display:inline-flex; align-items:center; gap:8px;
+  .shaperow, .colorrow { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .shaperow > span, .colorrow > span { width:54px; font-size:10px; color:var(--mut); flex:none; line-height:1.2; }
+  .shapepick { flex:1; min-width:0; height:26px; display:inline-flex; align-items:center; gap:8px;
                justify-content:flex-start; padding:0 8px; background:var(--raised);
                border:1px solid var(--line); border-radius:6px; cursor:pointer; }
   .shapepick:hover { border-color:var(--acc); }
-  .shapepick .thumb { width:17px; height:17px; flex:none; color:var(--txt); display:flex; }
+  .shapepick .thumb { width:18px; height:18px; flex:none; color:var(--txt); display:flex; }
   .shapepick .thumb svg { width:100%; height:100%; display:block; }
   .shapepick .nm { font-size:12px; color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .shapepick.custom .nm { color:var(--acc); }
-  .colorrow input[type=color] { flex:1; min-width:0; width:auto; height:28px; }
+  .colorrow input[type=color] { flex:1; min-width:0; width:auto; height:26px; }
   #colorList { position:relative; padding-left:13px; }
   #colorList:not(:empty)::before { content:''; position:absolute; left:0; top:1px; bottom:6px; width:3px;
         border-radius:2px; background:linear-gradient(180deg,#0a0a0a 0%,#3a3a3a 22%,#7d7d7d 50%,#c4c4c4 78%,#f4f4f4 100%);
         box-shadow:0 0 0 1px var(--line); }
-  /* shape chooser popover grid */
-  #shapePopover { width:290px; }
-  #shapeGrid { display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+  /* shape chooser popover grid — big, readable thumbnails */
+  #shapePopover { width:330px; }
+  #shapeGrid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
   .shapecell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; color:var(--txt);
-               background:var(--raised); border:1px solid var(--line); border-radius:6px; cursor:pointer; }
+               background:var(--raised); border:1px solid var(--line); border-radius:7px; cursor:pointer; }
   .shapecell:hover { border-color:var(--acc); background:var(--raised-hover); }
   .shapecell.on { border-color:var(--acc); box-shadow:0 0 0 1px var(--acc); }
-  .shapecell svg { width:68%; height:68%; display:block; }
+  .shapecell svg { width:82%; height:82%; display:block; }
 
   .hint { color:var(--faint); font-size:10px; margin-top:6px; line-height:1.5; }
   #unsGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-top:8px;
@@ -212,17 +220,8 @@
 <header class="appbar">
   <div class="brand"><h1>SVG DITHER FILTER</h1><span class="ver">v2.8 · <a href="index-v1.html">v1</a></span></div>
   <button id="beeldBtn" class="barbtn"><span class="gly">▦</span>Beeld</button>
-  <div class="spacer"></div>
-  <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
-  <button id="resetBtn" class="iconbtn" title="Reset naar origineel">↺</button>
-  <button id="themeBtn" class="iconbtn" title="Licht / donker thema">🌙</button>
-</header>
-
-<div id="beeldPopover" class="popover" role="dialog" aria-label="Beeld kiezen">
-  <div class="pop-title">Beeld kiezen</div>
-    <input type="file" id="media" accept="image/*,video/*" />
-    <label>Formaat (foto wordt passend gecropt)</label>
-    <select autocomplete="off" id="aspect" style="width:100%">
+  <label class="barsel" title="Formaat / uitsnede"><span class="gly">⛶</span>
+    <select autocomplete="off" id="aspect">
       <option value="orig">Origineel — geen uitsnede</option>
       <optgroup label="Print">
         <option value="square">Vierkant 1:1</option>
@@ -235,6 +234,16 @@
         <option value="tall">Telefoon 9:19.5</option>
       </optgroup>
     </select>
+  </label>
+  <div class="spacer"></div>
+  <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
+  <button id="resetBtn" class="iconbtn" title="Reset naar origineel">↺</button>
+  <button id="themeBtn" class="iconbtn" title="Licht / donker thema">🌙</button>
+</header>
+
+<div id="beeldPopover" class="popover" role="dialog" aria-label="Beeld kiezen">
+  <div class="pop-title">Beeld kiezen</div>
+    <input type="file" id="media" accept="image/*,video/*" />
     <div class="hint">Sleep een bestand op het canvas of plak (⌘V) een afbeelding.
       Bij een uitsnede: sleep de afbeelding op het canvas om 'm te verschuiven (dubbelklik = centreren).
       Houd de muis ingedrukt om het origineel te zien.</div>
@@ -380,7 +389,7 @@
     </div>
     <div id="cmykWrap" style="display:none">
       <label>Dot shape</label>
-      <select autocomplete="off" id="cmykShape" style="width:100%"></select>
+      <button id="cmykShapeBtn" class="shapepick" style="width:100%"><span class="thumb"></span><span class="nm"></span></button>
       <label>Kanalen (uitvinken = duotone/tritone)</label>
       <div class="row" style="gap:14px;margin-top:4px">
         <label style="flex:none;margin:0"><input type="checkbox" id="chC" checked /> C</label>
@@ -1564,10 +1573,7 @@ bindSeg('colorMode','colorMode', ()=>{ document.getElementById('satWrap').style.
 bindSeg('renderMode','renderMode', ()=>{ document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none'; refreshColorLock(); });
 
 /* CMYK controls */
-document.getElementById('cmykShape').innerHTML = shapeOptionsHTML(false);
-document.getElementById('cmykShape').addEventListener('change', async e=>{
-  S.cmykShape=e.target.value; await buildInkCache(); requestRender();
-});
+/* CMYK dot-shape uses the same visual shape picker (wired after the slot block below) */
 [['chC','cmykC'],['chM','cmykM'],['chY','cmykY'],['chK','cmykK']].forEach(([id,key])=>{
   document.getElementById(id).addEventListener('change', e=>{S[key]=e.target.checked; requestRender();});
 });
@@ -1628,8 +1634,9 @@ function openShapePopover(btn, idx){
   document.querySelectorAll('.popover.open').forEach(p=>p.classList.remove('open'));
   document.querySelectorAll('.barbtn.active').forEach(b=>b.classList.remove('active'));
   activeShapeSlot = idx;
-  const cur = S.slots[idx] && S.slots[idx].shape;
+  const cur = idx>=0 ? (S.slots[idx] && S.slots[idx].shape) : S.cmykShape;
   shapeGrid.querySelectorAll('.shapecell').forEach(c=>c.classList.toggle('on', c.dataset.k===cur));
+  document.getElementById('shapeUploadBtn').style.display = idx>=0 ? '' : 'none';  // cmyk has no custom dot
   const r=btn.getBoundingClientRect();
   shapePop.style.left = Math.min(r.right+6, window.innerWidth-300) + 'px';
   shapePop.style.top  = Math.max(56, Math.min(r.top, window.innerHeight-330)) + 'px';
@@ -1645,6 +1652,8 @@ shapeGrid.addEventListener('click', async e=>{
   if(activeShapeSlot>=0){
     S.slots[activeShapeSlot].shape=c.dataset.k; S.slots[activeShapeSlot].svg=null;
     syncSlotRow(activeShapeSlot); await buildCache(activeShapeSlot);
+  } else if(activeShapeSlot===-2){
+    S.cmykShape=c.dataset.k; syncCmykShapeBtn(); await buildInkCache();
   }
   shapePop.classList.remove('open'); requestRender();
 });
@@ -1677,6 +1686,14 @@ function syncSlotRow(i){
   }
   colorListEl.children[i].querySelector('input[type=color]').value = slot.color;
 }
+/* CMYK dot-shape: same visual picker, opened with the cmyk sentinel (-2) */
+function syncCmykShapeBtn(){
+  const sp=document.getElementById('cmykShapeBtn'); if(!sp) return;
+  sp.querySelector('.thumb').innerHTML = shapeSVGMarkup(S.cmykShape);
+  sp.querySelector('.nm').textContent = (SHAPES[S.cmykShape] && SHAPES[S.cmykShape].label || '').replace(/^\S+\s/,'');
+}
+document.getElementById('cmykShapeBtn').addEventListener('click', e=>{ e.stopPropagation(); openShapePopover(e.currentTarget, -2); });
+syncCmykShapeBtn();
 
 /* ---------- presets ---------- */
 function currentPresetCfg(){
@@ -1708,9 +1725,9 @@ function syncUI(){
         b.classList.toggle('on', b.dataset.v===val));
     });
   document.getElementById('singleWrap').style.display = S.mode==='single'?'block':'none';
-  document.getElementById('satWrap').style.display = S.colorMode==='source'?'block':'none';
+  document.getElementById('satWrap').style.display = (S.colorMode==='source'||S.colorMode==='palet')?'block':'none';
   document.getElementById('cmykWrap').style.display = S.renderMode==='cmyk'?'block':'none';
-  document.getElementById('cmykShape').value = S.cmykShape;
+  syncCmykShapeBtn();
   document.getElementById('chC').checked = S.cmykC;
   document.getElementById('chM').checked = S.cmykM;
   document.getElementById('chY').checked = S.cmykY;
@@ -2092,12 +2109,15 @@ document.getElementById('exportPngBtn').addEventListener('click', e=>{
       outC = document.createElement('canvas'); outC.width=exact[0]; outC.height=exact[1];
       const ox=outC.getContext('2d'); ox.imageSmoothingQuality='high';
       ox.drawImage(c, 0,0, exact[0],exact[1]);
+      c.width=c.height=0;   // free the source canvas before toBlob → halves peak memory at A1/A2 @300dpi
     }
+    const w=outC.width, h=outC.height;
     outC.toBlob(blob=>{
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
-      a.download=artFileName()+(t.label?'-'+t.label:'')+'-'+outC.width+'x'+outC.height+'.png'; a.click();
+      a.download=artFileName()+(t.label?'-'+t.label:'')+'-'+w+'x'+h+'.png'; a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+      outC.width=outC.height=0;   // release the export canvas once the blob exists
       btn.textContent=old; btn.disabled=false;
     },'image/png');
   }, 30);

@@ -1,4 +1,4 @@
-# SVG Dither Filter 2.7
+# SVG Dither Filter 2.8
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
 shape-based dither using built-in shapes or your own SVGs — then exports the
@@ -14,9 +14,36 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ![Demo of the SVG dither filter applied to a video](assets/demo.gif)
 
+## Interface (rebuilt in 2.8)
+
+The window splits into a top **app bar**, a left **edit rail**, and the canvas
+stage with its framed passe-partout (mat + frame line + soft shadow).
+
+- **App bar — global actions.** A **Beeld** popover holds everything about *what*
+  you're filtering: file upload, Unsplash search, and the drop/paste hints. A
+  **Formaat** picker sits next to it as its own control, showing the chosen crop
+  ratio right in the bar. An **Export** popover holds everything about *getting it
+  out*: PNG size, SVG download, and the format guidance. A **Reset** and a
+  **light/dark** toggle sit at the right.
+- **Edit rail — always visible.** No tabs, no collapsibles. Every editing
+  section is laid out flat with sticky title-case headers and hairline dividers:
+  *Presets · Beeldbewerking · Raster · Render-modus · Kleur · Vorm-modus ·
+  Vormgrootte · Rotatie · Vormen · Kleuren*. Unified control sizing, custom
+  checkboxes, a 300 px rail.
+- **Split Vormen / Kleuren.** Shapes (which mark) and colours (which palette)
+  are two separate sections and two independent axes — change one and the other
+  is never touched.
+- **Visual shape picker.** Each shape slot is a button showing a real,
+  colour-tinted mini-SVG of the chosen shape plus its name. Clicking opens a
+  thumbnail grid of all 28 built-in shapes (and an *Eigen SVG uploaden* button).
+  The CMYK dot-shape uses the very same picker. No more ASCII labels.
+- **Render-on-demand.** The canvas only repaints when something actually
+  changed (or while a video plays / you hold to compare), so dragging sliders
+  stays smooth even at high grids.
+
 ## Features
 
-### Print engine (new in 2.2)
+### Print engine
 
 - **CMYK print mode** — the image is separated into four ink screens (cyan,
   magenta, yellow, black) at the classic angles (15°/75°/0°/45°), multiply-
@@ -26,40 +53,39 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Blue-noise dithering** — a precomputed 32×32 void-and-cluster matrix for
   organic, clump-free grain (vs. the regular Bayer crosshatch).
 
-### Artwork engine (new in 2.1)
+### Artwork engine
 
 - **Artwork export** — high-res PNG and **true vector SVG** (symbols + uses):
   infinitely scalable, ideal for print and pen plotters.
-- **Formats: print & wallpaper** — the Formaat dropdown crops the photo to a
-  ratio: *Origineel*, *1:1*, *A-papier staand/liggend* (print), or *Desktop
-  16:9 / Ultrawide 21:9 / Telefoon 9:19.5* (wallpaper). Export at exact pixels:
-  A4–A1 at 150/300 dpi (up to 9933 px, SVG carries real mm sizes for
-  Illustrator/Inkscape) or wallpaper sizes (1920×1080 … 4K, 5120×2194, phone
-  1080×2340 / 1284×2778). PNG snaps to the exact target dimensions; a guard
-  warns when the crop ratio doesn't match the chosen export.
+- **Formats: print & wallpaper** — the **Formaat** picker (in the app bar) crops
+  the photo to a ratio: *Origineel*, *1:1*, *A-papier staand/liggend* (print), or
+  *Desktop 16:9 / Ultrawide 21:9 / Telefoon 9:19.5* (wallpaper). Export (in
+  **Export**) at exact pixels: A4–A1 at 150/300 dpi (up to 9933 px; the SVG
+  carries real **mm** sizes for Illustrator/Inkscape), screen sizes (1920 px /
+  4K), or wallpaper sizes (1920×1080 … 4K, 5120×2194, phone 1080×2340 /
+  1284×2778). PNG snaps to the exact target dimensions; a guard warns when the
+  crop ratio doesn't match the chosen export.
 - **Crop zoom & pan** — scroll to zoom into the photo and drag to reposition;
   this is a real *source* crop, so it carries through to every export (compose
   a tight wallpaper or print). Double-click recentres; hold still to compare.
-- **17 dithering algorithms (expanded in 2.7)** — error-diffusion: Floyd–
-  Steinberg, False FS, Atkinson, Jarvis–Judice–Ninke, Stucki, Burkes, Sierra,
-  Sierra-2, Sierra Lite, Stevenson–Arce — with a **serpentine** toggle and an
-  **error-strength** slider; ordered/noise: Bayer 2/4/8/16/32 and 32×32 blue
-  noise. (Algorithm set informed by a source-level analysis of
-  ditheringstudio.com.)
+- **16 dithering algorithms** — error-diffusion: Floyd–Steinberg, False FS,
+  Atkinson, Jarvis–Judice–Ninke, Stucki, Burkes, Sierra, Sierra-2, Sierra Lite,
+  Stevenson–Arce — with a **serpentine** toggle and an **error-strength**
+  slider; ordered/noise: Bayer 2/4/8/16/32 and 32×32 blue noise. (Algorithm set
+  informed by a source-level analysis of ditheringstudio.com.)
 - **Source & palette-snap colour modes** — *Bron* samples each cell's colour
   from the photo (with a saturation slider); *Palet-snap* maps that colour to
   the nearest of your 7 slot colours (true palette quantization, redmean
   distance) — load any palette (PICO-8, NES, DawnBringer, Solarized…) and the
   image is quantized to it while shape size keeps continuous tone.
-- **Auto palette from photo** — one button runs median-cut on the source to
-  build a 7-colour shadow→highlight palette matched to the image.
-- **Pre-dither tone pipeline (new in 2.7)** — besides brightness/contrast/gamma:
+- **Auto palette from photo** — one button (🎨 Uit foto) runs median-cut on the
+  source to build a 7-colour shadow→highlight palette matched to the image.
+- **Pre-dither tone pipeline** — besides brightness/contrast/gamma:
   **highlights compression**, a **pre-blur** to calm noisy photos, **posterize**
   (2–7 flat tonal bands), and **Woodcut** edge-boost (Sobel) for bold linocut-
   style contours made of shapes.
 - **Flow rotation** — shapes align to the image contours (Sobel gradients), so
   strokes follow hair, waves, and brushwork. Try *Flow Lines* on Starry Night.
-- **Tone curve** — brightness / contrast / gamma before tone mapping.
 - **Grid types** — square, brick (offset), and hexagonal packing, plus a gap
   control and per-cell size/angle jitter.
 - **Opacity / (semi-)transparency** — a shape-opacity slider plus an "opacity
@@ -69,7 +95,7 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Transparent background** — for PNG/SVG export over your own backdrop.
 - **Drag & drop + paste (⌘V)** — and hold the mouse on the canvas to compare
   with the original.
-- **Unsplash search** — search photos in the Source panel (15 per page, a
+- **Unsplash search** — search photos in the **Beeld** popover (15 per page, a
   scrollable grid, **Meer laden** appends more) and load one with a click
   (CORS-clean, so all exports keep working). Shows attribution and fires the
   download ping per Unsplash guidelines. Rate-limit and bad-key cases are
@@ -77,22 +103,24 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
   Put your Access Key in a local `unsplash-key.js` (gitignored):
   `window.UNSPLASH_KEY = '…'` — or paste it in the one-time prompt.
 - **Shuffle** — one button that rolls a random-but-tasteful combination of
-  palette, shapes, grid, and dithering. Great for discovery.
+  palette, shapes, grid, and dithering. Great for discovery; the preset
+  dropdown then shows **Verrassing** instead of going blank, so you can tweak
+  and save the result.
 
-### Presets (new in 2.0, expanded in 2.1)
+### Presets
 
-- **71 built-in looks in 8 categories** — *Print & druk*, *Kunst*, *Vorm &
-  techniek*, **Dither-lab** (Atkinson, Stucki Fijn, Jarvis Zacht, Stevenson
-  Speckle, Sierra Riso, PICO-8 / NES Quantize, Posterposter, Linosnede,
-  Dromerig — one per new 2.7 technique so they're visible while browsing),
-  *Retro tech*, *Sfeer*, the V1 original, and **Oosters** — 14
-  research-based Japanese/Chinese/Eastern presets (Bero-ai aizuri-e, Suiboku
-  ink wash, Kōrin gold-leaf, Hasui dusk, Five Tones of Ink shan-shui,
-  Mohammedaans Blauw porcelain, Cinnaberlak lacquer, Minhwa, Thangka Goud,
-  Lajvard & Firuzeh girih, Lapis & Goud Persian miniature, Ensō, Pichwai Goud,
-  Sơn Mài). Each was generated with authentic pigment palettes and
-  adversarially checked for colour-contrast, tonal ordering and legibility.
-  A preset bundles every setting, colour, and shape — including uploaded SVGs.
+- **71 built-in looks in 8 categories** — *Basis* (V1 original), *Print & druk*,
+  *Kunst*, *Vorm & techniek*, **Dither-lab** (Atkinson, Stucki Fijn, Jarvis
+  Zacht, Stevenson Speckle, Sierra Riso, PICO-8 / NES Quantize, Posterposter,
+  Linosnede, Dromerig — one per new technique so they're visible while
+  browsing), *Retro tech*, *Sfeer*, and **Oosters** — 14 research-based
+  Japanese/Chinese/Eastern presets (Bero-ai aizuri-e, Suiboku ink wash, Kōrin
+  gold-leaf, Hasui dusk, Five Tones of Ink shan-shui, Mohammedaans Blauw
+  porcelain, Cinnaberlak lacquer, Minhwa, Thangka Goud, Lajvard & Firuzeh girih,
+  Lapis & Goud Persian miniature, Ensō, Pichwai Goud, Sơn Mài). Each was
+  generated with authentic pigment palettes and adversarially checked for
+  colour-contrast, tonal ordering and legibility. A preset bundles every
+  setting, colour, and shape — including uploaded SVGs.
 - **◀ ▶ navigation** — step through all presets (and shape-sets / palettes)
   with prev/next buttons; each step applies instantly.
 - **Smart filenames** — exports are named after the source and preset, e.g.
@@ -107,20 +135,19 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
   raster (lines, plus, cross, fine hatch, crosshatch). The corner/quarter-arc
   with *Random 90°* gives flowing Truchet-style fields. Upload your own SVG per
   slot too.
-- **Independent shape-sets & palettes (new in 2.3)** — shapes (which mark)
-  and colours (which palette) are two separate axes: pick any of 21 shape-sets
-  and combine it with any of 13 palettes, each with its own ◀ ▶ navigation.
-  Changing one never touches the other or any other setting. Save your own
-  shape-sets and palettes to `localStorage`. (Full "looks" still live in the
-  main presets above.)
+- **Independent shape-sets & palettes** — pick any of 23 shape-sets and combine
+  it with any of 23 palettes, each with its own ◀ ▶ navigation. Changing one
+  never touches the other or any other setting. Save your own shape-sets and
+  palettes to `localStorage`. (Full "looks" still live in the main presets
+  above.)
 - **Light / dark theme** — toggle the whole app between dark and light with the
-  ☀️/🌙 button; remembered across sessions. The preview sits in a subtle
+  🌙/☀️ button; remembered across sessions. The preview sits in a subtle
   passe-partout (mat + frame line + soft shadow) like a framed print.
 
 ### Core (v1)
 
 - **Image & video input** — drag in a still or a video; video is filtered live, frame by frame.
-- **Aspect ratio** — keep the original or center-crop to **1:1**.
+- **Aspect / crop** — keep the original or crop to a print/wallpaper ratio.
 - **Grid resolution** — 4–200 cells across; rows derived from the aspect ratio.
 - **Background colour** — solid fill behind the shapes.
 - **7 SVG shapes** — upload up to seven SVGs, one per tone, each with its own colour.
@@ -130,8 +157,8 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 - **Invert** — flip the tone → shape mapping.
 - **Shape mode** — *Per-tone* uses all seven shapes, or *Single* uses one chosen
   shape for every cell (scaled by brightness).
-- **Shape scale (midtone min → max)** — per-cell size interpolates with brightness.
-- **Pixel rotation** — global angle snapped to 90°, plus optional random 90° per cell.
+- **Shape scale (min → max)** — per-cell size interpolates with brightness.
+- **Pixel rotation** — global angle, plus optional random 90° per cell.
 
 ## Quick start
 
@@ -141,23 +168,38 @@ open index.html        # macOS
 # or double-click index.html in any file manager
 ```
 
+Everything lives in one self-contained `index.html`: UI, presets, the dither
+engine, and the PNG/SVG exporters. There is no build, no bundler, and no
+runtime dependency. The only optional extra is a gitignored `unsplash-key.js`
+for the Unsplash search.
+
 ## Using the tool
 
-1. **Presets** — pick a built-in look as a starting point, save your own with
-   **Opslaan…**, or share one via **Export/Import JSON**. **Reset naar
-   origineel** restores the exact v1 defaults.
-2. **Source** — upload, drop, or paste an image or video; pick **Original** or
-   **1 : 1**. Hold the mouse on the canvas to peek at the original.
-3. **Tone** — brightness/contrast/gamma, invert, and the dithering algorithm.
-4. **Grid** — resolution, square/brick/hex packing, gap, and background.
-5. **Color** — per-tone palette or colours sampled from the source image.
-6. **Shape scale** — min/max size driven by brightness, plus size jitter.
-7. **Rotation** — fixed angle or *Flow* (shapes follow image contours),
-   angle jitter, optional random 90° per cell.
-8. **Shapes** — pick a built-in shape per slot 1 (shadow) → 7 (highlight), or
-   upload your own SVG with ⬆, and recolour each.
-9. **Artwork export** — download as PNG (screen sizes or A4–A1 at 150/300 dpi)
-   or as true vector SVG with real mm dimensions.
+1. **Beeld** (app bar) — upload, drop, or paste an image or video, or search
+   **Unsplash**. Set the **Formaat** (crop ratio) from its picker in the app
+   bar. Hold the mouse on the canvas to peek at the original; scroll to zoom
+   and drag to reposition the crop.
+2. **Presets** — pick a built-in look as a starting point, **Shuffle** for a
+   surprise, save your own with **Opslaan…**, or share one via
+   **Export/Import JSON**. **Reset** restores the exact v1 defaults.
+3. **Beeldbewerking** — brightness/contrast/gamma, highlights, pre-blur,
+   posterize, invert, Woodcut edge-boost, and the dithering algorithm
+   (serpentine + error-strength).
+4. **Raster** — resolution, square/brick/hex packing, gap, background, and
+   transparent-export toggle.
+5. **Render-modus** — Shapes or CMYK print (with its dot-shape picker and
+   channel toggles).
+6. **Kleur** — Per-tone palette, colours sampled from the source (Bron), or
+   palette-snap quantization, with a saturation slider.
+7. **Vorm-modus / Vormgrootte / Rotatie** — single vs per-tone shapes,
+   min/max size and jitter, opacity, fixed angle or *Flow* (shapes follow
+   image contours), angle jitter, random 90° per cell.
+8. **Vormen** — pick a shape-set or a built-in shape per slot (1 = shadow,
+   7 = highlight) via the visual picker, or upload your own SVG.
+9. **Kleuren** — pick a palette, set a colour per slot, or extract one from the
+   photo.
+10. **Export** (app bar) — download as PNG (screen/wallpaper sizes or A4–A1 at
+    150/300 dpi) or as true vector SVG with real mm dimensions on print sizes.
 
 > Ink-style presets (Halftone, Newsprint, Ink Hatch, Riso) use **Invert**: with
 > a single dark ink on light paper, dark areas should get the *large* dots.
@@ -181,7 +223,7 @@ Any modern evergreen browser (Chrome, Edge, Firefox, Safari). Uses Canvas 2D,
 
 ```
 .
-├── index.html      # the entire 2.7 tool — UI, presets, dither engine, exporters
+├── index.html      # the entire 2.8 tool — UI, presets, dither engine, exporters
 ├── index-v1.html   # the original v1, untouched
 ├── assets/         # demo media (mp4 + gif preview)
 ├── README.md
