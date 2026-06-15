@@ -3,19 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG Dither Filter 2.8</title>
+<title>Halftone — shape dither &amp; halftone studio</title>
 <style>
   :root { --bg:#0c0c0e; --panel:#141417; --panel-2:#101013; --raised:#1b1b20; --raised-hover:#212128;
           --ctrl:#1b1b20; --line:#26262c; --line-strong:#33333b; --txt:#e9e9ec; --mut:#85858f; --faint:#5c5c66;
           --acc:#5b8cff; --acc-press:#4a78e6; --acc-soft:rgba(91,140,255,.14);
           --warn:#d99a3d; --warn-line:#6b4a1f;
           --stage:#0b0b0d; --mat:#1b1b21; --matline:#34343d; --overlay:13,13,15; }
-  :root[data-theme="light"] {
-          --bg:#eeeef1; --panel:#ffffff; --panel-2:#f7f7f9; --raised:#ededf0; --raised-hover:#e4e4e9;
-          --ctrl:#ededf0; --line:#dcdce2; --line-strong:#cdcdd5; --txt:#1b1b22; --mut:#5f5f69; --faint:#9a9aa4;
-          --acc:#3b6fe0; --acc-press:#2f5cc4; --acc-soft:rgba(59,111,224,.12);
-          --warn:#b06a12; --warn-line:#c8a25f;
-          --stage:#d6d6da; --mat:#ffffff; --matline:#c2c2cb; --overlay:255,255,255; }
+  /* UI is dark only. data-stage="light" re-skins ONLY the canvas backdrop (stage + passe-partout)
+     so a light artwork can be previewed on a light ground — the panel stays dark. */
+  :root[data-stage="light"] {
+          --stage:#e9e9ec; --mat:#ffffff; --matline:#c8c8cf; --overlay:255,255,255; }
   * { box-sizing:border-box; }
   body { margin:0; font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
          background:var(--bg); color:var(--txt); display:flex; flex-direction:column;
@@ -24,11 +22,12 @@
   /* ---- top app bar: global actions ---- */
   .appbar { flex:none; display:flex; align-items:center; gap:10px; height:52px; padding:0 12px;
             background:var(--panel-2); border-bottom:1px solid var(--line-strong); z-index:10; }
-  .appbar .brand { display:flex; align-items:baseline; gap:8px; margin-right:4px; }
-  .appbar .brand h1 { margin:0; }
-  .appbar .brand .ver { font-size:10px; color:var(--faint);
-                        font-family:ui-monospace,"SF Mono",Menlo,monospace; }
-  .appbar .brand .ver a { color:var(--acc); text-decoration:none; }
+  .appbar .brand { display:flex; align-items:center; gap:8px; margin-right:4px; }
+  .appbar .brand h1 { margin:0; font-size:15px; letter-spacing:.005em; font-weight:650; }
+  .appbar .brand .v1link { font-size:10px; color:var(--faint); text-decoration:none;
+                font-family:ui-monospace,"SF Mono",Menlo,monospace; border:1px solid var(--line);
+                border-radius:4px; padding:1px 5px; line-height:1.4; }
+  .appbar .brand .v1link:hover { color:var(--acc); border-color:var(--acc); }
   .appbar .spacer { flex:1; }
   .barbtn { display:inline-flex; align-items:center; gap:7px; height:28px; padding:0 12px;
             background:var(--raised); color:var(--txt); border:1px solid var(--line); border-radius:7px;
@@ -65,7 +64,6 @@
   .popover { position:fixed; z-index:30; display:none; width:330px; max-height:78vh; overflow-y:auto;
              background:var(--panel); border:1px solid var(--line-strong); border-radius:11px;
              padding:14px; box-shadow:0 18px 50px rgba(0,0,0,.5); }
-  :root[data-theme="light"] .popover { box-shadow:0 18px 44px rgba(0,0,0,.22); }
   .popover.open { display:block; }
   #exportPopover { width:288px; }
   #exportPopover .btnrow { flex-direction:column; gap:6px; }
@@ -199,7 +197,7 @@
 
   /* ---- stage / canvas (passe-partout, unchanged) ---- */
   #stage { flex:1; display:flex; align-items:center; justify-content:center; padding:32px;
-           background:var(--stage); position:relative; overflow:hidden; transition:background .2s; }
+           background-color:var(--stage); position:relative; overflow:hidden; }
   #zoomBadge { position:absolute; top:10px; right:12px; z-index:2; display:none;
            background:rgba(var(--overlay),.85); border:1px solid var(--line); border-radius:5px;
            padding:3px 8px; font-size:11px; color:var(--mut); pointer-events:none; }
@@ -212,17 +210,17 @@
            justify-content:center; font-size:16px; color:var(--acc); background:rgba(var(--overlay),.7); z-index:3; }
   canvas { max-width:100%; max-height:100%;
            box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline), 0 12px 38px rgba(0,0,0,.45); }
-  :root[data-theme="light"] canvas { box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline),
+  :root[data-stage="light"] canvas { box-shadow:0 0 0 14px var(--mat), 0 0 0 15px var(--matline),
                       0 12px 34px rgba(0,0,0,.20); }
 </style>
 </head>
 <body>
 <header class="appbar">
-  <div class="brand"><h1>SVG DITHER FILTER</h1><span class="ver">v2.8 · <a href="index-v1.html">v1</a></span></div>
+  <div class="brand"><h1>Halftone</h1><a class="v1link" href="index-v1.html" title="Open de originele v1">v1</a></div>
   <button id="beeldBtn" class="barbtn"><span class="gly">▦</span>Beeld</button>
   <label class="barsel" title="Formaat / uitsnede"><span class="gly">⛶</span>
     <select autocomplete="off" id="aspect">
-      <option value="orig">Origineel — geen uitsnede</option>
+      <option value="orig">Origineel</option>
       <optgroup label="Print">
         <option value="square">Vierkant 1:1</option>
         <option value="aport">A-papier · staand</option>
@@ -236,9 +234,9 @@
     </select>
   </label>
   <div class="spacer"></div>
-  <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
   <button id="resetBtn" class="iconbtn" title="Reset naar origineel">↺</button>
-  <button id="themeBtn" class="iconbtn" title="Licht / donker thema">🌙</button>
+  <button id="backdropBtn" class="iconbtn" title="Canvas op lichte achtergrond">☀️</button>
+  <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
 </header>
 
 <div id="beeldPopover" class="popover" role="dialog" aria-label="Beeld kiezen">
@@ -2255,17 +2253,17 @@ document.getElementById('exportSvgBtn').addEventListener('click', ()=>{
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
 
-/* ---------- light / dark thema ---------- */
-const themeBtn = document.getElementById('themeBtn');
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t==='light' ? '🌙' : '☀️';
-  themeBtn.title = t==='light' ? 'Schakel naar donker' : 'Schakel naar licht';
-  localStorage.setItem('ditherTheme', t);
+/* ---------- canvas backdrop (UI stays dark; only the stage + passe-partout switch) ---------- */
+const backdropBtn = document.getElementById('backdropBtn');
+function applyStage(s){
+  document.documentElement.setAttribute('data-stage', s);
+  backdropBtn.textContent = s==='light' ? '🌙' : '☀️';
+  backdropBtn.title = s==='light' ? 'Canvas op donkere achtergrond' : 'Canvas op lichte achtergrond';
+  localStorage.setItem('ditherStage', s);
 }
-themeBtn.addEventListener('click', ()=>
-  applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'));
-applyTheme(localStorage.getItem('ditherTheme') || 'dark');
+backdropBtn.addEventListener('click', ()=>
+  applyStage(document.documentElement.getAttribute('data-stage')==='light'?'dark':'light'));
+applyStage(localStorage.getItem('ditherStage') || 'dark');
 
 /* ---------- go ---------- */
 syncUI();

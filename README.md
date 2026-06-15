@@ -1,8 +1,10 @@
-# SVG Dither Filter 2.8
+# Halftone
 
 A zero-dependency, single-file tool that turns an uploaded image or video into a
-shape-based dither using built-in shapes or your own SVGs — then exports the
-result as **print-ready PNG/vector-SVG artwork**.
+shape-based halftone / dither using built-in shapes or your own SVGs — then
+exports the result as **print-ready PNG/vector-SVG artwork**.
+
+*(formerly "SVG Dither Filter".)*
 
 No build step, no install. Open `index.html` in a browser and go.
 The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
@@ -12,7 +14,7 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ## Demo
 
-![Demo of the SVG dither filter applied to a video](assets/demo.gif)
+![Demo of Halftone applied to a video](assets/demo.gif)
 
 ## Interface (rebuilt in 2.8)
 
@@ -24,7 +26,7 @@ stage with its framed passe-partout (mat + frame line + soft shadow).
   **Formaat** picker sits next to it as its own control, showing the chosen crop
   ratio right in the bar. An **Export** popover holds everything about *getting it
   out*: PNG size, SVG download, and the format guidance. A **Reset** and a
-  **light/dark** toggle sit at the right.
+  **canvas-backdrop** toggle sit at the right; **Export** is the primary action.
 - **Edit rail — always visible.** No tabs, no collapsibles. Every editing
   section is laid out flat with sticky title-case headers and hairline dividers:
   *Presets · Beeldbewerking · Raster · Render-modus · Kleur · Vorm-modus ·
@@ -140,9 +142,11 @@ stage with its framed passe-partout (mat + frame line + soft shadow).
   never touches the other or any other setting. Save your own shape-sets and
   palettes to `localStorage`. (Full "looks" still live in the main presets
   above.)
-- **Light / dark theme** — toggle the whole app between dark and light with the
-  🌙/☀️ button; remembered across sessions. The preview sits in a subtle
-  passe-partout (mat + frame line + soft shadow) like a framed print.
+- **Dark UI + switchable canvas backdrop** — the interface is dark; a 🌙/☀️
+  button flips only the *canvas backdrop* (stage + passe-partout) between dark and
+  light, so you can preview a light artwork on a light ground while the panel stays
+  dark. Remembered across sessions. The preview sits in a subtle passe-partout
+  (mat + frame line + soft shadow) like a framed print.
 
 ### Core (v1)
 
