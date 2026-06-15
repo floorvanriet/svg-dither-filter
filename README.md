@@ -81,8 +81,11 @@ The original v1 is kept as `index-v1.html` (also tagged `v1.0` in git).
 
 ### Presets (new in 2.0, expanded in 2.1)
 
-- **61 built-in looks in 7 categories** — *Print & druk*, *Kunst*, *Vorm &
-  techniek*, *Retro tech*, *Sfeer*, the V1 original, and **Oosters** — 14
+- **71 built-in looks in 8 categories** — *Print & druk*, *Kunst*, *Vorm &
+  techniek*, **Dither-lab** (Atkinson, Stucki Fijn, Jarvis Zacht, Stevenson
+  Speckle, Sierra Riso, PICO-8 / NES Quantize, Posterposter, Linosnede,
+  Dromerig — one per new 2.7 technique so they're visible while browsing),
+  *Retro tech*, *Sfeer*, the V1 original, and **Oosters** — 14
   research-based Japanese/Chinese/Eastern presets (Bero-ai aizuri-e, Suiboku
   ink wash, Kōrin gold-leaf, Hasui dusk, Five Tones of Ink shan-shui,
   Mohammedaans Blauw porcelain, Cinnaberlak lacquer, Minhwa, Thangka Goud,
