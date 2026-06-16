@@ -240,6 +240,7 @@
   <div class="spacer"></div>
   <button id="resetBtn" class="iconbtn" title="Reset to original">↺</button>
   <button id="backdropBtn" class="iconbtn" title="Canvas on light background">☀️</button>
+  <button id="savePresetBtn" class="barbtn" title="Save the current settings as a preset"><span class="gly">☆</span>Save</button>
   <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
 </header>
 
@@ -302,10 +303,7 @@
       <button id="presetPrev" title="Previous preset" class="navbtn">◀</button>
       <select autocomplete="off" id="presetSel" style="flex:1;min-width:0"><option value="">— choose a preset —</option></select>
       <button id="presetNext" title="Next preset" class="navbtn">▶</button>
-    </div>
-    <div class="btnrow">
-      <button id="savePresetBtn">Save…</button>
-      <button id="delPresetBtn">Delete</button>
+      <button id="delPresetBtn" title="Delete custom preset" class="navbtn">✕</button>
     </div>
     <div class="btnrow">
       <button id="exportPresetBtn">Export JSON</button>

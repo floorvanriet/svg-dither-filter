@@ -189,8 +189,9 @@ for the Unsplash search.
    bar. Hold the mouse on the canvas to peek at the original; scroll to zoom
    and drag to reposition the crop.
 2. **Presets** — pick a built-in look as a starting point, **Shuffle** for a
-   surprise, save your own with **Opslaan…**, or share one via
-   **Export/Import JSON**. **Reset** restores the exact v1 defaults.
+   surprise, save the current settings with **Save** (in the app bar, next to
+   Export), or share a look via **Export/Import JSON**. **Reset** restores the
+   exact v1 defaults.
 3. **Beeldbewerking** — brightness/contrast/gamma, highlights, pre-blur,
    posterize, invert, Woodcut edge-boost, and the dithering algorithm
    (serpentine + error-strength).
