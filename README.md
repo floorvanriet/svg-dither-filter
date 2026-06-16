@@ -75,12 +75,16 @@ stage with its framed passe-partout (mat + frame line + soft shadow).
   Stevenson–Arce — with a **serpentine** toggle and an **error-strength**
   slider; ordered/noise: Bayer 2/4/8/16/32 and 32×32 blue noise. (Algorithm set
   informed by a source-level analysis of ditheringstudio.com.)
-- **Source & palette-snap colour modes** — *Bron* samples each cell's colour
-  from the photo (with a saturation slider); *Palet-snap* maps that colour to
-  the nearest of your 7 slot colours (true palette quantization, redmean
-  distance) — load any palette (PICO-8, NES, DawnBringer, Solarized…) and the
-  image is quantized to it while shape size keeps continuous tone.
-- **Auto palette from photo** — one button (🎨 Uit foto) runs median-cut on the
+- **Four colour modes** — *Per-tone* colours each cell by brightness from your 7
+  slot colours; *Source* samples each cell's colour from the photo (with a
+  saturation slider); *Snap* maps that colour to the nearest of your 7 slot
+  colours (true palette quantization, redmean distance) — load any palette
+  (PICO-8, NES, DawnBringer, Solarized…) and the image is quantized to it; and
+  **Gradient** flows your 7 colours across the canvas (vertical / horizontal /
+  diagonal / radial) so the dots run through a smooth gradient while their size
+  still draws the image — the pink→blue poster look. Try the *Pink Drift*,
+  *Aurora*, and *Sunset Fade* presets in the **Gradient** category.
+- **Auto palette from photo** — one button (🎨 From photo) runs median-cut on the
   source to build a 7-colour shadow→highlight palette matched to the image.
 - **Pre-dither tone pipeline** — besides brightness/contrast/gamma:
   **highlights compression**, a **pre-blur** to calm noisy photos, **posterize**
@@ -111,8 +115,9 @@ stage with its framed passe-partout (mat + frame line + soft shadow).
 
 ### Presets
 
-- **71 built-in looks in 8 categories** — *Basis* (V1 original), *Print & druk*,
-  *Kunst*, *Vorm & techniek*, **Dither-lab** (Atkinson, Stucki Fijn, Jarvis
+- **74 built-in looks in 9 categories** — *Basic* (V1 original), **Gradient**
+  (Pink Drift, Aurora, Sunset Fade), *Print*,
+  *Art*, *Shape & technique*, **Dither-lab** (Atkinson, Stucki Fijn, Jarvis
   Zacht, Stevenson Speckle, Sierra Riso, PICO-8 / NES Quantize, Posterposter,
   Linosnede, Dromerig — one per new technique so they're visible while
   browsing), *Retro tech*, *Sfeer*, and **Oosters** — 14 research-based
