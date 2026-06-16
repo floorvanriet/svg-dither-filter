@@ -209,6 +209,9 @@
            color:var(--mut); font-size:13px; text-align:center; max-width:300px; line-height:1.6;
            pointer-events:none; }
   .stage-hint b { color:var(--txt); }
+  /* the stage can be light (backdrop toggle) — keep the hint readable there */
+  :root[data-stage="light"] .stage-hint { color:#6c6c75; }
+  :root[data-stage="light"] .stage-hint b { color:#1b1b22; }
   #stage.drag::after { content:'Drop image or video'; position:absolute; inset:12px;
            border:2px dashed var(--acc); border-radius:12px; display:flex; align-items:center;
            justify-content:center; font-size:16px; color:var(--acc); background:rgba(var(--overlay),.7); z-index:3; }
@@ -240,7 +243,6 @@
   <div class="spacer"></div>
   <button id="resetBtn" class="iconbtn" title="Reset to original">↺</button>
   <button id="backdropBtn" class="iconbtn" title="Canvas on light background">☀️</button>
-  <button id="savePresetBtn" class="barbtn" title="Save the current settings as a preset"><span class="gly">☆</span>Save</button>
   <button id="exportBtn" class="barbtn primary"><span class="gly">⤓</span>Export</button>
 </header>
 
@@ -305,6 +307,7 @@
       <button id="presetNext" title="Next preset" class="navbtn">▶</button>
       <button id="delPresetBtn" title="Delete custom preset" class="navbtn">✕</button>
     </div>
+    <button id="savePresetBtn" style="width:100%;margin-top:6px">Save preset…</button>
     <div class="btnrow">
       <button id="exportPresetBtn">Export JSON</button>
       <button id="importPresetBtn">Import JSON</button>
